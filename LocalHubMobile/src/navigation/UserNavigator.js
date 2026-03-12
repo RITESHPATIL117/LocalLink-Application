@@ -1,0 +1,53 @@
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import colors from '../styles/colors';
+
+// Import Screens
+import HomeScreen from '../screens/user/HomeScreen';
+import SearchResultsScreen from '../screens/user/SearchResultsScreen';
+import BusinessDetailsScreen from '../screens/user/BusinessDetailsScreen';
+import CategoriesScreen from '../screens/user/CategoriesScreen';
+import FavoritesScreen from '../screens/user/FavoritesScreen';
+import ProfileScreen from '../screens/user/ProfileScreen';
+import PricingScreen from '../screens/user/PricingScreen';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+const HomeStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+const UserNavigator = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'CategoriesTab') iconName = focused ? 'grid' : 'grid-outline';
+          else if (route.name === 'FavoritesTab') iconName = focused ? 'heart' : 'heart-outline';
+          else if (route.name === 'ProfileTab') iconName = focused ? 'person' : 'person-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
+      <Tab.Screen name="CategoriesTab" component={CategoriesScreen} options={{ tabBarLabel: 'Categories' }} />
+      <Tab.Screen name="FavoritesTab" component={FavoritesScreen} options={{ tabBarLabel: 'Favorites' }} />
+      <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+    </Tab.Navigator>
+  );
+};
+
+export default UserNavigator;
