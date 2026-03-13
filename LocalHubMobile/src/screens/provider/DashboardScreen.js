@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import businessOwnerService from '../../services/businessOwnerService';
+import leadService from '../../services/leadService';
 
 const { width } = Dimensions.get('window');
 const isLargeScreen = width > 768;
@@ -48,10 +51,60 @@ const chartData = [
 ];
 
 const ProviderDashboardScreen = ({ navigation }) => {
+  const { user } = useSelector((state) => state.auth);
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [stats, setStats] = useState({ totalLeads: 0, activeLeads: 0, views: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const businessName = "SuperFast Plumbing";
-  const profilePic = "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200";
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const businessesRes = await businessOwnerService.getBusinesses().catch(() => ({ data: [] }));
+      const businesses = businessesRes.data || [];
+      
+      let totalLeadsCount = 0;
+      let activeLeadsCount = 0;
+      let totalViews = 0;
+
+      // Fetch leads and views for all owned businesses
+      await Promise.all(
+        businesses.map(async (biz) => {
+          totalViews += biz.views || 0;
+          try {
+            const leadsRes = await leadService.getLeadsByBusiness(biz.id);
+            const leads = leadsRes.data || [];
+            totalLeadsCount += leads.length;
+            activeLeadsCount += leads.filter(l => l.status === 'new' || l.status === 'contacted').length;
+          } catch (e) {
+            // ignore lead fetch error per business
+          }
+        })
+      );
+
+      setStats({ 
+        totalLeads: totalLeadsCount, 
+        activeLeads: activeLeadsCount, 
+        views: totalViews 
+      });
+    } catch (error) {
+      console.log('Error fetching provider stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const businessName = user?.name || "Provider"; 
+  const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200";
+
+  const currentStatCards = [
+    { id: '1', title: 'Total Leads', value: stats.totalLeads.toLocaleString(), trend: '+12%', isUp: true, icon: 'people', color: colors.primary },
+    { id: '2', title: 'Active Leads', value: stats.activeLeads.toString(), trend: '+5%', isUp: true, icon: 'flash', color: '#F59E0B' },
+    { id: '3', title: 'Profile Views', value: stats.views.toLocaleString(), trend: '-2%', isUp: false, icon: 'eye', color: '#10B981' },
+  ];
 
   const renderSidebar = () => (
     <View style={styles.sidebar}>
@@ -128,23 +181,27 @@ const ProviderDashboardScreen = ({ navigation }) => {
         <View style={styles.contentPadding}>
           
           {/* Stats Cards */}
-          <View style={styles.statsContainer}>
-            {statCards.map(stat => (
-              <View key={stat.id} style={styles.statCard}>
-                <View style={styles.statTop}>
-                  <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
-                    <Ionicons name={stat.icon} size={22} color={stat.color} />
+          {loading ? (
+             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+          ) : (
+             <View style={styles.statsContainer}>
+              {currentStatCards.map(stat => (
+                <View key={stat.id} style={styles.statCard}>
+                  <View style={styles.statTop}>
+                    <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
+                      <Ionicons name={stat.icon} size={22} color={stat.color} />
+                    </View>
+                    <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#ECFDF5' : '#FEF2F2' }]}>
+                      <Ionicons name={stat.isUp ? 'trending-up' : 'trending-down'} size={12} color={stat.isUp ? '#10B981' : '#EF4444'} />
+                      <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444' }]}>{stat.trend}</Text>
+                    </View>
                   </View>
-                  <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#ECFDF5' : '#FEF2F2' }]}>
-                    <Ionicons name={stat.isUp ? 'trending-up' : 'trending-down'} size={12} color={stat.isUp ? '#10B981' : '#EF4444'} />
-                    <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444' }]}>{stat.trend}</Text>
-                  </View>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statTitle}>{stat.title}</Text>
                 </View>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statTitle}>{stat.title}</Text>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
 
           {/* Graphical & Activity Split Area */}
           <View style={styles.dashboardSplit}>

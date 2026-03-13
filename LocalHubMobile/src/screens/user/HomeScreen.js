@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, FlatList } from 'react-native';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
@@ -9,63 +9,14 @@ import colors from '../../styles/colors';
 import SearchBar from '../../components/SearchBar';
 import CategoryItem from '../../components/CategoryItem';
 import BusinessCard from '../../components/BusinessCard';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import Skeleton from '../../components/Skeleton';
+import categoryService from '../../services/categoryService';
+import businessService from '../../services/businessService';
 
 const { width, height } = Dimensions.get('window');
 
-// Main Categories matching the mockup
-const mainCategories = [
-  { id: '1', name: 'Food &\nRestaurants', icon: 'fast-food', color: '#F59E0B' },
-  { id: '2', name: 'Health &\nMedical', icon: 'medkit', color: '#3B82F6' },
-  { id: '3', name: 'Home\nServices', icon: 'home', color: '#10B981' },
-  { id: '4', name: 'Local\nShops', icon: 'storefront', color: '#EF4444' },
-  { id: '5', name: 'Education', icon: 'school', color: '#22C55E' },
-  { id: '6', name: 'Beauty\n& Care', icon: 'color-palette', color: '#EC4899' },
-];
-
-const topCategories = [
-  { id: '1', name: 'Automobile', icon: 'car-sport', color: '#EF4444' },
-  { id: '2', name: 'Real Estate', icon: 'business', color: '#64748B' },
-  { id: '3', name: 'Events &\nWeddings', icon: 'ribbon', color: '#EC4899' },
-  { id: '4', name: 'Pet Services', icon: 'paw', color: '#F59E0B' },
-  { id: '5', name: 'Fitness &\nSports', icon: 'barbell', color: '#F97316' },
-  { id: '6', name: 'Travel &\nTransport', icon: 'airplane', color: '#EAB308' },
-];
-
-const featuredBusinesses = [
-  {
-    id: '1',
-    name: 'SuperFast Plumbing',
-    category: 'Home Services',
-    rating: '4.9',
-    address: 'Sangli',
-    image: 'https://images.unsplash.com/photo-1621905252507-eb6368d5ba18?q=80&w=400', 
-  },
-  {
-    id: '2',
-    name: 'City Hospital',
-    category: 'Health & Medical',
-    rating: '4.8',
-    address: 'Sangli',
-    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=400', 
-  },
-  {
-    id: '3',
-    name: 'Beauty Parlour',
-    category: 'Beauty',
-    rating: '4.7',
-    address: 'Sangli',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400',
-  },
-  {
-    id: '4',
-    name: 'Car Repair',
-    category: 'Automobile',
-    rating: '4.6',
-    address: 'Sangli',
-    image: 'https://images.unsplash.com/photo-1632823465306-cdbb235256e6?q=80&w=400',
-  }
-];
-
+// Fallback mocked arrays removed for real API calls
 // High quality real-world images of local services
 const bannerImages = [
   'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000', // Cleaning/Housekeeping
@@ -82,8 +33,47 @@ const HomeScreen = ({ navigation }) => {
   const flatListRef = useRef(null);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   
+  // Real API Data States
+  const [mainCategories, setMainCategories] = useState([]);
+  const [topCategories, setTopCategories] = useState([]);
+  const [featuredBusinesses, setFeaturedBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   // Calculate banner container width dynamically
   const bannerWidth = Math.min(width, MAX_APP_WIDTH);
+
+  const fetchData = async () => {
+    try {
+      // Parallel API calls
+      const [categoriesRes, businessesRes] = await Promise.all([
+        categoryService.getCategories().catch(() => ({ data: [] })),
+        businessService.getAllBusinesses({ featured: true }).catch(() => ({ data: [] }))
+      ]);
+      
+      const allCats = categoriesRes.data || [];
+      // If none from API, fallback to empty array or we can keep old mock if we had it.
+      // For real world, we want to reflect the DB.
+      setMainCategories(allCats.slice(0, 6)); 
+      setTopCategories(allCats.slice(6, 12));
+      
+      setFeaturedBusinesses(businessesRes.data || []);
+    } catch (error) {
+      console.log('Error fetching home data', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData();
+  }, []);
 
   // Auto-scroll logic for the image slider
   useEffect(() => {
@@ -111,7 +101,13 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+        }
+      >
         
         {/* Web-like Header */}
         <View style={styles.header}>
@@ -188,66 +184,110 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Search Bar Container - overlaps hero slightly less due to new height */}
-        <View style={styles.searchContainer}>
+        <AnimatedFadeIn 
+          style={styles.searchContainer}
+          delay={200}
+          duration={500}
+        >
           <SearchBar onSearchPress={() => navigation?.navigate('SearchResults')} />
-        </View>
+        </AnimatedFadeIn>
 
         {/* Main Categories Section */}
-        <View style={styles.mainCategoriesWrapper}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.mainCategoriesScroll}
+        {loading ? (
+          <View style={{ paddingHorizontal: 16, marginTop: 25 }}>
+            {/* Main Cats Skeleton */}
+            <View style={{ flexDirection: 'row', marginBottom: 30 }}>
+              <Skeleton width={80} height={100} radius={16} />
+              <View style={{ width: 12 }} />
+              <Skeleton width={80} height={100} radius={16} />
+              <View style={{ width: 12 }} />
+              <Skeleton width={80} height={100} radius={16} />
+            </View>
+            
+            <Skeleton width={150} height={24} radius={4} />
+            <View style={{ height: 16 }} />
+            {/* Top Cats Skeleton Grid */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
+               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
+               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
+               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
+            </View>
+          </View>
+        ) : (
+          <AnimatedFadeIn
+            delay={300}
+            duration={500}
           >
-            {mainCategories.map((cat) => (
-              <CategoryItem 
-                key={cat.id}
-                item={cat} 
-                type="square"
-                onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
-              />
-            ))}
-          </ScrollView>
-        </View>
+            <View style={styles.mainCategoriesWrapper}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.mainCategoriesScroll}
+              >
+                {mainCategories.length > 0 ? (
+                  mainCategories.map((cat) => (
+                    <CategoryItem 
+                      key={cat.id || Math.random().toString()}
+                      item={cat} 
+                      type="square"
+                      onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
+                    />
+                  ))
+                ) : (
+                  <Text style={{ textAlign: 'center', width: '100%', padding: 20, color: '#999' }}>No categories found.</Text>
+                )}
+              </ScrollView>
+            </View>
 
-        {/* Top Categories Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top Categories</Text>
-          <TouchableOpacity onPress={() => navigation?.navigate('CategoriesTab')}>
-            <Text style={styles.seeAll}>View All</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Top Categories Section */}
+            {topCategories.length > 0 && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Top Categories</Text>
+                  <TouchableOpacity onPress={() => navigation?.navigate('CategoriesTab')}>
+                    <Text style={styles.seeAll}>View All</Text>
+                  </TouchableOpacity>
+                </View>
 
-        <View style={styles.topCategoriesGrid}>
-          {topCategories.map((cat) => (
-            <CategoryItem 
-              key={cat.id} 
-              item={cat} 
-              type="wide"
-              onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
-            />
-          ))}
-        </View>
+                <View style={styles.topCategoriesGrid}>
+                  {topCategories.map((cat) => (
+                    <CategoryItem 
+                      key={cat.id || Math.random().toString()} 
+                      item={cat} 
+                      type="wide"
+                      onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
 
-        {/* Featured Businesses Section */}
-        <View style={[styles.sectionHeader, { marginTop: 12 }]}>
-          <Text style={styles.sectionTitle}>Featured Businesses</Text>
-        </View>
+            {/* Featured Businesses Section */}
+            <View style={[styles.sectionHeader, { marginTop: 12 }]}>
+              <Text style={styles.sectionTitle}>Featured Businesses</Text>
+            </View>
 
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.featuredBusinessScroll}
-        >
-          {featuredBusinesses.map((biz) => (
-            <BusinessCard 
-              key={biz.id} 
-              business={biz} 
-              horizontal={true}
-              onPress={() => navigation?.navigate('BusinessDetails', { business: biz })}
-            />
-          ))}
-        </ScrollView>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredBusinessScroll}
+            >
+              {featuredBusinesses.length > 0 ? (
+                featuredBusinesses.map((biz) => (
+                  <BusinessCard 
+                    key={biz.id || Math.random().toString()} 
+                    business={biz} 
+                    horizontal={true}
+                    onPress={() => navigation?.navigate('BusinessDetails', { business: biz })}
+                  />
+                ))
+              ) : (
+                <Text style={{ padding: 20, color: '#999' }}>No featured businesses right now.</Text>
+              )}
+            </ScrollView>
+          </AnimatedFadeIn>
+        )}
 
       </ScrollView>
     </SafeAreaView>

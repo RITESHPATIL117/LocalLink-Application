@@ -3,20 +3,25 @@ import { API_URL } from '../config/env';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000, // 10 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Request interceptor to attach auth token
 api.interceptors.request.use(
-  (config) => {
-    // You would normally retrieve the token from secure storage or Redux state
-    // import { store } from '../store';
-    // const state = store.getState();
-    // if (state.auth.token) {
-    //   config.headers.Authorization = `Bearer ${state.auth.token}`;
-    // }
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      console.log('Error fetching token for API request', e);
+    }
     return config;
   },
   (error) => {

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import colors from '../../styles/colors';
 import Badge from '../../components/Badge';
 
@@ -40,17 +43,31 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
           
           <TouchableOpacity 
             style={styles.backButtonOverlay} 
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.goBack();
+            }}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFF" />
+            <BlurView intensity={60} tint="dark" style={styles.glassCircle}>
+              <Ionicons name="arrow-back" size={20} color="#FFF" />
+            </BlurView>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionsOverlay}>
-            <Ionicons name="ellipsis-horizontal" size={24} color="#FFF" />
+          <TouchableOpacity 
+            style={styles.actionsOverlay}
+            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          >
+            <BlurView intensity={60} tint="dark" style={styles.glassCircle}>
+              <Ionicons name="ellipsis-horizontal" size={20} color="#FFF" />
+            </BlurView>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.contentContainer}>
+        <AnimatedFadeIn 
+          duration={600}
+          yOffset={40}
+          style={styles.contentContainer}
+        >
           {/* Avatar overlapping cover */}
           <View style={styles.avatarRow}>
             <Image source={{ uri: business.avatar || business.image }} style={styles.avatarPill} />
@@ -78,11 +95,17 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
 
           {/* Dual Action Buttons */}
           <View style={styles.actionButtonsRow}>
-            <TouchableOpacity style={styles.primaryBtn}>
+            <TouchableOpacity 
+              style={styles.primaryBtn}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+            >
               <Ionicons name="call" size={18} color="#FFF" />
               <Text style={styles.primaryBtnText}>Call Now</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryBtn}>
+            <TouchableOpacity 
+              style={styles.primaryBtn}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+            >
               <Ionicons name="document-text" size={18} color="#FFF" />
               <Text style={styles.primaryBtnText}>Request Quote</Text>
             </TouchableOpacity>
@@ -153,7 +176,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
           </View>
 
           <View style={{ height: 60 }} />
-        </View>
+        </AnimatedFadeIn>
       </ScrollView>
     </View>
   );
@@ -176,23 +199,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     left: 16,
-    width: 40,
-    height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: 'hidden',
   },
   actionsOverlay: {
     position: 'absolute',
     top: 50,
     right: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  glassCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
   },
   contentContainer: {
     backgroundColor: '#FFF',

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../hooks/useAuth';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import businessService from '../../services/businessService';
 
 const { width } = Dimensions.get('window');
 const isLargeScreen = width > 768;
@@ -19,7 +21,7 @@ const sidebarMenu = [
   { id: 'settings', title: 'Settings', icon: 'options-outline' },
 ];
 
-const adminStats = [
+const defaultAdminStats = [
   { id: '1', title: 'Total Businesses', value: '1,245', trend: '+45 This Week', isUp: true, icon: 'business', color: colors.primary },
   { id: '2', title: 'Total Users', value: '8,930', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
   { id: '3', title: 'Revenue', value: '₹4.2L', trend: '-2% vs Last', isUp: false, icon: 'wallet', color: '#F59E0B' },
@@ -45,10 +47,37 @@ const chartData = [
 
 const DashboardScreen = ({ navigation }) => {
   const { logout } = useAuth();
+  const { user } = useSelector(state => state.auth);
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [adminStats, setAdminStats] = useState(defaultAdminStats);
 
-  const adminName = "Admin Lead";
-  const profilePic = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200";
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    setLoading(true);
+    try {
+      const bizRes = await businessService.getAllBusinesses();
+      const businesses = bizRes.data || [];
+      const totalBiz = businesses.length;
+
+      setAdminStats(prev => {
+        const newStats = [...prev];
+        newStats[0].value = totalBiz.toString();
+        // Since we don't have a reliable user list / revenue endpoint, we'll keep the mock logic for others for now
+        return newStats;
+      });
+    } catch (e) {
+      console.log('Admin dashboard err:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adminName = user?.name || "Admin Lead";
+  const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200";
 
   const renderSidebar = () => (
     <View style={styles.sidebar}>
@@ -115,23 +144,27 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.contentPadding}>
           
           {/* Stats Cards */}
-          <View style={styles.statsContainer}>
-            {adminStats.map(stat => (
-              <View key={stat.id} style={styles.statCard}>
-                <View style={styles.statTop}>
-                  <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
-                    <Ionicons name={stat.icon} size={22} color={stat.color} />
+          {loading ? (
+            <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 20 }} />
+          ) : (
+            <View style={styles.statsContainer}>
+              {adminStats.map(stat => (
+                <View key={stat.id} style={styles.statCard}>
+                  <View style={styles.statTop}>
+                    <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
+                      <Ionicons name={stat.icon} size={22} color={stat.color} />
+                    </View>
+                    <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#ECFDF5' : '#FEF2F2' }]}>
+                      <Ionicons name={stat.isUp ? 'trending-up' : 'alert-circle'} size={12} color={stat.isUp ? '#10B981' : '#EF4444'} />
+                      <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444' }]}>{stat.trend}</Text>
+                    </View>
                   </View>
-                  <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#ECFDF5' : '#FEF2F2' }]}>
-                    <Ionicons name={stat.isUp ? 'trending-up' : 'alert-circle'} size={12} color={stat.isUp ? '#10B981' : '#EF4444'} />
-                    <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444' }]}>{stat.trend}</Text>
-                  </View>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statTitle}>{stat.title}</Text>
                 </View>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statTitle}>{stat.title}</Text>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
 
           {/* Graphical & Activity Split Area */}
           <View style={styles.dashboardSplit}>

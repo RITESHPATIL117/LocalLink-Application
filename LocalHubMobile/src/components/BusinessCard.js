@@ -1,20 +1,41 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import colors from '../styles/colors';
 import Badge from './Badge';
+import AnimatedFadeIn from './AnimatedFadeIn';
 
-const BusinessCard = ({ business, onPress, horizontal }) => {
+const BusinessCard = ({ business, onPress, horizontal, index = 0 }) => {
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if(onPress) onPress();
+  };
+
   return (
-    <TouchableOpacity 
-      style={[styles.card, horizontal && styles.horizontalCard]} 
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
-      <Image 
-        source={{ uri: business.image || 'https://via.placeholder.com/300x150?text=Business+Image' }} 
-        style={horizontal ? styles.horizontalImage : styles.image} 
-      />
+    <AnimatedFadeIn delay={index * 100} duration={400} yOffset={20}>
+      <Pressable 
+        style={({ pressed }) => [
+          styles.card, 
+          horizontal && styles.horizontalCard,
+          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+        ]} 
+        onPress={handlePress}
+      >
+      <View style={{ position: 'relative' }}>
+        <Image 
+          source={{ uri: business.image || 'https://via.placeholder.com/300x150?text=Business+Image' }} 
+          style={horizontal ? styles.horizontalImage : styles.image} 
+        />
+        {/* Glassmorphic overlay for rating if vertical */}
+        {!horizontal && (
+          <BlurView intensity={80} tint="dark" style={styles.glassRating}>
+            <Text style={styles.glassRatingText}>{business.rating}</Text>
+            <Ionicons name="star" size={12} color="#FBBF24" />
+          </BlurView>
+        )}
+      </View>
       <View style={styles.content}>
         
         {horizontal ? (
@@ -30,20 +51,16 @@ const BusinessCard = ({ business, onPress, horizontal }) => {
             </View>
           </>
         ) : (
-          // Detailed layout for Listings Screen
-          <>
-            <View style={styles.headerRow}>
-              <View style={{ flex: 1, marginRight: 8, alignItems: 'flex-start' }}>
-                <Text style={styles.name} numberOfLines={1}>{business.name}</Text>
-                {business.tier && (
-                  <Badge tier={business.tier} style={{ marginBottom: 4 }} />
-                )}
+            // Detailed layout for Listings Screen
+            <>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1, marginRight: 8, alignItems: 'flex-start' }}>
+                  <Text style={styles.name} numberOfLines={1}>{business.name}</Text>
+                  {business.tier && (
+                    <Badge tier={business.tier} style={{ marginBottom: 4 }} />
+                  )}
+                </View>
               </View>
-              <View style={styles.ratingContainer}>
-                <Text style={styles.ratingText}>{business.rating}</Text>
-                <Ionicons name="star" size={12} color="#FFF" />
-              </View>
-            </View>
 
             <View style={styles.infoRow}>
               <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
@@ -64,7 +81,8 @@ const BusinessCard = ({ business, onPress, horizontal }) => {
           </>
         )}
       </View>
-    </TouchableOpacity>
+      </Pressable>
+    </AnimatedFadeIn>
   );
 };
 
@@ -122,20 +140,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginLeft: 4,
   },
-  ratingContainer: {
-    backgroundColor: '#34A853',
+  glassRating: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  ratingText: {
+  glassRatingText: {
     color: '#FFF',
     fontSize: 12,
     fontWeight: 'bold',
-    marginRight: 2,
+    marginRight: 4,
   },
   infoRow: {
     flexDirection: 'row',

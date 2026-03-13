@@ -1,23 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform, ScrollView } from 'react-native';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+import { checkAuthStatus } from './src/store/authSlice';
+
+function AppContent() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuthStatus());
+  }, [dispatch]);
+
+  return (
+    <SafeAreaProvider>
+      <View style={styles.rootContainer}>
+        <View style={styles.appContainer}>
+          <AppNavigator />
+          <Toast />
+        </View>
+      </View>
+    </SafeAreaProvider>
+  );
+}
 
 export default function App() {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <View style={styles.rootContainer}>
-          <View style={styles.appContainer}>
-            <AppNavigator />
-          </View>
-        </View>
-      </SafeAreaProvider>
+      <AppContent />
     </Provider>
   );
 }
+ // Overwriting export default in first chunk, removing it here
 
 const styles = StyleSheet.create({
   rootContainer: {

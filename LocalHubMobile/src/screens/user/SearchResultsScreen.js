@@ -1,47 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Skeleton from '../../components/Skeleton';
 import SearchBar from '../../components/SearchBar';
 import BusinessCard from '../../components/BusinessCard';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import businessService from '../../services/businessService';
 
-// Dummy Data
-const dummyResults = [
-  {
-    id: '201',
-    name: 'Green Leaf Cafe',
-    category: 'Restaurants',
-    rating: '4.6',
-    tier: 'Gold',
-    address: 'Saket, New Delhi',
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
-  },
-  {
-    id: '202',
-    name: 'Apollo Pharmacy',
-    category: 'Pharmacy',
-    rating: '4.2',
-    tier: 'Silver',
-    address: 'Hauz Khas, New Delhi',
-    image: 'https://images.unsplash.com/photo-1585435557343-3b092031a831',
-  },
-  {
-    id: '203',
-    name: 'Urban Clap Salon Services',
-    category: 'Salons',
-    rating: '4.9',
-    tier: 'Diamond',
-    address: 'Home Service, NCR',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035',
-  },
-];
-
+// Dummy Data removed for real API calls
 const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price'];
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const [activeFilter, setActiveFilter] = useState('Top Rated');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const query = route?.params?.query || ''; // Get search query from nav params
+
+  useEffect(() => {
+    fetchResults();
+  }, [query, activeFilter]);
+
+  const fetchResults = async () => {
+    setLoading(true);
+    try {
+      // Mock parameter sending to reflect real-world filtering
+      const params = {
+        q: query,
+        filter: activeFilter.toLowerCase().replace(' ', '_'),
+      };
+      const res = await businessService.getAllBusinesses(params);
+      setResults(res.data || []);
+    } catch (error) {
+      console.log('Error fetching search results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F8F9FA' }]}>
@@ -80,17 +77,40 @@ const SearchResultsScreen = ({ route, navigation }) => {
         />
       </View>
 
-      <FlatList
-        data={dummyResults}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <BusinessCard 
-            business={item} 
-            onPress={() => navigation.navigate('BusinessDetails', { business: item })} 
-          />
-        )}
-      />
+      {loading ? (
+        <View style={{ padding: 16 }}>
+          {[1,2,3,4].map(key => (
+            <View key={key} style={{ marginBottom: 16 }}>
+              <Skeleton width="100%" height={140} radius={12} />
+              <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Skeleton width="60%" height={20} radius={4} />
+                <Skeleton width={40} height={20} radius={4} />
+              </View>
+              <View style={{ marginTop: 8 }}>
+                <Skeleton width="80%" height={16} radius={4} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={results}
+          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
+          contentContainerStyle={styles.listContainer}
+          renderItem={({ item, index }) => (
+            <BusinessCard 
+              business={item} 
+              index={index}
+              onPress={() => navigation.navigate('BusinessDetails', { business: item })} 
+            />
+          )}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 40, color: '#999' }}>
+              No results found for "{query}".
+            </Text>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };

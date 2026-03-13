@@ -1,30 +1,42 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
+import React from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import Toast from 'react-native-toast-message';
+
+import { loginUser } from '../../store/authSlice';
 import Button from '../../components/Button';
 import InputField from '../../components/InputField';
 import globalStyles from '../../styles/globalStyles';
-import { ROLES } from '../../utils/constants';
+import colors from '../../styles/colors';
 
-const LoginScreen = () => {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const LoginSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(6, 'Password too short').required('Password is required'),
+});
 
-  // Dummy login function simulating an API call
-  const handleLogin = (role) => {
-    // In a real app we'd just call login(email, password)
-    // Here we're injecting a fake user with a specific role for demonstration
-    login(email, password).catch(() => {
-      // Since there's no real backend, we mock a successful state dispatch
-      const { store } = require('../../store');
-      import('../../store/authSlice').then(({ setCredentials }) => {
-        store.dispatch(setCredentials({
-          user: { id: '1', name: 'Test User', email: 'test@localhub.com', role },
-          token: 'fake-jwt-token'
-        }));
+const LoginScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
+
+  const handleLogin = (values) => {
+    dispatch(loginUser(values))
+      .unwrap()
+      .then(() => {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Logged in successfully!',
+        });
+      })
+      .catch((err) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: err || 'Something went wrong',
+        });
       });
-    });
   };
 
   return (
@@ -32,13 +44,55 @@ const LoginScreen = () => {
       <Text style={globalStyles.title}>LocalHub</Text>
       <Text style={globalStyles.subtitle}>Sign in to continue</Text>
 
-      <InputField label="Email" value={email} onChangeText={setEmail} placeholder="Enter your email" />
-      <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Enter your password" secureTextEntry />
+      <Formik
+        initialValues={{ email: '', password: '' }}
+        validationSchema={LoginSchema}
+        onSubmit={handleLogin}
+      >
+        {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+          <View>
+            <InputField 
+              label="Email" 
+              value={values.email} 
+              onChangeText={handleChange('email')} 
+              onBlur={handleBlur('email')}
+              placeholder="Enter your email" 
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={touched.email && errors.email}
+            />
+            {touched.email && errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
 
-      <Text style={styles.demoText}>Demo Login (Select Role):</Text>
-      <Button title="Login as Customer" onPress={() => handleLogin(ROLES.USER)} />
-      <Button title="Login as Provider" onPress={() => handleLogin(ROLES.PROVIDER)} variant="secondary" />
-      <Button title="Login as Admin" onPress={() => handleLogin(ROLES.ADMIN)} variant="secondary" />
+            <InputField 
+              label="Password" 
+              value={values.password} 
+              onChangeText={handleChange('password')} 
+              onBlur={handleBlur('password')}
+              placeholder="Enter your password" 
+              secureTextEntry 
+              error={touched.password && errors.password}
+            />
+            {touched.password && errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
+
+            <Button 
+              title={loading ? "Logging in..." : "Login"} 
+              onPress={handleSubmit} 
+              disabled={loading}
+            />
+            
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>Don't have an account? </Text>
+              <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
+                Sign Up
+              </Text>
+            </View>
+          </View>
+        )}
+      </Formik>
     </View>
   );
 };
@@ -48,10 +102,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-  demoText: {
-    marginTop: 24,
+  errorText: {
+    color: 'red',
+    fontSize: 12,
     marginBottom: 8,
-    textAlign: 'center',
+    marginTop: -8,
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  registerText: {
+    color: '#666',
+  },
+  registerLink: {
+    color: colors.primary,
     fontWeight: 'bold',
   }
 });

@@ -9,6 +9,7 @@ import ProviderNavigator from './ProviderNavigator';
 import { ROLES } from '../utils/constants';
 
 import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,7 +30,10 @@ const AppNavigator = () => {
             
             {/* Make Login accessible if not authenticated */}
             {!isAuthenticated && (
-              <Stack.Screen name="Login" component={LoginScreen} />
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+              </>
             )}
           </>
         )}
