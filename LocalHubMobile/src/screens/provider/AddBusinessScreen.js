@@ -6,96 +6,144 @@ import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 
 const packages = [
-  { id: 'free', name: 'Free', price: '₹0 / mo', color: '#6B7280' },
-  { id: 'silver', name: 'Silver', price: '₹499 / mo', color: '#9CA3AF' },
-  { id: 'gold', name: 'Gold', price: '₹999 / mo', color: '#D97706' },
-  { id: 'diamond', name: 'Diamond', price: '₹1499 / mo', color: colors.primary },
+  { id: 'free', name: 'Free', price: '$0/mo', color: '#6B7280' },
+  { id: 'silver', name: 'Silver', price: '$29/mo', color: '#9CA3AF' },
+  { id: 'gold', name: 'Gold', price: '$99/mo', color: '#F59E0B' },
+  { id: 'diamond', name: 'Diamond', price: '$199/mo', color: '#3B82F6' },
 ];
 
 const AddBusinessScreen = ({ navigation }) => {
+  const [formData, setFormData] = useState({
+    businessName: '',
+    category: '',
+    subCategory: '',
+    location: '',
+    phone: '',
+  });
+
   const [selectedPackage, setSelectedPackage] = useState('free');
+  const [images, setImages] = useState([]); // This would hold image URIs in a real implementation
+
+  const handleCreateListing = () => {
+    // Submit logic here
+    alert('Listing Created Successfully!');
+    navigation.goBack();
+  };
 
   return (
-    <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F8F9FA' }]}>
+    <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F9FAFB' }]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Business Listing</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Add New Listing</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollArea}>
         
-        {/* Photo Upload */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Business Photo</Text>
-          <TouchableOpacity style={styles.photoUploadBox}>
-            <Ionicons name="image-outline" size={40} color={colors.textSecondary} />
-            <Text style={styles.uploadText}>Tap to upload photo</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Basic Details Form */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Business Details</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Business Name *</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="e.g. SuperFast Plumbing"
+              value={formData.businessName}
+              onChangeText={(text) => setFormData({...formData, businessName: text})}
+            />
+          </View>
 
-        {/* Basic Info */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Business Name</Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="e.g. SuperFast Plumbing" 
-            placeholderTextColor={colors.textSecondary}
-          />
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+              <Text style={styles.label}>Category *</Text>
+              <View style={styles.dropdown}>
+                <Text style={styles.dropdownText}>{formData.category || 'Select Category'}</Text>
+                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+              </View>
+            </View>
+            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+              <Text style={styles.label}>Sub Category *</Text>
+              <View style={styles.dropdown}>
+                <Text style={styles.dropdownText}>{formData.subCategory || 'Select Subcategory'}</Text>
+                <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+              </View>
+            </View>
+          </View>
 
-          <Text style={styles.label}>Category</Text>
-          <TouchableOpacity style={styles.dropdown}>
-            <Text style={{ color: colors.textSecondary }}>Select a Category</Text>
-            <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Location / Address *</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="Enter full address"
+              value={formData.location}
+              onChangeText={(text) => setFormData({...formData, location: text})}
+            />
+          </View>
 
-          <Text style={styles.label}>Address</Text>
-          <TextInput 
-            style={[styles.input, styles.textArea]} 
-            placeholder="Complete business address" 
-            placeholderTextColor={colors.textSecondary}
-            multiline
-            numberOfLines={3}
-          />
-        </View>
-
-        {/* Package Selection */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Select Package</Text>
-          <View style={styles.packageGrid}>
-            {packages.map(pkg => {
-              const isActive = selectedPackage === pkg.id;
-              return (
-                <TouchableOpacity 
-                  key={pkg.id} 
-                  style={[
-                    styles.packageCard, 
-                    isActive && styles.activePackageCard,
-                    isActive && { borderColor: pkg.color }
-                  ]}
-                  onPress={() => setSelectedPackage(pkg.id)}
-                >
-                  <View style={[styles.radioOuter, isActive && { borderColor: pkg.color }]}>
-                    {isActive && <View style={[styles.radioInner, { backgroundColor: pkg.color }]} />}
-                  </View>
-                  <View style={styles.packageInfo}>
-                    <Text style={[styles.packageName, isActive && { color: pkg.color }]}>{pkg.name}</Text>
-                    <Text style={styles.packagePrice}>{pkg.price}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone Number *</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="e.g. +91 9876543210"
+              keyboardType="phone-pad"
+              value={formData.phone}
+              onChangeText={(text) => setFormData({...formData, phone: text})}
+            />
           </View>
         </View>
 
-        {/* Submit */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.submitBtn}>
-            <Text style={styles.submitText}>Submit Listing</Text>
+        {/* Image Upload */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Upload Photos</Text>
+          <Text style={styles.helperText}>Add at least 1 image to make your listing stand out.</Text>
+          
+          <TouchableOpacity style={styles.uploadBox}>
+            <Ionicons name="cloud-upload-outline" size={40} color={colors.primary} />
+            <Text style={styles.uploadText}>Tap to enhance images from gallery</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Package Selection */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Select Package</Text>
+          <Text style={styles.helperText}>Choose a plan that fits your business needs.</Text>
+          
+          <View style={styles.packagesContainer}>
+            {packages.map((pkg) => (
+              <TouchableOpacity
+                key={pkg.id}
+                style={[
+                  styles.packageCard,
+                  selectedPackage === pkg.id && styles.activePackageCard,
+                  selectedPackage === pkg.id && { borderColor: pkg.color }
+                ]}
+                onPress={() => setSelectedPackage(pkg.id)}
+              >
+                <View style={[styles.packageRibbon, { backgroundColor: pkg.color }]} />
+                <View style={styles.packageContent}>
+                  <Text style={[styles.packageName, selectedPackage === pkg.id && { color: pkg.color }]}>
+                    {pkg.name}
+                  </Text>
+                  <Text style={styles.packagePrice}>{pkg.price}</Text>
+                  
+                  {selectedPackage === pkg.id && (
+                    <View style={styles.checkmark}>
+                      <Ionicons name="checkmark-circle" size={24} color={pkg.color} />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity style={globalStyles.primaryButton} onPress={handleCreateListing}>
+          <Text style={globalStyles.primaryButtonText}>Create Listing</Text>
+        </TouchableOpacity>
 
       </ScrollView>
     </SafeAreaView>
@@ -107,134 +155,146 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#F3F4F6',
+  },
+  backBtn: {
+    padding: 8,
+    marginLeft: -8,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.text,
   },
-  backButton: {
-    padding: 4,
-  },
   scrollArea: {
     padding: 20,
     paddingBottom: 40,
   },
-  section: {
-    marginBottom: 24,
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.textSecondary,
     marginBottom: 8,
   },
-  photoUploadBox: {
-    height: 140,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadText: {
-    marginTop: 8,
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
   input: {
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 15,
     color: colors.text,
-    marginBottom: 16,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+    backgroundColor: '#F9FAFB',
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 16,
+    backgroundColor: '#F9FAFB',
   },
-  packageGrid: {
+  dropdownText: {
+    fontSize: 15,
+    color: '#9CA3AF',
+  },
+  helperText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  uploadBox: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  uploadText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  packagesContainer: {
     flexDirection: 'column',
   },
   packageCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: 16,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
     marginBottom: 12,
+    overflow: 'hidden',
+    backgroundColor: '#FFF',
   },
   activePackageCard: {
-    backgroundColor: '#F3F9FF',
     borderWidth: 2,
+    backgroundColor: '#F9FAFB',
   },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  packageRibbon: {
+    width: 6,
+    height: '100%',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    zIndex: 1,
   },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  packageInfo: {
-    flex: 1,
+  packageContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
+    paddingLeft: 20,
   },
   packageName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.text,
+    flex: 1,
   },
   packagePrice: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  submitBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitText: {
-    color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginRight: 12,
   },
+  checkmark: {
+    position: 'absolute',
+    right: 16,
+  }
 });
 
 export default AddBusinessScreen;

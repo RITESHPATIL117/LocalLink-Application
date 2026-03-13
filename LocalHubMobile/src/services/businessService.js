@@ -4,6 +4,9 @@ const businessService = {
   getAllBusinesses: async (params) => {
     return api.get('/businesses', { params });
   },
+  getNearbyBusinesses: async (params) => {
+    return api.get('/businesses/nearby', { params });
+  },
   getBusinessById: async (id) => {
     return api.get(`/businesses/${id}`);
   },

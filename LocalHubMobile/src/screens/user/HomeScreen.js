@@ -213,7 +213,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Top Categories Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Top Categories</Text>
-          <TouchableOpacity onPress={() => navigation?.navigate('SearchResults')}>
+          <TouchableOpacity onPress={() => navigation?.navigate('CategoriesTab')}>
             <Text style={styles.seeAll}>View All</Text>
           </TouchableOpacity>
         </View>

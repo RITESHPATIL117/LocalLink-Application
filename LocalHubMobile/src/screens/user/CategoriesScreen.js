@@ -143,7 +143,7 @@ const CategoriesScreen = ({ navigation }) => {
                 <View key={subItem.id} style={styles.gridItem}>
                   <CategoryItem
                     item={subItem}
-                    onPress={() => navigation.navigate('SearchResults', { query: subItem.name })}
+                    onPress={() => navigation.navigate('Subcategory', { subcategory: subItem.name })}
                   />
                 </View>
               ))}

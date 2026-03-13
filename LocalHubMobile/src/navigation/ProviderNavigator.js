@@ -1,15 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 
 // Import Screens (to be created)
-import DashboardScreen from '../screens/serviceProvider/DashboardScreen';
-import MyListingsScreen from '../screens/serviceProvider/MyListingsScreen';
-import LeadsScreen from '../screens/serviceProvider/LeadsScreen';
-import ReviewsScreen from '../screens/serviceProvider/ReviewsScreen';
-import AnalyticsScreen from '../screens/serviceProvider/AnalyticsScreen';
-import AddBusinessScreen from '../screens/serviceProvider/AddBusinessScreen';
+import DashboardScreen from '../screens/provider/DashboardScreen';
+import MyListingsScreen from '../screens/provider/MyListingsScreen';
+import LeadsScreen from '../screens/provider/LeadsScreen';
+import ReviewsScreen from '../screens/provider/ReviewsScreen';
+import AnalyticsScreen from '../screens/provider/AnalyticsScreen';
+import AddBusinessScreen from '../screens/provider/AddBusinessScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -24,11 +25,26 @@ const DashboardStack = () => (
 const ProviderNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-      }}
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'DashboardTab') {
+            iconName = focused ? 'grid' : 'grid-outline';
+          } else if (route.name === 'MyListingsTab') {
+            iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'LeadsTab') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'MoreTab') {
+            iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
     >
       <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
       <Tab.Screen name="MyListingsTab" component={MyListingsScreen} options={{ tabBarLabel: 'My Listings' }} />

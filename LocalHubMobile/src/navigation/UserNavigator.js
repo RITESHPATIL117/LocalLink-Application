@@ -12,6 +12,7 @@ import CategoriesScreen from '../screens/user/CategoriesScreen';
 import FavoritesScreen from '../screens/user/FavoritesScreen';
 import ProfileScreen from '../screens/user/ProfileScreen';
 import PricingScreen from '../screens/user/PricingScreen';
+import SubcategoryScreen from '../screens/user/SubcategoryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -21,7 +22,17 @@ const HomeStack = () => (
     <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
     <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Subcategory" component={SubcategoryScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+const CategoriesStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Categories" component={CategoriesScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Subcategory" component={SubcategoryScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -43,7 +54,7 @@ const UserNavigator = () => {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="CategoriesTab" component={CategoriesScreen} options={{ tabBarLabel: 'Categories' }} />
+      <Tab.Screen name="CategoriesTab" component={CategoriesStack} options={{ tabBarLabel: 'Categories' }} />
       <Tab.Screen name="FavoritesTab" component={FavoritesScreen} options={{ tabBarLabel: 'Favorites' }} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
