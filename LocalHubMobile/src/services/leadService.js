@@ -2,10 +2,20 @@ import api from './api';
 
 const leadService = {
   sendLead: async (data) => {
-    return api.post('/leads', data);
+    try {
+      const response = await api.post('/leads', data);
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
   },
   getLeadsByBusiness: async (businessId) => {
-    return api.get(`/leads/business/${businessId}`);
+    try {
+      const response = await api.get(`/leads/business/${businessId}`);
+      return { data: response || [] };
+    } catch (e) {
+      return { data: [] };
+    }
   },
 };
 

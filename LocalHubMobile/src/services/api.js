@@ -29,9 +29,12 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor - unwraps response.data for easier consumption
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // If the backend returns data directly, this will be that data
+    return response.data;
+  },
   (error) => {
     // Handle global errors, token expiration, etc.
     return Promise.reject(error);

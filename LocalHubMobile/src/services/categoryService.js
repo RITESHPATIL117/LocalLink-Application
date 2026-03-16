@@ -155,12 +155,13 @@ const categoryService = {
   getCategories: async () => {
     try {
       const response = await api.get('/categories');
-      if (response && response.data && response.data.length > 0) {
-        return response;
+      // If we got a response (already unwrapped by interceptor), return it in the expected format
+      if (response && (Array.isArray(response) ? response.length > 0 : response)) {
+        return { data: response };
       }
       return { data: mockCategories };
     } catch (error) {
-      console.log('API failed, returning mock categories');
+      console.log('API failed, returning mock categories:', error.message || error);
       return { data: mockCategories };
     }
   },

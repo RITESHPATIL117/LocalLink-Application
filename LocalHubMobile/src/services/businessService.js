@@ -55,25 +55,27 @@ const businessService = {
   getAllBusinesses: async (params) => {
     try {
       const response = await api.get('/businesses', { params });
-      if (response && response.data && response.data.length > 0) {
-        return response;
+      if (response && (Array.isArray(response) ? response.length > 0 : response)) {
+        return { data: response };
       }
       return { data: mockBusinesses };
     } catch (error) {
-      console.log('API failed, returning mock businesses');
+      console.log('API failed, returning mock businesses:', error.message || error);
       return { data: mockBusinesses };
     }
   },
   getNearbyBusinesses: async (params) => {
     try {
-      return await api.get('/businesses/nearby', { params });
+      const response = await api.get('/businesses/nearby', { params });
+      return { data: response || mockBusinesses };
     } catch (e) {
       return { data: mockBusinesses };
     }
   },
   getBusinessById: async (id) => {
     try {
-      return await api.get(`/businesses/${id}`);
+      const response = await api.get(`/businesses/${id}`);
+      return { data: response || mockBusinesses.find(b => b.id === id) };
     } catch (e) {
       return { data: mockBusinesses.find(b => b.id === id) };
     }

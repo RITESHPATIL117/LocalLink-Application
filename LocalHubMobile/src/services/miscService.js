@@ -2,7 +2,12 @@ import api from './api';
 
 const miscService = {
   getNewRequest: async () => {
-    return api.get('/new-request');
+    try {
+      const response = await api.get('/new-request');
+      return { data: response };
+    } catch (e) {
+      return { data: null };
+    }
   },
 };
 

@@ -2,7 +2,12 @@ import api from './api';
 
 const userService = {
   getProfile: async () => {
-    return api.get('/users/profile');
+    try {
+      const response = await api.get('/users/profile');
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
   },
 };
 

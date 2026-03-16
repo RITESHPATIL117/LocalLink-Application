@@ -2,16 +2,36 @@ import api from './api';
 
 const servicesService = {
   addService: async (data) => {
-    return api.post('/services', data);
+    try {
+      const response = await api.post('/services', data);
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
   },
   updateService: async (id, data) => {
-    return api.put(`/services/${id}`, data);
+    try {
+      const response = await api.put(`/services/${id}`, data);
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
   },
   deleteService: async (id) => {
-    return api.delete(`/services/${id}`);
+    try {
+      const response = await api.delete(`/services/${id}`);
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
   },
   getServicesByBusiness: async (businessId) => {
-    return api.get(`/services/business/${businessId}`);
+    try {
+      const response = await api.get(`/services/business/${businessId}`);
+      return { data: response || [] };
+    } catch (e) {
+      return { data: [] };
+    }
   },
 };
 
