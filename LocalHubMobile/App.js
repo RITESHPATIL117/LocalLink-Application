@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   appContainer: {
     flex: 1,
     width: '100%',
-    maxWidth: Platform.OS === 'web' ? 480 : '100%', // Mobile width on Web/Laptop, full on device
+    maxWidth: Platform.OS === 'web' ? 800 : '100%', // Increased from 480 for better web view
     backgroundColor: '#FFFFFF',
     // Optional shadow for the web container
     ...Platform.select({

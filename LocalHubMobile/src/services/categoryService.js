@@ -1,4 +1,5 @@
 import api from './api';
+import logger from '../utils/logger';
 
 const mockCategories = [
   {
@@ -154,14 +155,20 @@ const mockCategories = [
 const categoryService = {
   getCategories: async () => {
     try {
+      logger.info('Fetching categories...');
       const response = await api.get('/categories');
       // If we got a response (already unwrapped by interceptor), return it in the expected format
       if (response && (Array.isArray(response) ? response.length > 0 : response)) {
+        logger.info(`Successfully fetched ${Array.isArray(response) ? response.length : 1} categories`);
         return { data: response };
       }
+      logger.warn('API returned empty categories, using mock data');
       return { data: mockCategories };
     } catch (error) {
-      console.log('API failed, returning mock categories:', error.message || error);
+      logger.error('API failed while fetching categories, returning mock data', {
+        message: error.message,
+        error
+      });
       return { data: mockCategories };
     }
   },

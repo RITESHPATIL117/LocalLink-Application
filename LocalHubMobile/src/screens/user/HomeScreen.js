@@ -26,7 +26,7 @@ const bannerImages = [
 ];
 
 const SLIDER_HEIGHT = height * 0.40; // 40% of screen height
-const MAX_APP_WIDTH = 480;
+const MAX_APP_WIDTH = 800;
 
 const HomeScreen = ({ navigation }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);

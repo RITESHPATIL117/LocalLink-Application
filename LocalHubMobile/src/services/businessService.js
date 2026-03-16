@@ -1,4 +1,5 @@
 import api from './api';
+import logger from '../utils/logger';
 
 const mockBusinesses = [
   {
@@ -54,39 +55,49 @@ const mockBusinesses = [
 const businessService = {
   getAllBusinesses: async (params) => {
     try {
+      logger.info('Fetching all businesses...', params);
       const response = await api.get('/businesses', { params });
       if (response && (Array.isArray(response) ? response.length > 0 : response)) {
+        logger.info(`Successfully fetched ${Array.isArray(response) ? response.length : 1} businesses`);
         return { data: response };
       }
+      logger.warn('No businesses returned from API, using mock data');
       return { data: mockBusinesses };
     } catch (error) {
-      console.log('API failed, returning mock businesses:', error.message || error);
+      logger.error('API failed while fetching businesses, returning mock data', error.message);
       return { data: mockBusinesses };
     }
   },
   getNearbyBusinesses: async (params) => {
     try {
+      logger.info('Fetching nearby businesses...', params);
       const response = await api.get('/businesses/nearby', { params });
       return { data: response || mockBusinesses };
     } catch (e) {
+      logger.error('Failed to fetch nearby businesses', e.message);
       return { data: mockBusinesses };
     }
   },
   getBusinessById: async (id) => {
     try {
+      logger.debug(`Fetching business details for ID: ${id}`);
       const response = await api.get(`/businesses/${id}`);
       return { data: response || mockBusinesses.find(b => b.id === id) };
     } catch (e) {
+      logger.error(`Failed to fetch business ${id}`, e.message);
       return { data: mockBusinesses.find(b => b.id === id) };
     }
   },
   addBusiness: async (data) => {
+    logger.info('Adding new business', { name: data.name });
     return api.post('/businesses', data);
   },
   updateBusiness: async (id, data) => {
+    logger.info(`Updating business ${id}`, { name: data.name });
     return api.put(`/businesses/${id}`, data);
   },
   deleteBusiness: async (id) => {
+    logger.warn(`Deleting business ${id}`);
     return api.delete(`/businesses/${id}`);
   },
 };
