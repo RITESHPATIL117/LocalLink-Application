@@ -36,6 +36,20 @@ const CategoriesStack = () => (
   </Stack.Navigator>
 );
 
+const FavoritesStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Favorites" component={FavoritesScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+const ProfileStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+    {/* Add other profile-related stacks here if needed */}
+  </Stack.Navigator>
+);
+
 const UserNavigator = () => {
   return (
     <Tab.Navigator
@@ -55,8 +69,8 @@ const UserNavigator = () => {
     >
       <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="CategoriesTab" component={CategoriesStack} options={{ tabBarLabel: 'Categories' }} />
-      <Tab.Screen name="FavoritesTab" component={FavoritesScreen} options={{ tabBarLabel: 'Favorites' }} />
-      <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen name="FavoritesTab" component={FavoritesStack} options={{ tabBarLabel: 'Favorites' }} />
+      <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 };
