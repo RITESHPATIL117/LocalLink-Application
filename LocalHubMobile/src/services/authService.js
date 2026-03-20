@@ -37,11 +37,31 @@ const authService = {
   getProfile: async () => {
     try {
       logger.debug('Fetching user profile...');
-      const response = await api.get('/auth/profile');
+      const response = await api.get('/users/profile');
       return { data: response || mockUser.user };
     } catch (e) {
       logger.error('Failed to fetch profile', e.message);
       return { data: mockUser.user };
+    }
+  },
+  ownerLogin: async (email, password) => {
+    try {
+      logger.info(`Attempting owner login for: ${email}`);
+      const response = await api.post('/business-owners/login', { email, password });
+      return { data: response || mockUser };
+    } catch (e) {
+      logger.error('Owner login failed', e.message);
+      return { data: mockUser };
+    }
+  },
+  ownerRegister: async (userData) => {
+    try {
+      logger.info(`Attempting owner registration for: ${userData.email}`);
+      const response = await api.post('/business-owners/register', userData);
+      return { data: response || mockUser };
+    } catch (e) {
+      logger.error('Owner registration failed', e.message);
+      return { data: mockUser };
     }
   },
 };

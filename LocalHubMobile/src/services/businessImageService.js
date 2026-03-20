@@ -15,7 +15,7 @@ const businessImageService = {
   },
   getImages: async (businessId) => {
     try {
-      const response = await api.get(`/business-images/business/${businessId}`);
+      const response = await api.get(`/business-images/${businessId}`);
       return { data: response || [] };
     } catch (e) {
       return { data: [] };

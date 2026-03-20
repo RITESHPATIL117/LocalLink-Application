@@ -9,9 +9,9 @@ const dealPurchaseService = {
       return { data: null, error: e.message };
     }
   },
-  getDealPurchasesByUser: async () => {
+  getDealPurchasesByUser: async (userId) => {
     try {
-      const response = await api.get('/deal-purchases/user');
+      const response = await api.get(`/deal-purchases/user/${userId}`);
       return { data: response || [] };
     } catch (e) {
       return { data: [] };

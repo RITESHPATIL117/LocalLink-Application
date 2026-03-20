@@ -17,9 +17,9 @@ const favoriteService = {
       return { data: { success: true }};
     }
   },
-  getFavoritesByUser: async () => {
+  getFavoritesByUser: async (userId) => {
     try {
-      const response = await api.get('/favorites/user');
+      const response = await api.get(`/favorites/${userId}`);
       return { data: response || [] };
     } catch (e) {
       return { data: [] };

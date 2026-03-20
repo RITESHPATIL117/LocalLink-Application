@@ -29,7 +29,7 @@ const businessHourService = {
   },
   getBusinessHours: async (businessId) => {
     try {
-      const response = await api.get(`/business-hours/business/${businessId}`);
+      const response = await api.get(`/business-hours/${businessId}`);
       return { data: response || mockHours };
     } catch (e) {
       return { data: mockHours };

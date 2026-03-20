@@ -100,6 +100,16 @@ const businessService = {
     logger.warn(`Deleting business ${id}`);
     return api.delete(`/businesses/${id}`);
   },
+  getOwnerBusinesses: async () => {
+    try {
+      logger.info('Fetching business owner listings...');
+      const response = await api.get('/business-owners/businesses');
+      return { data: response || [] };
+    } catch (e) {
+      logger.error('Failed to fetch owner businesses', e.message);
+      return { data: [] };
+    }
+  },
 };
 
 export default businessService;
