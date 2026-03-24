@@ -25,8 +25,10 @@ const BusinessSchema = Yup.object().shape({
   phone: Yup.string().matches(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').required('Phone number is required'),
 });
 
-const AddBusinessScreen = ({ navigation }) => {
-  const [selectedPackage, setSelectedPackage] = useState('free');
+const AddBusinessScreen = ({ navigation, route }) => {
+  const { business = null } = route.params || {};
+  const isEdit = !!business;
+  const [selectedPackage, setSelectedPackage] = useState(business?.package || 'free');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateListing = async (values) => {
@@ -37,20 +39,23 @@ const AddBusinessScreen = ({ navigation }) => {
         package: selectedPackage,
       };
       
-      // In a real app we wait for this API response:
-      // await businessService.addBusiness(payload);
+      if (isEdit) {
+        // await businessService.updateBusiness(business.id, payload);
+      } else {
+        // await businessService.addBusiness(payload);
+      }
       
       Toast.show({
         type: 'success',
-        text1: 'Listing Created',
-        text2: 'Your business listing was successfully created!',
+        text1: isEdit ? 'Listing Updated' : 'Listing Created',
+        text2: isEdit ? 'Your business listing was successfully updated!' : 'Your business listing was successfully created!',
       });
       navigation.goBack();
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: error.message || 'Failed to create listing',
+        text2: error.message || 'Action failed',
       });
     } finally {
       setIsSubmitting(false);
@@ -63,14 +68,21 @@ const AddBusinessScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Listing</Text>
+        <Text style={styles.headerTitle}>{isEdit ? 'Edit Listing' : 'Add New Listing'}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <Formik
-        initialValues={{ businessName: '', category: '', subCategory: '', location: '', phone: '' }}
+        initialValues={{ 
+          businessName: business?.name || '', 
+          category: business?.category || '', 
+          subCategory: business?.subCategory || '', 
+          location: business?.location || '', 
+          phone: business?.phone || '' 
+        }}
         validationSchema={BusinessSchema}
         onSubmit={handleCreateListing}
+        enableReinitialize
       >
         {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollArea}>

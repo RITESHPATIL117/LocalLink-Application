@@ -13,6 +13,7 @@ import FavoritesScreen from '../screens/user/FavoritesScreen';
 import ProfileScreen from '../screens/user/ProfileScreen';
 import PricingScreen from '../screens/user/PricingScreen';
 import SubcategoryScreen from '../screens/user/SubcategoryScreen';
+import RequestsScreen from '../screens/user/RequestsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,12 @@ const HomeStack = () => (
     <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Subcategory" component={SubcategoryScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
+const RequestsStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Requests" component={RequestsScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
@@ -61,6 +68,7 @@ const UserNavigator = () => {
           let iconName;
           if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'CategoriesTab') iconName = focused ? 'grid' : 'grid-outline';
+          else if (route.name === 'RequestsTab') iconName = focused ? 'document-text' : 'document-text-outline';
           else if (route.name === 'FavoritesTab') iconName = focused ? 'heart' : 'heart-outline';
           else if (route.name === 'ProfileTab') iconName = focused ? 'person' : 'person-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -69,6 +77,7 @@ const UserNavigator = () => {
     >
       <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="CategoriesTab" component={CategoriesStack} options={{ tabBarLabel: 'Categories' }} />
+      <Tab.Screen name="RequestsTab" component={RequestsStack} options={{ tabBarLabel: 'Requests' }} />
       <Tab.Screen name="FavoritesTab" component={FavoritesStack} options={{ tabBarLabel: 'Favorites' }} />
       <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>

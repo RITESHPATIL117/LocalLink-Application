@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { checkAuthStatus } from './src/store/authSlice';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 function AppContent() {
   const dispatch = useDispatch();
 
@@ -15,14 +17,16 @@ function AppContent() {
   }, [dispatch]);
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.rootContainer}>
-        <View style={styles.appContainer}>
-          <AppNavigator />
-          <Toast />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <View style={styles.rootContainer}>
+          <View style={styles.appContainer}>
+            <AppNavigator />
+            <Toast />
+          </View>
         </View>
-      </View>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -33,26 +37,24 @@ export default function App() {
     </Provider>
   );
 }
- // Overwriting export default in first chunk, removing it here
 
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: '#E5E7EB', // Grey background for the "side distance"
-    alignItems: 'center',       // Center the app container
+    backgroundColor: '#F3F4F6', // Lighter grey for better contrast
+    alignItems: 'center',       
   },
   appContainer: {
     flex: 1,
     width: '100%',
-    maxWidth: Platform.OS === 'web' ? 800 : '100%', // Increased from 480 for better web view
+    maxWidth: Platform.OS === 'web' ? 1280 : '100%', // Increased to 1280 for a full web experience
     backgroundColor: '#FFFFFF',
-    // Optional shadow for the web container
     ...Platform.select({
       web: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
+        shadowOpacity: 0.05,
+        shadowRadius: 15,
       },
     }),
   },

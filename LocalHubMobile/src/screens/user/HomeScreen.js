@@ -13,6 +13,7 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import Skeleton from '../../components/Skeleton';
 import categoryService from '../../services/categoryService';
 import businessService from '../../services/businessService';
+import PremiumLoader from '../../components/PremiumLoader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,8 +55,8 @@ const HomeScreen = ({ navigation }) => {
       const allCats = categoriesRes.data || [];
       // If none from API, fallback to empty array or we can keep old mock if we had it.
       // For real world, we want to reflect the DB.
-      setMainCategories(allCats.slice(0, 6)); 
-      setTopCategories(allCats.slice(6, 12));
+      setMainCategories(allCats.slice(0, 4)); 
+      setTopCategories(allCats.slice(0, 6));
       
       setFeaturedBusinesses(businessesRes.data || []);
     } catch (error) {
@@ -109,8 +110,15 @@ const HomeScreen = ({ navigation }) => {
         }
       >
         
-        {/* Web-like Header */}
+        {/* Responsive Header */}
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.menuBtn} 
+            onPress={() => navigation.openDrawer()}
+          >
+            <Ionicons name="menu" size={28} color={colors.primary} />
+          </TouchableOpacity>
+
           <View style={styles.logoContainer}>
             <View style={styles.logoIconBg}>
               <Ionicons name="pie-chart" size={16} color="#FFF" />
@@ -118,27 +126,29 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.logoText}>Local<Text style={{color: '#F97316'}}>Hub</Text></Text>
           </View>
           
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navLinks}>
-            <TouchableOpacity onPress={() => navigation.navigate('Home')}><Text style={[styles.navLink, styles.activeNavLink]}>Home</Text></TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('CategoriesTab')}><Text style={styles.navLink}>Categories</Text></TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('SearchResults', { query: '' })}><Text style={styles.navLink}>Businesses</Text></TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Pricing')}><Text style={styles.navLink}>Pricing</Text></TouchableOpacity>
-            
-            {!isAuthenticated ? (
-              <>
-                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                  <Text style={styles.navLink}>Login</Text>
-                </TouchableOpacity>
+          {width > 768 ? (
+            <View style={styles.webNavLinks}>
+              <TouchableOpacity onPress={() => navigation.navigate('Home')}><Text style={[styles.navLink, styles.activeNavLink]}>Home</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('CategoriesTab')}><Text style={styles.navLink}>Categories</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('SearchResults', { query: '' })}><Text style={styles.navLink}>Businesses</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Pricing')}><Text style={styles.navLink}>Pricing</Text></TouchableOpacity>
+              
+              {!isAuthenticated ? (
                 <TouchableOpacity style={styles.signUpBtn} onPress={() => navigation.navigate('Login')}>
-                  <Text style={styles.signUpText}>Sign Up</Text>
+                  <Text style={styles.signUpText}>Login / Sign Up</Text>
                 </TouchableOpacity>
-              </>
-            ) : (
-              <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
-                <Text style={styles.navLink}>Hi, {user?.name.split(' ')[0]}</Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
+              ) : (
+                <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')} style={styles.profileBtn}>
+                  <Image source={{ uri: user?.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg' }} style={styles.headerAvatar} />
+                  <Text style={styles.navLink}>{user?.name.split(' ')[0]}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
+              <Ionicons name="person-circle-outline" size={32} color={colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Hero Banner Area with Image Slider */}
@@ -192,27 +202,31 @@ const HomeScreen = ({ navigation }) => {
           <SearchBar onSearchPress={() => navigation?.navigate('SearchResults')} />
         </AnimatedFadeIn>
 
+        {/* Special Offers Section */}
+        <AnimatedFadeIn delay={300} duration={500}>
+          <View style={styles.promoContainer}>
+            <LinearGradient
+              colors={[colors.primary, '#8B5CF6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.promoBanner}
+            >
+              <View style={styles.promoContent}>
+                <Text style={styles.promoTitle}>Summer Special! 🚀</Text>
+                <Text style={styles.promoText}>Get 20% off all AC Repair and Plumbing services this week.</Text>
+                <TouchableOpacity style={styles.promoButton}>
+                  <Text style={styles.promoButtonText}>Claim Now</Text>
+                </TouchableOpacity>
+              </View>
+              <Ionicons name="gift" size={60} color="rgba(255,255,255,0.2)" style={styles.promoIconBg} />
+            </LinearGradient>
+          </View>
+        </AnimatedFadeIn>
+
         {/* Main Categories Section */}
         {loading ? (
-          <View style={{ paddingHorizontal: 16, marginTop: 25 }}>
-            {/* Main Cats Skeleton */}
-            <View style={{ flexDirection: 'row', marginBottom: 30 }}>
-              <Skeleton width={80} height={100} radius={16} />
-              <View style={{ width: 12 }} />
-              <Skeleton width={80} height={100} radius={16} />
-              <View style={{ width: 12 }} />
-              <Skeleton width={80} height={100} radius={16} />
-            </View>
-            
-            <Skeleton width={150} height={24} radius={4} />
-            <View style={{ height: 16 }} />
-            {/* Top Cats Skeleton Grid */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
-               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
-               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
-               <View style={{ width: '48%', marginBottom: 12 }}><Skeleton width="100%" height={80} radius={12} /></View>
-            </View>
+          <View style={{ height: 400, justifyContent: 'center' }}>
+            <PremiumLoader message="Fetching best services for you..." />
           </View>
         ) : (
           <AnimatedFadeIn
@@ -226,11 +240,12 @@ const HomeScreen = ({ navigation }) => {
                 contentContainerStyle={styles.mainCategoriesScroll}
               >
                 {mainCategories.length > 0 ? (
-                  mainCategories.map((cat) => (
+                  mainCategories.map((cat, index) => (
                     <CategoryItem 
                       key={cat.id || Math.random().toString()}
                       item={cat} 
                       type="square"
+                      index={index}
                       onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
                     />
                   ))
@@ -251,11 +266,12 @@ const HomeScreen = ({ navigation }) => {
                 </View>
 
                 <View style={styles.topCategoriesGrid}>
-                  {topCategories.map((cat) => (
+                  {topCategories.map((cat, index) => (
                     <CategoryItem 
                       key={cat.id || Math.random().toString()} 
                       item={cat} 
                       type="wide"
+                      index={index}
                       onPress={() => navigation?.navigate('SearchResults', { query: cat.name })}
                     />
                   ))}
@@ -274,11 +290,12 @@ const HomeScreen = ({ navigation }) => {
               contentContainerStyle={styles.featuredBusinessScroll}
             >
               {featuredBusinesses.length > 0 ? (
-                featuredBusinesses.map((biz) => (
+                featuredBusinesses.map((biz, index) => (
                   <BusinessCard 
                     key={biz.id || Math.random().toString()} 
                     business={biz} 
                     horizontal={true}
+                    index={index}
                     onPress={() => navigation?.navigate('BusinessDetails', { business: biz })}
                   />
                 ))
@@ -286,6 +303,22 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={{ padding: 20, color: '#999' }}>No featured businesses right now.</Text>
               )}
             </ScrollView>
+
+            {/* Trending Services */}
+            <View style={[styles.sectionHeader, { marginTop: 12 }]}>
+              <Text style={styles.sectionTitle}>Trending Near You <Ionicons name="flame" size={18} color="#EF4444" /></Text>
+            </View>
+            <View style={styles.trendingContainer}>
+               <TouchableOpacity style={styles.trendingBadge} onPress={() => navigation?.navigate('SearchResults', { query: 'AC Repair' })}>
+                 <Text style={styles.trendingText}>❄️ AC Repair</Text>
+               </TouchableOpacity>
+               <TouchableOpacity style={styles.trendingBadge} onPress={() => navigation?.navigate('SearchResults', { query: 'Deep Cleaning' })}>
+                 <Text style={styles.trendingText}>✨ Deep Cleaning</Text>
+               </TouchableOpacity>
+               <TouchableOpacity style={styles.trendingBadge} onPress={() => navigation?.navigate('SearchResults', { query: 'Pest Control' })}>
+                 <Text style={styles.trendingText}>🐛 Pest Control</Text>
+               </TouchableOpacity>
+            </View>
           </AnimatedFadeIn>
         )}
 
@@ -310,11 +343,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFF',
     zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuBtn: {
+    padding: 4,
+    marginRight: 8,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 'auto', // Push nav links to the right
   },
   logoIconBg: {
     backgroundColor: colors.primary,
@@ -323,35 +362,47 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   logoText: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     color: colors.primary,
+    letterSpacing: -0.5,
   },
-  navLinks: {
+  webNavLinks: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 16,
   },
   navLink: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
-    marginLeft: 14,
+    color: '#4B5563',
+    marginLeft: 24,
   },
   activeNavLink: {
     color: colors.primary,
   },
   signUpBtn: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginLeft: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginLeft: 24,
   },
   signUpText: {
     color: '#FFF',
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  profileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 24,
+  },
+  headerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   heroSection: {
     width: '100%',
@@ -376,35 +427,35 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: Platform.OS === 'web' ? 48 : 32,
     fontWeight: '900',
     color: '#FFF',
     textAlign: 'center',
-    lineHeight: 42,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: {width: 1, height: 2},
-    textShadowRadius: 6
+    lineHeight: Platform.OS === 'web' ? 58 : 42,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 10
   },
   heroLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    marginTop: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 30,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   heroSubtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#FFF',
-    marginLeft: 6,
+    marginLeft: 8,
     fontWeight: '600',
   },
   paginationContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 60,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -412,35 +463,42 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: 'rgba(255,255,255,0.4)',
-    marginHorizontal: 4,
+    marginHorizontal: 5,
   },
   paginationDotActive: {
     backgroundColor: '#FFF',
-    width: 24,
+    width: 30,
   },
   searchContainer: {
-    marginTop: -28, // Overlap the hero section
+    marginTop: -40, // Deeper overlap for premium look
     zIndex: 3,
-    paddingHorizontal: 10,
+    paddingHorizontal: Platform.OS === 'web' ? 100 : 20,
+    width: '100%',
+    maxWidth: 1000,
+    alignSelf: 'center',
   },
   mainCategoriesWrapper: {
-    marginTop: 16,
-    marginBottom: 20,
+    marginTop: 40,
+    marginBottom: 30,
   },
   mainCategoriesScroll: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     paddingBottom: 10,
+    justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 18,
@@ -457,11 +515,101 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingHorizontal: 10,
     marginBottom: 10,
+    maxWidth: 1200,
+    alignSelf: 'center',
   },
   featuredBusinessScroll: {
     paddingHorizontal: 8,
     paddingBottom: 16,
+    maxWidth: 1200,
+    alignSelf: 'center',
   },
+  promoContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 10,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  promoBanner: {
+    borderRadius: 24,
+    padding: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  promoContent: {
+    flex: 1,
+    zIndex: 2,
+  },
+  promoTitle: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
+  promoText: {
+    color: '#FFF',
+    fontSize: 15,
+    opacity: 0.9,
+    marginBottom: 16,
+    lineHeight: 22,
+    maxWidth: 400,
+  },
+  promoButton: {
+    backgroundColor: '#FFF',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 30,
+  },
+  promoButtonText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  promoIconBg: {
+    position: 'absolute',
+    right: -20,
+    bottom: -20,
+    zIndex: 1,
+    transform: [{ rotate: '-15deg' }]
+  },
+  trendingContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 30,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start',
+  },
+  trendingBadge: {
+    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  trendingText: {
+    color: '#374151',
+    fontWeight: '700',
+    fontSize: 14,
+  }
 });
 
 export default HomeScreen;

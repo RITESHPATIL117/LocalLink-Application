@@ -4,17 +4,23 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 
-// Import Screens (to be created)
+// Import Screens
 import DashboardScreen from '../screens/admin/DashboardScreen';
 import UsersScreen from '../screens/admin/UsersScreen';
 import ReportsScreen from '../screens/admin/ReportsScreen';
+import BusinessesScreen from '../screens/admin/BusinessesScreen';
+import ApprovalsScreen from '../screens/admin/ApprovalsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const AdminDashboardStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen name="AdminDashboard" component={DashboardScreen} options={{ title: 'Admin Dashboard' }} />
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="AdminDashboard" component={DashboardScreen} />
+    <Stack.Screen name="Users" component={UsersScreen} />
+    <Stack.Screen name="Reports" component={ReportsScreen} />
+    <Stack.Screen name="Businesses" component={BusinessesScreen} />
+    <Stack.Screen name="Approvals" component={ApprovalsScreen} />
   </Stack.Navigator>
 );
 
@@ -32,6 +38,8 @@ const AdminNavigator = () => {
             iconName = focused ? 'speedometer' : 'speedometer-outline';
           } else if (route.name === 'UsersTab') {
             iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'ApprovalsTab') {
+            iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
           } else if (route.name === 'ReportsTab') {
             iconName = focused ? 'document-text' : 'document-text-outline';
           }
@@ -42,6 +50,7 @@ const AdminNavigator = () => {
     >
       <Tab.Screen name="DashboardTab" component={AdminDashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
       <Tab.Screen name="UsersTab" component={UsersScreen} options={{ tabBarLabel: 'Users' }} />
+      <Tab.Screen name="ApprovalsTab" component={ApprovalsScreen} options={{ tabBarLabel: 'Approvals' }} />
       <Tab.Screen name="ReportsTab" component={ReportsScreen} options={{ tabBarLabel: 'Reports' }} />
     </Tab.Navigator>
   );

@@ -29,7 +29,7 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role } = req.body;
 
         const user = await User.findByEmail(email);
         if (!user) {
@@ -39,6 +39,11 @@ const login = async (req, res, next) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
+        // Enforce the requested role (e.g. user cannot login as provider)
+        if (role && user.role !== role) {
+            return res.status(403).json({ success: false, message: `Access denied. You are not registered as a ${role}` });
         }
 
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });

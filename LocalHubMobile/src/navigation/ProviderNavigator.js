@@ -4,21 +4,36 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 
-// Import Screens (to be created)
+// Import Screens
 import DashboardScreen from '../screens/provider/DashboardScreen';
 import MyListingsScreen from '../screens/provider/MyListingsScreen';
 import LeadsScreen from '../screens/provider/LeadsScreen';
+import LeadDetailScreen from '../screens/provider/LeadDetailScreen'; // Rename fix
 import ReviewsScreen from '../screens/provider/ReviewsScreen';
 import AnalyticsScreen from '../screens/provider/AnalyticsScreen';
 import AddBusinessScreen from '../screens/provider/AddBusinessScreen';
+import ChatListScreen from '../screens/provider/ChatListScreen'; // New
+import ChatDetailScreen from '../screens/provider/ChatDetailScreen'; // New
+import NotificationsScreen from '../screens/provider/NotificationsScreen'; // New
+import EarningsScreen from '../screens/provider/EarningsScreen'; // New
+import ProviderProfileScreen from '../screens/provider/ProviderProfileScreen'; // New
+import ProviderSettingsScreen from '../screens/provider/ProviderSettingsScreen'; // New
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const DashboardStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen name="ProviderDashboard" component={DashboardScreen} options={{ title: 'Provider Dashboard' }} />
-    <Stack.Screen name="AddBusiness" component={AddBusinessScreen} options={{ title: 'Add Business' }} />
+  <Stack.Navigator screenOptions={{ headerTintColor: colors.primary }}>
+    <Stack.Screen name="ProviderDashboard" component={DashboardScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AddBusiness" component={AddBusinessScreen} options={{ title: 'Manage Listing' }} />
+    <Stack.Screen name="Reviews" component={ReviewsScreen} options={{ title: 'Customer Reviews' }} />
+    <Stack.Screen name="LeadDetails" component={LeadDetailScreen} options={{ title: 'Lead Details' }} />
+    <Stack.Screen name="ChatList" component={ChatListScreen} options={{ title: 'Messages' }} />
+    <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ title: 'Chat' }} />
+    <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+    <Stack.Screen name="Earnings" component={EarningsScreen} options={{ title: 'My Earnings' }} />
+    <Stack.Screen name="Profile" component={ProviderProfileScreen} options={{ title: 'Business Profile' }} />
+    <Stack.Screen name="Settings" component={ProviderSettingsScreen} options={{ title: 'Settings' }} />
   </Stack.Navigator>
 );
 

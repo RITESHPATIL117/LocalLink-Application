@@ -6,6 +6,7 @@ import SearchBar from '../../components/SearchBar';
 import BusinessCard from '../../components/BusinessCard';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import PremiumLoader from '../../components/PremiumLoader';
 
 // Dummy Data mapped by subcategory
 const dummyResults = {
@@ -44,113 +45,126 @@ const dummyResults = {
 
 const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price'];
 
+import { useWindowDimensions } from 'react-native';
+
 const SubcategoryScreen = ({ route, navigation }) => {
+  const { width } = useWindowDimensions();
+  const isWeb = width > 768;
+  const numColumns = isWeb ? (width > 1200 ? 3 : 2) : 1;
+
   const [activeFilter, setActiveFilter] = useState('Top Rated');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const subcategory = route.params?.subcategory || 'Services';
 
   useEffect(() => {
-    // Determine dummy results or fallback to empty
+    setLoading(true);
     const matchedResults = dummyResults[subcategory] || [];
     setResults(matchedResults);
+    
+    // Simulate API fetch delay for premium feel
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
   }, [subcategory]);
 
   return (
-    <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F8F9FA' }]}>
+    <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F9FAFB' }]} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{subcategory}</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => navigation.openDrawer()}>
+            <Ionicons name="menu" size={28} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{subcategory}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
+             <Ionicons name="person-circle" size={32} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.filterBar}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={filters}
+            keyExtractor={(item) => item}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={[
+                  styles.filterChip, 
+                  activeFilter === item && styles.activeFilterChip
+                ]}
+                onPress={() => setActiveFilter(item)}
+              >
+                <Text style={[
+                  styles.filterText,
+                  activeFilter === item && styles.activeFilterText
+                ]}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
       </View>
 
-      <View style={styles.searchContainer}>
-        <SearchBar />
-      </View>
-
-      <View style={styles.filterContainer}>
+      {loading ? (
+        <PremiumLoader message={`Finding best ${subcategory}...`} />
+      ) : (
         <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={filters}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={[
-                styles.filterChip, 
-                activeFilter === item && styles.activeFilterChip
-              ]}
-              onPress={() => setActiveFilter(item)}
-            >
-              <Text style={[
-                styles.filterText,
-                activeFilter === item && styles.activeFilterText
-              ]}>{item}</Text>
-            </TouchableOpacity>
+          key={numColumns}
+          data={results}
+          numColumns={numColumns}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={80} color="#E5E7EB" />
+              <Text style={styles.emptyText}>No providers found for {subcategory}</Text>
+            </View>
+          )}
+          renderItem={({ item, index }) => (
+            <BusinessCard 
+              business={item} 
+              grid={numColumns > 1}
+              index={index}
+              onPress={() => navigation.navigate('BusinessDetails', { business: item })} 
+            />
           )}
         />
-      </View>
-
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color="#CCC" />
-            <Text style={styles.emptyText}>No providers found for {subcategory}</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <BusinessCard 
-            business={item} 
-            onPress={() => navigation.navigate('BusinessDetails', { business: item })} 
-          />
-        )}
-      />
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backButton: {
-    padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
   },
-  searchContainer: {
-    backgroundColor: '#FFF',
-    paddingBottom: 8,
-  },
-  filterContainer: {
-    backgroundColor: '#FFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+  filterBar: {
+    paddingVertical: 12,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginRight: 10,
+    borderColor: '#E5E7EB',
+    marginRight: 8,
     backgroundColor: '#FFF',
   },
   activeFilterChip: {
@@ -158,29 +172,32 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   filterText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '600',
   },
   activeFilterText: {
     color: '#FFF',
   },
   listContainer: {
-    paddingBottom: 20,
-    paddingTop: 10,
-    minHeight: '100%',
+    padding: 10,
+    paddingBottom: 40,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   emptyContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
+    marginTop: 100,
   },
   emptyText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#888',
-    fontWeight: '500',
-  }
+    marginTop: 20,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
 });
 
 export default SubcategoryScreen;

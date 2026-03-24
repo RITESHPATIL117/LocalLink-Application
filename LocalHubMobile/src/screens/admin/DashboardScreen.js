@@ -94,7 +94,18 @@ const DashboardScreen = ({ navigation }) => {
              <TouchableOpacity
              key={item.id}
              style={[styles.menuItem, activeMenu === item.id && styles.activeMenuItem]}
-             onPress={() => setActiveMenu(item.id)}
+             onPress={() => {
+               setActiveMenu(item.id);
+               if (item.id === 'users') {
+                 navigation.navigate('UsersTab');
+               } else if (item.id === 'businesses') {
+                 navigation.navigate('Businesses');
+               } else if (item.id === 'approvals') {
+                 navigation.navigate('ApprovalsTab');
+               } else if (item.id === 'reports') {
+                 navigation.navigate('ReportsTab');
+               }
+             }}
            >
              <Ionicons 
                name={activeMenu === item.id ? item.icon.replace('-outline', '') : item.icon} 
@@ -241,7 +252,18 @@ const DashboardScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={item.id}
                 style={[styles.mobileMenuItem, activeMenu === item.id && styles.activeMobileMenuItem]}
-                onPress={() => setActiveMenu(item.id)}
+                onPress={() => {
+                  setActiveMenu(item.id);
+                  if (item.id === 'users') {
+                    navigation.navigate('UsersTab');
+                  } else if (item.id === 'businesses') {
+                    navigation.navigate('Businesses');
+                  } else if (item.id === 'approvals') {
+                    navigation.navigate('ApprovalsTab');
+                  } else if (item.id === 'reports') {
+                    navigation.navigate('ReportsTab');
+                  }
+                }}
               >
                 <Ionicons 
                   name={activeMenu === item.id ? item.icon.replace('-outline', '') : item.icon} 

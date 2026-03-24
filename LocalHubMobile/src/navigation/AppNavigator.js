@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import AdminNavigator from './AdminNavigator';
 import UserNavigator from './UserNavigator';
+import MainDrawerNavigator from './MainDrawerNavigator';
 import ProviderNavigator from './ProviderNavigator';
 import { ROLES } from '../utils/constants';
 
@@ -26,7 +27,7 @@ const AppNavigator = () => {
         ) : (
           <>
             {/* UserRoot is the default, visible when logged out or when logged in as USER */}
-            <Stack.Screen name="UserRoot" component={UserNavigator} />
+            <Stack.Screen name="UserRoot" component={MainDrawerNavigator} />
             
             {/* Make Login accessible if not authenticated */}
             {!isAuthenticated && (

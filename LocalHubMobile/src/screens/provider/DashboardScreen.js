@@ -133,7 +133,19 @@ const ProviderDashboardScreen = ({ navigation }) => {
       onPress={() => {
         setActiveMenu(item.id);
         if (item.id === 'listings') {
-          navigation.navigate('AddBusiness');
+          navigation.navigate('MyListingsTab');
+        } else if (item.id === 'leads') {
+          navigation.navigate('LeadsTab');
+        } else if (item.id === 'analytics') {
+          navigation.navigate('MoreTab');
+        } else if (item.id === 'reviews') {
+          navigation.navigate('Reviews');
+        } else if (item.id === 'subscription') {
+          navigation.navigate('Earnings'); // Or Subscription if created
+        } else if (item.id === 'settings') {
+          navigation.navigate('Settings');
+        } else if (item.id === 'dashboard') {
+          setActiveMenu('dashboard');
         }
       }}
     >
@@ -167,14 +179,16 @@ const ProviderDashboardScreen = ({ navigation }) => {
             <Text style={styles.greetingTitle}>{businessName}</Text>
           </View>
           <View style={styles.topActions}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="search" size={20} color="#FFF" />
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('ChatList')}>
+              <Ionicons name="chatbubbles" size={20} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notifications')}>
               <View style={styles.badge} />
               <Ionicons name="notifications" size={20} color="#FFF" />
             </TouchableOpacity>
-            <Image source={{ uri: profilePic }} style={styles.profilePic} />
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+              <Image source={{ uri: profilePic }} style={styles.profilePic} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -279,7 +293,18 @@ const ProviderDashboardScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={item.id}
                 style={[styles.mobileMenuItem, activeMenu === item.id && styles.activeMobileMenuItem]}
-                onPress={() => setActiveMenu(item.id)}
+                onPress={() => {
+                  setActiveMenu(item.id);
+                  if (item.id === 'listings') {
+                    navigation.navigate('MyListingsTab');
+                  } else if (item.id === 'leads') {
+                    navigation.navigate('LeadsTab');
+                  } else if (item.id === 'analytics') {
+                    navigation.navigate('MoreTab');
+                  } else if (item.id === 'reviews') {
+                    navigation.navigate('Reviews');
+                  }
+                }}
               >
                 <Ionicons 
                   name={activeMenu === item.id ? item.icon.replace('-outline', '') : item.icon} 
