@@ -40,17 +40,24 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   text: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 4,
-    textTransform: 'capitalize',
+    fontSize: 11,
+    fontWeight: '900',
+    marginLeft: 5,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+
 });
 
 export default Badge;

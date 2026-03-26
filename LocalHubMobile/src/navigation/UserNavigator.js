@@ -1,6 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Platform } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 
@@ -63,7 +65,27 @@ const UserNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#F1F5F9',
+          height: Platform.OS === 'ios' ? 88 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
+          paddingTop: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 20,
+          elevation: 20,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '900',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+        },
+
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
@@ -75,6 +97,7 @@ const UserNavigator = () => {
         },
       })}
     >
+
       <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="CategoriesTab" component={CategoriesStack} options={{ tabBarLabel: 'Categories' }} />
       <Tab.Screen name="RequestsTab" component={RequestsStack} options={{ tabBarLabel: 'Requests' }} />

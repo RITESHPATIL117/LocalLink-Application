@@ -15,7 +15,15 @@ export const renderDynamicIcon = (name, size, color) => {
   }
   
   // MaterialCommunityIcons mappings (for those not in Feather/Ionicons)
-  if (['wrench', 'flower', 'bug', 'hammer', 'account-group', 'chart-areaspline', 'file-document-outline'].includes(iconName)) {
+  const mcoIcons = [
+    'wrench', 'flower', 'bug', 'hammer', 'account-group', 'chart-areaspline', 'file-document-outline', 
+    'car-wrench', 'content-cut', 'party-popper', 'dumbbell', 'format-paint', 'moped',
+    'broom', 'water', 'lightning-bolt', 'car-wash', 'hammer-wrench', 'balloon', 'food',
+    'yoga', 'home-city', 'silverware-fork-knife', 'washing-machine', 'hanger', 'iron', 'tshirt-crew',
+    'truck', 'box', 'warehouse', 'home-search', 'office-building'
+  ];
+  
+  if (mcoIcons.includes(iconName)) {
     return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
   }
   

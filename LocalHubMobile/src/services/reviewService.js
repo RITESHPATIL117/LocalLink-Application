@@ -29,7 +29,7 @@ const reviewService = {
   },
   getReviewsByBusiness: async (businessId) => {
     try {
-      const response = await api.get(`/reviews/${businessId}`);
+      const response = await api.get(`/reviews/business/${businessId}`);
       return { data: response || mockReviews };
     } catch (e) {
       console.log('API getReviews failed:', e.message || e);

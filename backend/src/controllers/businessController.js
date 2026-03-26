@@ -19,7 +19,19 @@ const getBusinessesByCategory = async (req, res, next) => {
     }
 };
 
+const getOwnerBusinesses = async (req, res, next) => {
+    try {
+        // req.user is set by authMiddleware protect
+        const providerId = req.user.id;
+        const businesses = await Business.getByProviderId(providerId);
+        res.json(businesses);
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     getAllBusinesses,
-    getBusinessesByCategory
+    getBusinessesByCategory,
+    getOwnerBusinesses
 };

@@ -1,15 +1,23 @@
 export default {
-  primary: '#0066FF',    // Deep Blue
-  secondary: '#FFC107',  // Gold/Yellow
-  tertiary: '#C0C0C0',   // Silver
-  quaternary: '#CCEEFF', // Diamond/Light Blue
-  background: '#F8F9FA', // Light Gray background
-  surface: '#FFFFFF',    // White card background
-  text: '#111827',       // Dark Gray text
-  textSecondary: '#6B7280', // Medium Gray text
-  border: '#E5E7EB',     // Light Gray border
-  error: '#EF4444',      // Red
-  success: '#10B981',    // Green
-  warning: '#F59E0B',    // Orange
-  star: '#FFD700',       // Star yellow
+  primary: '#1E3A8A',    // Royal Blue (Elite Trust)
+  secondary: '#F59E0B',  // Soft Gold (Elite Accent)
+  accent: '#1E3A8A',     // Consistently Elite
+  background: '#F9FAFB', // Off White / Cream
+  surface: '#FFFFFF',    // Pure White
+  surfaceSecondary: '#F3F4F6', // Lighter Gray
+  glassEffect: 'rgba(255,255,255,0.8)',
+  text: '#111827',       // Rich Dark
+  textSecondary: '#6B7280', // Subtle Grey
+  border: '#E5E7EB',     // Light Grey
+  error: '#EF4444', 
+  success: '#10B981',
+  warning: '#F59E0B',
+  star: '#F59E0B',
+  
+  // Gradients
+  gradient: ['#1E3A8A', '#3B82F6'],
+  promoGradient: ['#1E3A8A', '#6366F1'],
+  softGradient: ['#F9FAFB', '#F3F4F6'],
 };
+
+

@@ -23,13 +23,15 @@ export default StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 0, // removed border for cleaner look
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 3,
     marginBottom: 16,
   },
+
 });

@@ -19,7 +19,7 @@ const businessOwnerService = {
   },
   getBusinesses: async () => {
     try {
-      const response = await api.get('/business-owners/businesses');
+      const response = await api.get('/businesses/my-businesses');
       return { data: response || [] };
     } catch (e) {
       return { data: [] };

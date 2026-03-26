@@ -20,6 +20,16 @@ class User {
         const [rows] = await db.query('SELECT id, name, email, role, phone, created_at FROM users WHERE id = ?', [id]);
         return rows[0];
     }
+
+    static async getAll() {
+        const [rows] = await db.query('SELECT id, name, email, role, phone, created_at FROM users');
+        return rows;
+    }
+
+    static async updateStatus(id, status) {
+        await db.query('UPDATE users SET status = ? WHERE id = ?', [status, id]);
+        return true;
+    }
 }
 
 module.exports = User;

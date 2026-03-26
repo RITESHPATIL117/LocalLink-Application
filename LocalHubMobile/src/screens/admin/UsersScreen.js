@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import adminService from '../../services/adminService';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
 
 const dummyUsers = [
   { id: '1', name: 'Ritesh Patil', email: 'ritesh@localhub.com', role: 'admin', status: 'Active', joined: 'Jan 10, 2026', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150' },
@@ -14,13 +18,45 @@ const dummyUsers = [
 ];
 
 const UsersScreen = ({ navigation }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.getAllUsers();
+      setUsers(res.data || []);
+    } catch (e) {
+      console.log('Fetch users err:', e);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not load users.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleUserStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'Suspended' ? 'Active' : 'Suspended';
+    try {
+      await adminService.updateUserStatus(id, newStatus);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Toast.show({ type: 'success', text1: 'Status Updated', text2: `User is now ${newStatus}.` });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Update Failed', text2: 'Could not change user status.' });
+    }
+  };
+
   const filters = ['All', 'customer', 'provider', 'admin', 'Suspended'];
 
-  const filteredUsers = dummyUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) || user.email.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (user.email || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = 
       activeFilter === 'All' ? true :
       activeFilter === 'Suspended' ? user.status === 'Suspended' :
@@ -37,26 +73,26 @@ const UsersScreen = ({ navigation }) => {
     }
   };
 
-  const renderUser = ({ item }) => (
-    <View style={styles.userCard}>
+  const renderUser = ({ item, index }) => (
+    <AnimatedFadeIn delay={index * 50} style={styles.userCard}>
       <View style={styles.cardMain}>
         {item.avatar ? (
           <Image source={{ uri: item.avatar }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
+            <Text style={styles.avatarText}>{(item.name || 'U').charAt(0)}</Text>
           </View>
         )}
         
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{item.name}</Text>
           <Text style={styles.userEmail}>{item.email}</Text>
-          <Text style={styles.userJoined}>Joined {item.joined}</Text>
+          <Text style={styles.userJoined}>Joined {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent'}</Text>
         </View>
 
         <View style={styles.badgesWrapper}>
           <View style={[styles.roleBadge, { backgroundColor: `${getRoleColor(item.role)}15` }]}>
-            <Text style={[styles.roleText, { color: getRoleColor(item.role) }]}>{item.role.toUpperCase()}</Text>
+            <Text style={[styles.roleText, { color: getRoleColor(item.role) }]}>{(item.role || 'user').toUpperCase()}</Text>
           </View>
           {item.status === 'Suspended' && (
             <View style={[styles.roleBadge, { backgroundColor: '#FEF2F2', marginTop: 4 }]}>
@@ -67,27 +103,32 @@ const UsersScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.cardActions}>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => Toast.show({ text1: 'Coming Soon', text2: 'Edit functionality in next update.' })}>
           <Ionicons name="create-outline" size={16} color="#6B7280" />
           <Text style={styles.actionText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => Toast.show({ text1: 'Email App', text2: `Opening mail to ${item.email}` })}>
           <Ionicons name="mail-outline" size={16} color="#6B7280" />
           <Text style={styles.actionText}>Email</Text>
         </TouchableOpacity>
-        {item.status === 'Suspended' ? (
-          <TouchableOpacity style={[styles.actionBtn, { borderRightWidth: 0 }]}>
-            <Ionicons name="refresh-outline" size={16} color="#10B981" />
-            <Text style={[styles.actionText, { color: '#10B981' }]}>Restore</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={[styles.actionBtn, { borderRightWidth: 0 }]}>
-            <Ionicons name="ban-outline" size={16} color="#EF4444" />
-            <Text style={[styles.actionText, { color: '#EF4444' }]}>Suspend</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity 
+          style={[styles.actionBtn, { borderRightWidth: 0 }]} 
+          onPress={() => toggleUserStatus(item.id, item.status)}
+        >
+          {item.status === 'Suspended' ? (
+            <>
+              <Ionicons name="refresh-outline" size={16} color="#10B981" />
+              <Text style={[styles.actionText, { color: '#10B981' }]}>Restore</Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="ban-outline" size={16} color="#EF4444" />
+              <Text style={[styles.actionText, { color: '#EF4444' }]}>Suspend</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
-    </View>
+    </AnimatedFadeIn>
   );
 
   return (

@@ -1,4 +1,13 @@
-import { useWindowDimensions, TouchableOpacity, Image, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import colors from '../../styles/colors';
+import globalStyles from '../../styles/globalStyles';
+import categoryService from '../../services/categoryService';
+import CategoryItem from '../../components/CategoryItem';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import { renderDynamicIcon } from '../../utils/iconHelper';
 
 const CategoriesScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
@@ -20,19 +29,19 @@ const CategoriesScreen = ({ navigation }) => {
       let rawData = res.data || [];
       const subcategoryMap = {
         'Plumbing': [
-          { name: 'Pipe Repair', icon: 'construct' },
-          { name: 'Water Heater', icon: 'thermometer' },
-          { name: 'Leak Detection', icon: 'water' }
+          { name: 'Pipe Repair', icon: 'construct', image: 'https://images.unsplash.com/photo-1542013936693-884638332954?q=80&w=300' },
+          { name: 'Water Heater', icon: 'thermometer', image: 'https://images.unsplash.com/photo-1585938389612-a552a28d6914?q=80&w=300' },
+          { name: 'Leak Detection', icon: 'water', image: 'https://images.unsplash.com/photo-1584622781564-1d987f7333c1?q=80&w=300' }
         ],
         'Electrician': [
-          { name: 'Wiring', icon: 'flash' },
-          { name: 'Lighting', icon: 'sunny' },
-          { name: 'Panels', icon: 'grid' }
+          { name: 'Wiring', icon: 'flash', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
+          { name: 'Lighting', icon: 'sunny', image: 'https://images.unsplash.com/photo-1551029506-0807df4e2031?q=80&w=300' },
+          { name: 'Panels', icon: 'grid', image: 'https://images.unsplash.com/photo-1521747669139-02cd71498b04?q=80&w=300' }
         ],
         'Cleaning': [
-          { name: 'Deep Clean', icon: 'sparkles' },
-          { name: 'Standard', icon: 'color-wand' },
-          { name: 'Move Out', icon: 'home' }
+          { name: 'Deep Clean', icon: 'sparkles', image: 'https://images.unsplash.com/photo-1584622781564-1d987f7333c1?q=80&w=300' },
+          { name: 'Standard', icon: 'color-wand', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
+          { name: 'Move Out', icon: 'home', image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=300' }
         ],
       };
 
@@ -121,22 +130,28 @@ const CategoriesScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#FFF',
-    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
     color: '#111827',
+    letterSpacing: -0.5,
   },
   searchBar: {
     flexDirection: 'row',
@@ -144,53 +159,57 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     marginHorizontal: 20,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   searchInput: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
+    fontWeight: '600',
     color: '#111827',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 60,
     maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
   },
   categorySection: {
-    marginTop: 20,
+    marginTop: 24,
     paddingHorizontal: 10,
   },
   sectionHeader: {
-    paddingHorizontal: 10,
-    marginBottom: 16,
+    paddingHorizontal: 14,
+    marginBottom: 18,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   categoryTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     color: '#111827',
+    letterSpacing: -0.5,
   },
   subcategoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   gridItem: {
-    padding: 6,
+    padding: 8,
   },
   loaderContainer: {
     flex: 1,
@@ -203,10 +222,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 16,
-    fontSize: 16,
+    fontSize: 17,
     color: '#9CA3AF',
-    fontWeight: '600',
+    fontWeight: '700',
   },
+
 });
 
 export default CategoriesScreen;

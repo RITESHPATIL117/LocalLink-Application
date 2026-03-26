@@ -12,6 +12,9 @@ import { ROLES } from '../utils/constants';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
+import SettingsScreen from '../screens/user/SettingsScreen';
+import SupportScreen from '../screens/user/SupportScreen';
+
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -38,7 +41,9 @@ const AppNavigator = () => {
             )}
           </>
         )}
-      </Stack.Navigator>
+        <Stack.Screen name="Support" component={SupportScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+    </Stack.Navigator>
     </NavigationContainer>
   );
 };

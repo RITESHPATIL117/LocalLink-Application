@@ -7,6 +7,7 @@ const mockCategories = [
     name: 'Home Services',
     title: 'Home Services',
     icon: 'home',
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=400',
     isMaterial: false,
     color: '#3B82F6',
     subcategories: [
@@ -20,6 +21,7 @@ const mockCategories = [
     name: 'Auto Repair',
     title: 'Auto Repair',
     icon: 'car-wrench',
+    image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=400',
     isMaterial: true,
     color: '#EF4444',
     subcategories: [
@@ -32,6 +34,7 @@ const mockCategories = [
     name: 'Beauty & Salon',
     title: 'Beauty & Salon',
     icon: 'content-cut',
+    image: 'https://images.unsplash.com/photo-1560066984-138be5ba5499?q=80&w=400',
     isMaterial: true,
     color: '#EC4899',
     subcategories: [
@@ -44,6 +47,7 @@ const mockCategories = [
     name: 'Local Shops',
     title: 'Local Shops',
     icon: 'storefront',
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400',
     isMaterial: false,
     color: '#10B981',
     subcategories: [
@@ -56,6 +60,7 @@ const mockCategories = [
     name: 'Events & Catering',
     title: 'Events & Catering',
     icon: 'party-popper',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=400',
     isMaterial: true,
     color: '#F59E0B',
     subcategories: [
@@ -68,6 +73,7 @@ const mockCategories = [
     name: 'Health & Fitness',
     title: 'Health & Fitness',
     icon: 'dumbbell',
+    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
     isMaterial: true,
     color: '#8B5CF6',
     subcategories: [
@@ -80,6 +86,7 @@ const mockCategories = [
     name: 'Education',
     title: 'Education',
     icon: 'school',
+    image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=400',
     isMaterial: false,
     color: '#F43F5E',
     subcategories: [
@@ -92,6 +99,7 @@ const mockCategories = [
     name: 'Pet Services',
     title: 'Pet Services',
     icon: 'paw',
+    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=400',
     isMaterial: true,
     color: '#06B6D4',
     subcategories: [
@@ -104,6 +112,7 @@ const mockCategories = [
     name: 'Real Estate',
     title: 'Real Estate',
     icon: 'home-city',
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400',
     isMaterial: true,
     color: '#6366F1',
     subcategories: [
@@ -117,6 +126,7 @@ const mockCategories = [
     name: 'Restaurants',
     title: 'Restaurants',
     icon: 'silverware-fork-knife',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=400',
     isMaterial: true,
     color: '#EAB308',
     subcategories: [
@@ -130,6 +140,7 @@ const mockCategories = [
     name: 'Laundry',
     title: 'Laundry',
     icon: 'washing-machine',
+    image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=400',
     isMaterial: true,
     color: '#0EA5E9',
     subcategories: [
@@ -143,6 +154,7 @@ const mockCategories = [
     name: 'Moving & Storage',
     title: 'Moving & Storage',
     icon: 'truck',
+    image: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?q=80&w=400',
     isMaterial: true,
     color: '#84CC16',
     subcategories: [

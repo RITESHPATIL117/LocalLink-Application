@@ -14,7 +14,7 @@ const register = async (req, res, next) => {
 
         const userId = await User.create({ name, email, password, role, phone });
         
-        const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
         res.status(201).json({
             success: true,
@@ -46,7 +46,7 @@ const login = async (req, res, next) => {
             return res.status(403).json({ success: false, message: `Access denied. You are not registered as a ${role}` });
         }
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
         res.json({
             success: true,

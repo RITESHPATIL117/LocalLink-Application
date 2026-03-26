@@ -39,6 +39,9 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    if (error.code === 'ERR_NETWORK') {
+      logger.error(`NETWORK ERROR: Cannot reach ${API_URL}. Please check if the backend is running and your device is on the same network.`);
+    }
     logger.error(`API Response Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
       message: error.message,
       data: error.response?.data,

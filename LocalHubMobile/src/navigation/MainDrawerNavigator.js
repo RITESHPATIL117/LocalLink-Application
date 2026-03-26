@@ -1,6 +1,6 @@
 import React from 'react';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
 import UserNavigator from './UserNavigator';
@@ -36,7 +36,12 @@ const CustomDrawerContent = (props) => {
         <DrawerItem
           label="Help & Support"
           icon={({ color, size }) => <Ionicons name="help-circle-outline" color={color} size={size} />}
-          onPress={() => {}}
+          onPress={() => props.navigation.navigate('Support')}
+        />
+        <DrawerItem
+          label="Settings"
+          icon={({ color, size }) => <Ionicons name="settings-outline" color={color} size={size} />}
+          onPress={() => props.navigation.navigate('Settings')}
         />
         <DrawerItem
           label="About Us"

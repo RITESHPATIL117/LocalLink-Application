@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, Image } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../styles/colors';
 import { renderDynamicIcon } from '../utils/iconHelper';
 
@@ -21,12 +22,22 @@ const CategoryItem = ({ item, onPress, type = 'square', index = 0 }) => {
     }
 
     return (
-      <View style={styles.squareInner}>
-        <View style={[styles.iconContainer, { backgroundColor: `${iconColor}10` }]}>
-          {renderDynamicIcon(item.icon, 32, iconColor)}
+      <ImageBackground 
+        source={{ uri: item.image || 'https://images.unsplash.com/photo-1581094488221-757774cc1e5b?q=80&w=400' }} 
+        style={styles.squareInner}
+        imageStyle={{ borderRadius: 20, backgroundColor: '#EEE' }}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
+          style={styles.gradient}
+        />
+        <View style={styles.topRow}>
+          <View style={[styles.iconBadge, { backgroundColor: `${iconColor}20` }]}>
+            {renderDynamicIcon(item.icon, 20, '#FFF')}
+          </View>
         </View>
         <Text style={styles.label} numberOfLines={2}>{item.name}</Text>
-      </View>
+      </ImageBackground>
     );
   };
 
@@ -47,46 +58,61 @@ const styles = StyleSheet.create({
   squareContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    width: '100%',
+    width: 150,
+    height: 180,
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 4,
+    marginBottom: 10,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F3F4F6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-    marginBottom: 8,
   },
   squareInner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    flex: 1,
+    padding: 16,
+    justifyContent: 'flex-end',
   },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+  },
+  topRow: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    backdropFilter: 'blur(10px)',
   },
   label: {
-    fontSize: 13,
-    color: '#374151',
-    textAlign: 'center',
-    fontWeight: '700',
-    lineHeight: 18,
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '900',
+    lineHeight: 20,
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   wideContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 12,
-    marginHorizontal: 6,
+    borderRadius: 16,
+    marginBottom: 14,
+    marginHorizontal: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 10,
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F3F4F6',
@@ -94,17 +120,24 @@ const styles = StyleSheet.create({
   wideInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: 12,
   },
   wideIconContainer: {
-    marginRight: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
   wideLabel: {
-    fontSize: 13,
-    color: colors.text,
-    fontWeight: '700',
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '900',
     flex: 1,
+    letterSpacing: -0.3,
   },
+
 });
 
-export default CategoryItem;
+export default React.memo(CategoryItem);

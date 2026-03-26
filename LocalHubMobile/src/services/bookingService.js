@@ -20,9 +20,9 @@ const bookingService = {
       return { data: { ...data, id: 'bk_new', status: 'pending' } };
     }
   },
-  getBookingsByUser: async (userId) => {
+  getBookingsByUser: async () => {
     try {
-       const response = await api.get(`/bookings/user/${userId}`);
+       const response = await api.get('/bookings/my');
        return { data: response || mockBookings };
     } catch (e) {
        return { data: mockBookings };

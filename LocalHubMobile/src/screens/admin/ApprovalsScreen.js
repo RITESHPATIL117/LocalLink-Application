@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import adminService from '../../services/adminService';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
 
 const dummyApprovals = [
   { id: '1', name: 'Elite Electricians', owner: 'Vikram Singh', category: 'Electrician', date: '2 hours ago', image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=200' },
@@ -12,37 +16,70 @@ const dummyApprovals = [
 ];
 
 const ApprovalsScreen = ({ navigation }) => {
-  const [data, setData] = useState(dummyApprovals);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAction = (id, type) => {
-    Alert.alert(
-      type === 'approve' ? 'Approve Listing' : 'Reject Listing',
-      `Are you sure you want to ${type} this business listing?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: type === 'approve' ? 'Approve' : 'Reject', 
-          style: type === 'approve' ? 'default' : 'destructive',
-          onPress: () => setData(prev => prev.filter(item => item.id !== id))
-        }
-      ]
-    );
+  useEffect(() => {
+    fetchPending();
+  }, []);
+
+  const fetchPending = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.getPendingBusinesses();
+      setData(res.data || []);
+    } catch (e) {
+      console.log('Fetch pending err:', e);
+      Toast.show({ type: 'error', text1: 'Fetch Failed', text2: 'Could not load pending approvals.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.cardImage} />
+  const handleAction = async (id, type) => {
+    if (type === 'approve') {
+       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+       try {
+         await adminService.verifyBusiness(id);
+         setData(prev => prev.filter(item => item.id !== id));
+         Toast.show({ type: 'success', text1: 'Business Approved', text2: 'Listing is now live on LocalHub.' });
+       } catch (e) {
+         Toast.show({ type: 'error', text1: 'Error', text2: 'Could not verify business.' });
+       }
+    } else {
+      Alert.alert(
+        'Reject Listing',
+        'Are you sure you want to reject this business listing?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Reject', 
+            style: 'destructive',
+            onPress: () => {
+               // For now rejection just removes from list (could be a delete call)
+               setData(prev => prev.filter(item => item.id !== id));
+               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const renderItem = ({ item, index }) => (
+    <AnimatedFadeIn delay={index * 100} style={styles.card}>
+      <Image source={{ uri: item.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400' }} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <View>
             <Text style={styles.bizName}>{item.name}</Text>
-            <Text style={styles.ownerText}>Owner: {item.owner}</Text>
+            <Text style={styles.ownerText}>Owner: {item.owner_name || 'Service Provider'}</Text>
           </View>
-          <Text style={styles.dateText}>{item.date}</Text>
+          <Text style={styles.dateText}>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recent'}</Text>
         </View>
         
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category}</Text>
+          <Text style={styles.categoryText}>{item.category_name || 'General'}</Text>
         </View>
 
         <View style={styles.actions}>
@@ -62,7 +99,7 @@ const ApprovalsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </AnimatedFadeIn>
   );
 
   return (

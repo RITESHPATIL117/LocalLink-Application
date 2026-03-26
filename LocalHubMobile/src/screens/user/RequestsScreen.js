@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
@@ -35,7 +35,6 @@ const dummyRequests = [
   },
 ];
 
-import { useWindowDimensions } from 'react-native';
 
 const RequestsScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();

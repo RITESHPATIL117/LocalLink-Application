@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -7,6 +7,8 @@ import * as Haptics from 'expo-haptics';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import colors from '../../styles/colors';
 import Badge from '../../components/Badge';
+import reviewService from '../../services/reviewService';
+import PremiumLoader from '../../components/PremiumLoader';
 
 const dummyReviews = [
   { id: '1', user: 'Rahul Mehta', rating: 5, date: '2 days ago', text: 'Great Service!' },
@@ -19,8 +21,6 @@ const mockServices = [
   'Leakage Fitting',
   'Water Supply',
 ];
-
-import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform } from 'react-native';
 
 const BusinessDetailsScreen = ({ route, navigation }) => {
   const { width } = useWindowDimensions();
@@ -38,6 +38,25 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
   };
 
   const [activeTab, setActiveTab] = useState('Overview');
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const fetchReviews = useCallback(async () => {
+    if (!business.id) return;
+    setLoadingReviews(true);
+    try {
+      const res = await reviewService.getReviewsByBusiness(business.id);
+      setReviews(res.data || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [business.id]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   return (
     <View style={styles.container}>
@@ -116,8 +135,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
                  <View style={styles.overviewContainer}>
                     <Text style={styles.sectionTitle}>About this business</Text>
                     <Text style={styles.descriptionText}>
-                      We provide high-quality {business.category.toLowerCase()} services in {business.address}. 
-                      Our team of professionals is dedicated to ensuring customer satisfaction with every job.
+                      {business.description || `We provide high-quality ${business.category?.toLowerCase() || 'service'} in ${business.address || 'your area'}. Our team of professionals is dedicated to ensuring customer satisfaction with every job.`}
                     </Text>
                  </View>
                )}
@@ -131,26 +149,35 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
                     ))}
                  </View>
                )}
-               {activeTab === 'Reviews' && (
-                 <View>
-                   {dummyReviews.map(review => (
-                     <View key={review.id} style={styles.cardReview}>
-                        <View style={styles.reviewHeader}>
-                          <Image source={{ uri: `https://ui-avatars.com/api/?name=${review.user}` }} style={styles.reviewAvatar} />
-                          <View>
-                            <Text style={styles.reviewUserName}>{review.user}</Text>
-                            <Text style={styles.reviewDate}>{review.date}</Text>
-                          </View>
-                          <View style={styles.reviewRating}>
-                            <Text style={styles.ratingNum}>{review.rating}</Text>
-                            <Ionicons name="star" size={14} color={colors.star} />
-                          </View>
+                {activeTab === 'Reviews' && (
+                  <View>
+                    {loadingReviews ? (
+                      <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+                    ) : reviews.length > 0 ? (
+                      reviews.map((review, idx) => (
+                        <View key={review.id || idx} style={styles.cardReview}>
+                           <View style={styles.reviewHeader}>
+                             <Image source={{ uri: review.user?.avatar || `https://ui-avatars.com/api/?name=${review.user?.name || 'User'}` }} style={styles.reviewAvatar} />
+                             <View>
+                               <Text style={styles.reviewUserName}>{review.user?.name || 'Verified User'}</Text>
+                               <Text style={styles.reviewDate}>{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'Recent'}</Text>
+                             </View>
+                             <View style={styles.reviewRating}>
+                               <Text style={styles.ratingNum}>{review.rating}</Text>
+                               <Ionicons name="star" size={14} color={colors.star} />
+                             </View>
+                           </View>
+                           <Text style={styles.reviewText}>{review.comment || review.text}</Text>
                         </View>
-                        <Text style={styles.reviewText}>{review.text}</Text>
-                     </View>
-                   ))}
-                 </View>
-               )}
+                      ))
+                    ) : (
+                      <View style={styles.emptyContainer}>
+                        <Ionicons name="chatbox-ellipses-outline" size={48} color="#D1D5DB" />
+                        <Text style={styles.emptyText}>No reviews yet. Be the first to review!</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
             </AnimatedFadeIn>
           </View>
         </View>
@@ -210,6 +237,8 @@ const styles = StyleSheet.create({
   reviewText: { fontSize: 15, color: '#4B5563', lineHeight: 22 },
   glassCircle: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   backButtonOverlay: { position: 'absolute', top: 50, left: 16 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
+  emptyText: { marginTop: 12, fontSize: 16, color: '#9CA3AF', fontWeight: '600' },
 });
 
 export default BusinessDetailsScreen;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import SearchBar from '../../components/SearchBar';
@@ -45,7 +45,6 @@ const dummyResults = {
 
 const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price'];
 
-import { useWindowDimensions } from 'react-native';
 
 const SubcategoryScreen = ({ route, navigation }) => {
   const { width } = useWindowDimensions();

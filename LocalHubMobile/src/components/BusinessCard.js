@@ -20,7 +20,7 @@ const BusinessCard = ({ business, onPress, horizontal, grid, index = 0 }) => {
           styles.card, 
           horizontal && styles.horizontalCard,
           grid && styles.gridCard,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+          pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] }
         ]} 
         onPress={handlePress}
       >
@@ -33,44 +33,36 @@ const BusinessCard = ({ business, onPress, horizontal, grid, index = 0 }) => {
               grid && styles.gridImage
             ]} 
           />
-          {business.tier && (
-            <View style={styles.badgeOverlay}>
-              <Badge tier={business.tier} />
-            </View>
-          )}
-          <BlurView intensity={60} tint="dark" style={styles.ratingBadge}>
+          <View style={styles.verifiedBadge}>
+            <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
+            <Text style={styles.verifiedText}>VERIFIED</Text>
+          </View>
+          <BlurView intensity={80} tint="dark" style={styles.ratingBadge}>
             <Text style={styles.ratingText}>{business.rating}</Text>
-            <Ionicons name="star" size={12} color={colors.star} />
+            <Ionicons name="star" size={12} color={colors.secondary} />
           </BlurView>
         </View>
 
         <View style={styles.content}>
+          <View style={styles.categoryRow}>
+            <Text style={styles.categoryText}>{business.category || 'Service'}</Text>
+            <View style={styles.dot} />
+            <Text style={styles.statusText}>Live Now</Text>
+          </View>
+          
           <Text style={styles.name} numberOfLines={1}>{business.name}</Text>
           
           <View style={styles.infoRow}>
-            <Ionicons name="location" size={14} color="#6B7280" />
+            <Ionicons name="location" size={14} color="#9CA3AF" />
             <Text style={styles.infoText} numberOfLines={1}>{business.address}</Text>
           </View>
 
-          {!horizontal && (
-            <View style={styles.categoryRow}>
-              <Text style={styles.categoryText}>{business.category}</Text>
-              <View style={styles.dot} />
-              <Text style={styles.statusText}>Open Now</Text>
-            </View>
-          )}
-
-          {(!horizontal && !grid) && (
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.callBtn}>
-                <Ionicons name="call" size={16} color="#FFF" />
-                <Text style={styles.callBtnText}>Call</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.msgBtn}>
-                <Ionicons name="chatbubble-ellipses" size={16} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.footer}>
+            <Text style={styles.priceText}>Starting at <Text style={styles.priceValue}>₹499</Text></Text>
+            <TouchableOpacity style={styles.viewBtn}>
+              <Text style={styles.viewBtnText}>VIEW</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Pressable>
     </AnimatedFadeIn>
@@ -79,15 +71,15 @@ const BusinessCard = ({ business, onPress, horizontal, grid, index = 0 }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    marginVertical: 10,
+    marginVertical: 12,
     marginHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowRadius: 20,
+    elevation: 4,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F3F4F6',
@@ -98,7 +90,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   horizontalCard: {
-    width: 180,
+    width: 200,
     marginHorizontal: 8,
     marginVertical: 4,
   },
@@ -108,19 +100,32 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 180,
     backgroundColor: '#F3F4F6',
   },
   horizontalImage: {
-    height: 120,
+    height: 130,
   },
   gridImage: {
     height: 140,
   },
-  badgeOverlay: {
+  verifiedBadge: {
     position: 'absolute',
     top: 12,
     left: 12,
+    backgroundColor: 'rgba(30, 58, 138, 0.9)', 
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  verifiedText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
+    marginLeft: 4,
+    letterSpacing: 0.5,
   },
   ratingBadge: {
     position: 'absolute',
@@ -128,46 +133,31 @@ const styles = StyleSheet.create({
     right: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   ratingText: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '900',
     marginRight: 4,
   },
   content: {
     padding: 16,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 6,
-  },
-  infoRow: {
+  categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  infoText: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginLeft: 4,
-    flex: 1,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '800',
     color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   dot: {
     width: 3,
@@ -177,38 +167,60 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '800',
     color: '#10B981',
+    textTransform: 'uppercase',
   },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
+  name: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
-  callBtn: {
-    flex: 1,
+  infoRow: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 10,
-    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  callBtnText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 14,
+  infoText: {
+    fontSize: 13,
+    color: '#6B7280',
     marginLeft: 6,
+    fontWeight: '600',
   },
-  msgBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    justifyContent: 'center',
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F9FAFB',
   },
+  priceText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  viewBtn: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  viewBtnText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.primary,
+    letterSpacing: 0.5,
+  },
+
 });
 
-export default BusinessCard;
+export default React.memo(BusinessCard);

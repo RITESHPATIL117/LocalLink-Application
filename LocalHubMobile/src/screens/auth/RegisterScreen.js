@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -29,7 +29,6 @@ const roles = [
   { label: 'Admin', value: 'admin', icon: 'settings', description: 'Manager' },
 ];
 
-import { useWindowDimensions } from 'react-native';
 
 const RegisterScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();

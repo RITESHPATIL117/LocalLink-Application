@@ -103,7 +103,7 @@ const businessService = {
   getOwnerBusinesses: async () => {
     try {
       logger.info('Fetching business owner listings...');
-      const response = await api.get('/business-owners/businesses');
+      const response = await api.get('/businesses/my-businesses');
       return { data: response || [] };
     } catch (e) {
       logger.error('Failed to fetch owner businesses', e.message);

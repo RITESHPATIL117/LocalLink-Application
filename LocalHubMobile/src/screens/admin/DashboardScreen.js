@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '../../hooks/useAuth';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import businessService from '../../services/businessService';
+import adminService from '../../services/adminService';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
 const { width } = Dimensions.get('window');
 const isLargeScreen = width > 768;
@@ -59,16 +62,15 @@ const DashboardScreen = ({ navigation }) => {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const bizRes = await businessService.getAllBusinesses();
-      const businesses = bizRes.data || [];
-      const totalBiz = businesses.length;
-
-      setAdminStats(prev => {
-        const newStats = [...prev];
-        newStats[0].value = totalBiz.toString();
-        // Since we don't have a reliable user list / revenue endpoint, we'll keep the mock logic for others for now
-        return newStats;
-      });
+      const statsRes = await adminService.getStats();
+      const stats = statsRes.data || {};
+      
+      setAdminStats([
+        { id: '1', title: 'Total Businesses', value: stats.totalBusinesses?.toString() || '0', trend: '+5% This Week', isUp: true, icon: 'business', color: colors.primary },
+        { id: '2', title: 'Total Users', value: stats.totalUsers?.toString() || '0', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
+        { id: '3', title: 'Revenue', value: `₹${stats.revenue || 0}`, trend: 'Stable', isUp: true, icon: 'wallet', color: '#F59E0B' },
+        { id: '4', title: 'Pending Approval', value: stats.pendingApprovals?.toString() || '0', trend: 'Priority', isUp: false, icon: 'time', color: '#EF4444' },
+      ]);
     } catch (e) {
       console.log('Admin dashboard err:', e);
     } finally {
@@ -159,9 +161,9 @@ const DashboardScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 20 }} />
           ) : (
             <View style={styles.statsContainer}>
-              {adminStats.map(stat => (
-                <View key={stat.id} style={styles.statCard}>
-                  <View style={styles.statTop}>
+              {adminStats.map((stat, idx) => (
+                <AnimatedFadeIn key={stat.id} delay={idx * 100} style={styles.statCard}>
+                   <View style={styles.statTop}>
                     <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
                       <Ionicons name={stat.icon} size={22} color={stat.color} />
                     </View>
@@ -172,7 +174,7 @@ const DashboardScreen = ({ navigation }) => {
                   </View>
                   <Text style={styles.statValue}>{stat.value}</Text>
                   <Text style={styles.statTitle}>{stat.title}</Text>
-                </View>
+                </AnimatedFadeIn>
               ))}
             </View>
           )}

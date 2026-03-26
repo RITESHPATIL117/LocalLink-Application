@@ -4,19 +4,30 @@ import colors from '../styles/colors';
 import typography from '../styles/typography';
 
 const Button = ({ title, onPress, style, textStyle, variant = 'primary', disabled }) => {
-  const isPrimary = variant === 'primary';
+  let buttonVariantStyle = styles.primary;
+  let textVariantStyle = styles.textPrimary;
+
+  if (variant === 'secondary') {
+    buttonVariantStyle = styles.secondary;
+    textVariantStyle = styles.textSecondary;
+  } else if (variant === 'outline') {
+    buttonVariantStyle = styles.outline;
+    textVariantStyle = styles.textOutline;
+  }
+
   const buttonStyle = [
     styles.button,
-    isPrimary ? styles.primary : styles.secondary,
+    buttonVariantStyle,
     disabled && styles.disabled,
     style,
   ];
 
   const labelStyle = [
     styles.text,
-    isPrimary ? styles.textPrimary : styles.textSecondary,
+    textVariantStyle,
     textStyle,
   ];
+
 
   return (
     <TouchableOpacity 
@@ -32,33 +43,52 @@ const Button = ({ title, onPress, style, textStyle, variant = 'primary', disable
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 8,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 4,
   },
   primary: {
     backgroundColor: colors.primary,
   },
   secondary: {
+    backgroundColor: colors.secondary,
+  },
+  outline: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.primary,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   text: {
-    ...typography.h3,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   textPrimary: {
     color: '#FFFFFF',
   },
   textSecondary: {
+    color: '#FFFFFF',
+  },
+  textOutline: {
     color: colors.primary,
   },
+
+
 });
 
 export default Button;

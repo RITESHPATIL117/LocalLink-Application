@@ -1,7 +1,7 @@
-import { useWindowDimensions, TextInput, ActivityIndicator } from 'react-native';
+import { useWindowDimensions, TextInput, ActivityIndicator, View, StyleSheet, TouchableOpacity, Text, FlatList, Platform } from 'react-native';
 import PremiumLoader from '../../components/PremiumLoader';
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, FlatList } from 'react-native';
+  
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
@@ -9,6 +9,8 @@ import globalStyles from '../../styles/globalStyles';
 import BusinessCard from '../../components/BusinessCard';
 import businessService from '../../services/businessService';
 import Skeleton from '../../components/Skeleton';
+
+const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price', 'Newest'];
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { width } = useWindowDimensions();
@@ -119,15 +121,21 @@ const SearchResultsScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    paddingBottom: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
     gap: 16,
   },
   headerSearch: {
@@ -136,26 +144,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
-    height: 44,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   headerSearchInput: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     fontSize: 14,
+    fontWeight: '600',
     color: '#111827',
   },
   filterBar: {
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginRight: 8,
-    backgroundColor: '#FFF',
+    marginRight: 10,
+    backgroundColor: '#FFFFFF',
   },
   activeFilterChip: {
     backgroundColor: colors.primary,
@@ -164,14 +175,14 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 13,
     color: '#6B7280',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   activeFilterText: {
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   listContainer: {
-    padding: 10,
-    paddingBottom: 40,
+    padding: 12,
+    paddingBottom: 60,
     maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
@@ -192,9 +203,10 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 20,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#9CA3AF',
   },
+
 });
 
 export default SearchResultsScreen;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +19,7 @@ const menuGroups = [
       { id: 'personal', icon: 'person-outline', title: 'Personal Information', color: '#3B82F6' },
       { id: 'requests', icon: 'document-text-outline', title: 'My Requests', color: '#10B981' },
       { id: 'favorites', icon: 'heart-outline', title: 'Saved Items', color: '#EF4444' },
+      { id: 'settings', icon: 'settings-outline', title: 'Settings', color: '#4B5563' },
     ]
   },
   {
@@ -37,7 +38,6 @@ const menuGroups = [
   }
 ];
 
-import { useWindowDimensions } from 'react-native';
 
 const ProfileScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
@@ -146,6 +146,8 @@ const ProfileScreen = ({ navigation }) => {
                         onPress={() => {
                           if (item.id === 'requests') navigation.navigate('RequestsTab');
                           if (item.id === 'favorites') navigation.navigate('FavoritesTab');
+                          if (item.id === 'settings') navigation.navigate('Settings');
+                          if (item.id === 'help') navigation.navigate('Support');
                         }}
                       >
                         <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
