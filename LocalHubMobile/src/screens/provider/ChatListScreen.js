@@ -5,39 +5,24 @@ import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
-
-const dummyChats = [
-  {
-    id: '1',
-    name: 'Amit Sharma',
-    lastMessage: 'When can you visit my office?',
-    time: '12:45 PM',
-    unread: 2,
-    isOnline: true,
-    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150',
-  },
-  {
-    id: '2',
-    name: 'Neha Gupta',
-    lastMessage: 'Okay, sounds good to me.',
-    time: 'Yesterday',
-    unread: 0,
-    isOnline: false,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150',
-  },
-  {
-    id: '3',
-    name: 'System Alerts',
-    lastMessage: 'Your listing is approved!',
-    time: '2 days ago',
-    unread: 0,
-    isOnline: false,
-    avatar: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?q=80&w=150', // Logo placeholder
-  }
-];
+import chatService from '../../services/chatService';
 
 const ChatListScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
+  const [chats, setChats] = useState([]);
+  
+  React.useEffect(() => {
+    fetchChats();
+  }, []);
+
+  const fetchChats = async () => {
+    try {
+      const res = await chatService.getChats();
+      setChats(res.data || []);
+    } catch (e) {
+      console.log('Error fetching chats:', e);
+    }
+  };
 
   const renderChatItem = ({ item }) => (
     <TouchableOpacity 
@@ -92,7 +77,7 @@ const ChatListScreen = ({ navigation }) => {
       </AnimatedFadeIn>
 
       <FlatList
-        data={dummyChats}
+        data={chats}
         keyExtractor={(item) => item.id}
         renderItem={renderChatItem}
         contentContainerStyle={styles.listArea}

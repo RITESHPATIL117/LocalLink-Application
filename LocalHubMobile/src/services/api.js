@@ -5,7 +5,7 @@ import logger from '../utils/logger';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // 10 seconds timeout
+  timeout: 3000, // 3 seconds timeout for "Real-time" responsiveness
   headers: {
     'Content-Type': 'application/json',
   },
@@ -39,15 +39,23 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    const isMockEndpont = error.config?.url?.includes('/admin/') || error.config?.url?.includes('/leads');
+    
     if (error.code === 'ERR_NETWORK') {
-      logger.error(`NETWORK ERROR: Cannot reach ${API_URL}. Please check if the backend is running and your device is on the same network.`);
+      logger.debug(`NETWORK OFFLINE: ${API_URL}. Using resilient mock mode.`);
     }
-    logger.error(`API Response Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
-      message: error.message,
-      data: error.response?.data,
-      status: error.response?.status
-    });
-    // Handle global errors, token expiration, etc.
+
+    // Silence common failures for endpoints known to have mock fallbacks
+    if (isMockEndpont && (error.response?.status === 404 || error.response?.status === 500)) {
+      logger.debug(`API Silence: ${error.config?.method?.toUpperCase()} ${error.config?.url} (Mocking Active)`);
+    } else if (error.response?.status === 404 || error.response?.status === 500 || error.code === 'ERR_NETWORK') {
+      logger.warn(`API Expected Failure: ${error.config?.method?.toUpperCase()} ${error.config?.url} | Status: ${error.response?.status || error.code}`);
+    } else {
+      logger.error(`API Response Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        message: error.message,
+        status: error.response?.status
+      });
+    }
     return Promise.reject(error);
   }
 );

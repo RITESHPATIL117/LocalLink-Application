@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import businessService from '../../services/businessService';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
 const BusinessesScreen = ({ navigation }) => {
   const [businesses, setBusinesses] = useState([]);
@@ -35,38 +36,40 @@ const BusinessesScreen = ({ navigation }) => {
     return matchesSearch && matchesFilter;
   });
 
-  const renderBusiness = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.bizCard}
-      onPress={() => navigation.navigate('BusinessDetails', { businessId: item.id })}
-    >
-      <Image 
-        source={{ uri: item.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=200' }} 
-        style={styles.bizImage} 
-      />
-      <View style={styles.bizContent}>
-        <View style={styles.bizHeader}>
-          <Text style={styles.bizName} numberOfLines={1}>{item.name}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: item.status === 'active' ? '#ECFDF5' : '#FFFBEB' }]}>
-            <Text style={[styles.statusText, { color: item.status === 'active' ? '#10B981' : '#F59E0B' }]}>
-              {item.status?.toUpperCase()}
-            </Text>
+  const renderBusiness = ({ item, index }) => (
+    <AnimatedFadeIn delay={index * 50}>
+      <TouchableOpacity 
+        style={styles.bizCard}
+        onPress={() => navigation.navigate('BusinessDetails', { businessId: item.id })}
+      >
+        <Image 
+          source={{ uri: item.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=200' }} 
+          style={styles.bizImage} 
+        />
+        <View style={styles.bizContent}>
+          <View style={styles.bizHeader}>
+            <Text style={styles.bizName} numberOfLines={1}>{item.name}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: item.status === 'active' ? '#ECFDF5' : '#FFFBEB' }]}>
+              <Text style={[styles.statusText, { color: item.status === 'active' ? '#10B981' : '#F59E0B' }]}>
+                {item.status?.toUpperCase()}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.bizCategory}>{item.category_name || 'General Service'}</Text>
+          <View style={styles.bizFooter}>
+            <View style={styles.footerItem}>
+              <Ionicons name="star" size={14} color="#F59E0B" />
+              <Text style={styles.footerText}>{item.rating || '0.0'}</Text>
+            </View>
+            <View style={styles.footerItem}>
+              <Ionicons name="location-outline" size={14} color="#6B7280" />
+              <Text style={styles.footerText} numberOfLines={1}>{item.address || 'Local'}</Text>
+            </View>
           </View>
         </View>
-        <Text style={styles.bizCategory}>{item.category_name || 'General Service'}</Text>
-        <View style={styles.bizFooter}>
-          <View style={styles.footerItem}>
-            <Ionicons name="star" size={14} color="#F59E0B" />
-            <Text style={styles.footerText}>{item.rating || '0.0'}</Text>
-          </View>
-          <View style={styles.footerItem}>
-            <Ionicons name="location-outline" size={14} color="#6B7280" />
-            <Text style={styles.footerText} numberOfLines={1}>{item.address || 'Local'}</Text>
-          </View>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#D1D5DB" style={{ alignSelf: 'center', marginRight: 10 }} />
-    </TouchableOpacity>
+        <Ionicons name="chevron-forward" size={20} color="#D1D5DB" style={{ alignSelf: 'center', marginRight: 10 }} />
+      </TouchableOpacity>
+    </AnimatedFadeIn>
   );
 
   return (

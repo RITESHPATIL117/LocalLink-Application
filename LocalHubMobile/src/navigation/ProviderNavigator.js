@@ -22,50 +22,43 @@ import ProviderSettingsScreen from '../screens/provider/ProviderSettingsScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const DashboardStack = () => (
-  <Stack.Navigator screenOptions={{ headerTintColor: colors.primary }}>
-    <Stack.Screen name="ProviderDashboard" component={DashboardScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddBusiness" component={AddBusinessScreen} options={{ title: 'Manage Listing' }} />
-    <Stack.Screen name="Reviews" component={ReviewsScreen} options={{ title: 'Customer Reviews' }} />
-    <Stack.Screen name="LeadDetails" component={LeadDetailScreen} options={{ title: 'Lead Details' }} />
-    <Stack.Screen name="ChatList" component={ChatListScreen} options={{ title: 'Messages' }} />
-    <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ title: 'Chat' }} />
-    <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
-    <Stack.Screen name="Earnings" component={EarningsScreen} options={{ title: 'My Earnings' }} />
-    <Stack.Screen name="Profile" component={ProviderProfileScreen} options={{ title: 'Business Profile' }} />
-    <Stack.Screen name="Settings" component={ProviderSettingsScreen} options={{ title: 'Settings' }} />
-  </Stack.Navigator>
+const TabNavigator = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.textSecondary,
+      tabBarIcon: ({ focused, color, size }) => {
+        let iconName;
+        if (route.name === 'DashboardTab') iconName = focused ? 'grid' : 'grid-outline';
+        else if (route.name === 'MyListingsTab') iconName = focused ? 'list' : 'list-outline';
+        else if (route.name === 'LeadsTab') iconName = focused ? 'people' : 'people-outline';
+        else if (route.name === 'MoreTab') iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+    })}
+  >
+    <Tab.Screen name="DashboardTab" component={DashboardScreen} options={{ tabBarLabel: 'Dashboard' }} />
+    <Tab.Screen name="MyListingsTab" component={MyListingsScreen} options={{ tabBarLabel: 'My Listings' }} />
+    <Tab.Screen name="LeadsTab" component={LeadsScreen} options={{ tabBarLabel: 'Leads' }} />
+    <Tab.Screen name="MoreTab" component={AnalyticsScreen} options={{ tabBarLabel: 'Analytics' }} />
+  </Tab.Navigator>
 );
 
 const ProviderNavigator = () => {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'DashboardTab') {
-            iconName = focused ? 'grid' : 'grid-outline';
-          } else if (route.name === 'MyListingsTab') {
-            iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'LeadsTab') {
-            iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'MoreTab') {
-            iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
-      <Tab.Screen name="MyListingsTab" component={MyListingsScreen} options={{ tabBarLabel: 'My Listings' }} />
-      <Tab.Screen name="LeadsTab" component={LeadsScreen} options={{ tabBarLabel: 'Leads' }} />
-      <Tab.Screen name="MoreTab" component={AnalyticsScreen} options={{ tabBarLabel: 'Analytics' }} />
-    </Tab.Navigator>
+    <Stack.Navigator screenOptions={{ headerTintColor: colors.primary }}>
+      <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen name="AddBusiness" component={AddBusinessScreen} options={{ title: 'Manage Listing' }} />
+      <Stack.Screen name="Reviews" component={ReviewsScreen} options={{ title: 'Customer Reviews' }} />
+      <Stack.Screen name="LeadDetails" component={LeadDetailScreen} options={{ title: 'Lead Details' }} />
+      <Stack.Screen name="ChatList" component={ChatListScreen} options={{ title: 'Messages' }} />
+      <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+      <Stack.Screen name="Earnings" component={EarningsScreen} options={{ title: 'My Earnings' }} />
+      <Stack.Screen name="Profile" component={ProviderProfileScreen} options={{ title: 'Business Profile' }} />
+      <Stack.Screen name="Settings" component={ProviderSettingsScreen} options={{ title: 'Settings' }} />
+    </Stack.Navigator>
   );
 };
 

@@ -6,15 +6,42 @@ import colors from '../styles/colors';
  * Renders a dynamic icon based on the icon name and common family mappings.
  * Resolves warnings like "wrench" not being in Feather family.
  */
-export const renderDynamicIcon = (name, size, color) => {
-  const iconName = name || 'star';
-  
+/**
+ * Renders a dynamic icon based on the icon name and common family mappings.
+ * Robustly handles (name, size, color) or (name, isMaterial, size, color).
+ */
+export const renderDynamicIcon = (name, isMaterialOrSize, sizeOrColor, colorOnly) => {
+  let iconName = name || 'star';
+  let size = 24;
+  let color = colors.primary || '#000';
+  let isMaterial = false;
+
+  // Handle (name, size, color)
+  if (typeof isMaterialOrSize === 'number') {
+    size = isMaterialOrSize;
+    color = sizeOrColor || color;
+  } 
+  // Handle (name, isMaterial, size, color)
+  else {
+    isMaterial = !!isMaterialOrSize;
+    size = typeof sizeOrColor === 'number' ? sizeOrColor : 24;
+    color = colorOnly || color;
+  }
+
+  // Ensure size is never 0 or non-positive to prevent native crashes
+  const actualSize = Math.max(1, size);
+
+  // Material Icons family
+  if (isMaterial) {
+    return <MaterialCommunityIcons name={iconName} size={actualSize} color={color} />;
+  }
+
   // Feather mappings
   if (['zap', 'trash-2', 'tool', 'layers', 'user', 'settings', 'help-circle', 'mail', 'phone'].includes(iconName)) {
-    return <Feather name={iconName} size={size} color={color} />;
+    return <Feather name={iconName} size={actualSize} color={color} />;
   }
   
-  // MaterialCommunityIcons mappings (for those not in Feather/Ionicons)
+  // MaterialCommunityIcons fallback mappings
   const mcoIcons = [
     'wrench', 'flower', 'bug', 'hammer', 'account-group', 'chart-areaspline', 'file-document-outline', 
     'car-wrench', 'content-cut', 'party-popper', 'dumbbell', 'format-paint', 'moped',
@@ -24,11 +51,11 @@ export const renderDynamicIcon = (name, size, color) => {
   ];
   
   if (mcoIcons.includes(iconName)) {
-    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+    return <MaterialCommunityIcons name={iconName} size={actualSize} color={color} />;
   }
   
-  // Default to Ionicons (most versatile)
-  return <Ionicons name={iconName} size={size} color={color} />;
+  // Default to Ionicons
+  return <Ionicons name={iconName} size={actualSize} color={color} />;
 };
 
 export default renderDynamicIcon;

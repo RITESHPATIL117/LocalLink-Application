@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform } from 'react-native';
+import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform, Linking, ActivityIndicator, Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -9,6 +11,7 @@ import colors from '../../styles/colors';
 import Badge from '../../components/Badge';
 import reviewService from '../../services/reviewService';
 import PremiumLoader from '../../components/PremiumLoader';
+import { useFavorites } from '../../hooks/useFavorites';
 
 const dummyReviews = [
   { id: '1', user: 'Rahul Mehta', rating: 5, date: '2 days ago', text: 'Great Service!' },
@@ -40,6 +43,8 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isFav = isFavorite(business.id);
 
   const fetchReviews = useCallback(async () => {
     if (!business.id) return;
@@ -75,6 +80,18 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
                 </BlurView>
               </TouchableOpacity>
             )}
+            
+            <TouchableOpacity 
+              style={styles.favoriteBtnOverlay} 
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                toggleFavorite(business);
+              }}
+            >
+              <BlurView intensity={isFav ? 80 : 60} tint={isFav ? "light" : "dark"} style={styles.glassCircle}>
+                <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? "#EF4444" : "#FFF"} />
+              </BlurView>
+            </TouchableOpacity>
           </View>
 
           <View style={[styles.mainInfoContainer, isLargeScreen && styles.mainInfoWeb]}>
@@ -102,13 +119,13 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
             </View>
 
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity style={styles.primaryBtn}>
+              <TouchableOpacity style={styles.primaryBtn} onPress={() => Linking.openURL('tel:1234567890')}>
                 <Ionicons name="call" size={20} color="#FFF" />
                 <Text style={styles.primaryBtnText}>Call Now</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn}>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => navigation.navigate('RequestsTab')}>
                 <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
-                <Text style={styles.secondaryBtnText}>Chat</Text>
+                <Text style={styles.secondaryBtnText}>Message</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -178,6 +195,17 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
                     )}
                   </View>
                 )}
+                {activeTab === 'Photos' && (
+                  <View style={styles.photosGrid}>
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <Image 
+                        key={i} 
+                        source={{ uri: `${business.image}?sig=${i}` }} 
+                        style={styles.photoThumb} 
+                      />
+                    ))}
+                  </View>
+                )}
             </AnimatedFadeIn>
           </View>
         </View>
@@ -237,8 +265,11 @@ const styles = StyleSheet.create({
   reviewText: { fontSize: 15, color: '#4B5563', lineHeight: 22 },
   glassCircle: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   backButtonOverlay: { position: 'absolute', top: 50, left: 16 },
+  favoriteBtnOverlay: { position: 'absolute', top: 50, right: 16 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyText: { marginTop: 12, fontSize: 16, color: '#9CA3AF', fontWeight: '600' },
+  photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  photoThumb: { width: (screenWidth - 60) / 3, height: (screenWidth - 60) / 3, borderRadius: 12 },
 });
 
 export default BusinessDetailsScreen;

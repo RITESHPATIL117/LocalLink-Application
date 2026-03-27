@@ -46,7 +46,7 @@ const CustomDrawerContent = (props) => {
         <DrawerItem
           label="About Us"
           icon={({ color, size }) => <Ionicons name="information-circle-outline" color={color} size={size} />}
-          onPress={() => {}}
+          onPress={() => props.navigation.navigate('AboutUs')}
         />
 
         {isAuthenticated && (

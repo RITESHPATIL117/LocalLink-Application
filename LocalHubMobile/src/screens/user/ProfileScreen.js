@@ -9,6 +9,7 @@ import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import Button from '../../components/Button';
+import { useFavorites } from '../../hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +45,7 @@ const ProfileScreen = ({ navigation }) => {
   const isWeb = width > 768;
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { favorites } = useFavorites();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -120,7 +122,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statVal}>5</Text>
+                  <Text style={styles.statVal}>{favorites.length}</Text>
                   <Text style={styles.statLabel}>Saved</Text>
                 </View>
                 <View style={styles.statDivider} />
@@ -144,10 +146,14 @@ const ProfileScreen = ({ navigation }) => {
                         key={item.id} 
                         style={[styles.menuItem, itemIdx === group.items.length - 1 && { borderBottomWidth: 0 }]}
                         onPress={() => {
+                          if (item.id === 'personal') navigation.navigate('EditProfile');
                           if (item.id === 'requests') navigation.navigate('RequestsTab');
                           if (item.id === 'favorites') navigation.navigate('FavoritesTab');
                           if (item.id === 'settings') navigation.navigate('Settings');
                           if (item.id === 'help') navigation.navigate('Support');
+                          if (item.id === 'reviews') navigation.navigate('RequestsTab'); // Or dedicated reviews if created
+                          if (item.id === 'recent') navigation.navigate('HomeTab');
+                          if (item.id === 'terms') navigation.navigate('Info', { title: 'Terms & Privacy' });
                         }}
                       >
                         <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>

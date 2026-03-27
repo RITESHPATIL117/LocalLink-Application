@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/authSlice';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import Toast from 'react-native-toast-message';
 
 const ProviderSettingsScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [notifications, setNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -35,20 +39,28 @@ const ProviderSettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account & Security</Text>
           <View style={styles.settingsCard}>
-            <ActionRow icon="lock-closed" label="Change Password" onPress={() => {}} />
-            <ActionRow icon="shield-checkmark" label="Two-Factor Auth" onPress={() => {}} />
-            <ActionRow icon="eye-off" label="Privacy Settings" onPress={() => {}} />
+            <ActionRow icon="lock-closed" label="Change Password" onPress={() => Toast.show({ type: 'info', text1: 'Feature Coming Soon', text2: 'Password change will be available in the next update.' })} />
+            <ActionRow icon="shield-checkmark" label="Two-Factor Auth" onPress={() => Toast.show({ type: 'info', text1: 'Feature Coming Soon', text2: 'Enhanced security is coming soon.' })} />
+            <ActionRow icon="eye-off" label="Privacy Settings" onPress={() => Toast.show({ type: 'info', text1: 'Feature Coming Soon', text2: 'Privacy controls are being finalized.' })} />
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.settingsCard}>
-            <ActionRow icon="help-circle" label="Help Center" onPress={() => {}} />
-            <ActionRow icon="chatbubble" label="Contact Support" onPress={() => {}} />
-            <ActionRow icon="document-text" label="Terms & Conditions" onPress={() => {}} />
+            <ActionRow icon="help-circle" label="Help Center" onPress={() => navigation.navigate('Support')} />
+            <ActionRow icon="chatbubble" label="Contact Support" onPress={() => navigation.navigate('Support')} />
+            <ActionRow icon="document-text" label="Terms & Conditions" onPress={() => Toast.show({ type: 'info', text1: 'Terms & Conditions', text2: 'View our terms on our website.' })} />
           </View>
         </View>
+
+        <TouchableOpacity 
+          style={styles.logoutBtn} 
+          onPress={() => { dispatch(logout()); navigation.navigate('Login'); }}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" style={{marginRight: 8}}/>
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
 
         <View style={styles.footer}>
           <Text style={styles.version}>LocalHub Provider v1.0.4</Text>
@@ -98,6 +110,19 @@ const styles = StyleSheet.create({
   rowLeft: { flexDirection: 'row', alignItems: 'center' },
   iconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#FFF3EE', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   label: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
+  logoutBtn: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEF2F2', 
+    margin: 20,
+    padding: 16, 
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    marginTop: 10,
+  },
+  logoutText: { color: '#EF4444', fontWeight: '800', fontSize: 16 },
   footer: { alignItems: 'center', paddingVertical: 40 },
   version: { fontSize: 12, color: '#94A3B8', fontWeight: '600' },
   copyright: { fontSize: 12, color: '#CBD5E1', marginTop: 4 },

@@ -14,6 +14,8 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 
 import SettingsScreen from '../screens/user/SettingsScreen';
 import SupportScreen from '../screens/user/SupportScreen';
+import AboutUsScreen from '../screens/user/AboutUsScreen';
+import InfoScreen from '../screens/user/InfoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,7 +44,9 @@ const AppNavigator = () => {
           </>
         )}
         <Stack.Screen name="Support" component={SupportScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="AboutUs" component={AboutUsScreen} />
+        <Stack.Screen name="Info" component={InfoScreen} />
     </Stack.Navigator>
     </NavigationContainer>
   );

@@ -7,23 +7,25 @@ import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
 const LeadDetailScreen = ({ route, navigation }) => {
-  const { leadId = '1' } = route.params || {};
-  const [status, setStatus] = useState('New');
-  const [loading, setLoading] = useState(false);
+  const { lead: passedLead } = route.params || {};
 
-  // Mock lead data
-  const lead = {
-    id: leadId,
-    user: 'Amit Sharma',
-    email: 'amit@example.com',
-    phone: '+91 98765 43210',
+  // Mock fallback if navigated directly without params
+  const lead = passedLead || {
+    id: '1',
+    customer: 'Amit Sharma',
+    customerEmail: 'amit@example.com',
+    customerPhone: '+91 98765 43210',
     service: 'Plumbing Repair',
-    date: '24 Mar 2026, 10:30 AM',
+    time: '24 Mar 2026, 10:30 AM',
     location: 'Plot 42, Sector 5, Gurgaon',
     message: 'I have a major leaking pipe under the kitchen sink. Water is spreading to the living room. Need someone urgently who can come in the next 1 hour.',
     avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150',
     budget: '₹500 - ₹1,500',
+    status: 'New'
   };
+
+  const [status, setStatus] = useState(lead.status || 'New');
+  const [loading, setLoading] = useState(false);
 
   const handleStatusChange = (newStatus) => {
     setLoading(true);
@@ -41,7 +43,7 @@ const LeadDetailScreen = ({ route, navigation }) => {
         <AnimatedFadeIn duration={500}>
           <View style={styles.customerHeader}>
             <Image source={{ uri: lead.avatar }} style={styles.avatar} />
-            <Text style={styles.userName}>{lead.user}</Text>
+            <Text style={styles.userName}>{lead.customer}</Text>
             <View style={[
               styles.statusBadge, 
               status === 'New' ? styles.badgeNew : status === 'Contacted' ? styles.badgeContacted : styles.badgeClosed
@@ -59,14 +61,14 @@ const LeadDetailScreen = ({ route, navigation }) => {
           <View style={styles.contactRow}>
             <TouchableOpacity 
               style={styles.contactBtn} 
-              onPress={() => navigation.navigate('ChatDetail', { name: lead.user })}
+              onPress={() => navigation.navigate('ChatDetail', { name: lead.customer })}
             >
               <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
               <Text style={styles.contactBtnText}>Message</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.contactBtn} 
-              onPress={() => Linking.openURL(`tel:${lead.phone}`)}
+              onPress={() => Linking.openURL(`tel:${lead.customerPhone}`)}
             >
               <Ionicons name="call" size={20} color="#10B981" />
               <Text style={[styles.contactBtnText, { color: '#10B981' }]}>Call Now</Text>
@@ -80,7 +82,7 @@ const LeadDetailScreen = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Service Requested</Text>
             <View style={styles.detailCard}>
               <DetailItem icon="construct" label="Service" value={lead.service} />
-              <DetailItem icon="calendar" label="Requested On" value={lead.date} />
+              <DetailItem icon="calendar" label="Requested On" value={lead.time} />
               <DetailItem icon="location" label="Location" value={lead.location} />
               <DetailItem icon="wallet" label="Estimate Budget" value={lead.budget} color="#F59E0B" />
             </View>

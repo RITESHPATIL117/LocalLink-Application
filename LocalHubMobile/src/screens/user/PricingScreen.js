@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
 
 const packages = [
   { id: 'free', name: 'Free Listing', price: '₹0 / mo', features: ['Basic Profile', 'Photo Gallery', 'Customer Reviews'] },
@@ -13,6 +15,7 @@ const packages = [
 ];
 
 const PricingScreen = ({ navigation }) => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]}>
       {/* Header */}
@@ -43,7 +46,20 @@ const PricingScreen = ({ navigation }) => {
               ))}
             </View>
             
-            <TouchableOpacity style={[styles.button, index === 3 ? styles.diamondButton : null]} onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity 
+              style={[styles.button, index === 3 ? styles.diamondButton : null]} 
+              onPress={() => {
+                if (isAuthenticated) {
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Plan Requested',
+                    text2: `A request for the ${pkg.name} has been sent to support.`,
+                  });
+                } else {
+                  navigation.navigate('Login');
+                }
+              }}
+            >
               <Text style={[styles.buttonText, index === 3 && { color: colors.primary }]}>
                 Choose Plan
               </Text>

@@ -10,6 +10,7 @@ import UsersScreen from '../screens/admin/UsersScreen';
 import ReportsScreen from '../screens/admin/ReportsScreen';
 import BusinessesScreen from '../screens/admin/BusinessesScreen';
 import ApprovalsScreen from '../screens/admin/ApprovalsScreen';
+import CategoriesScreen from '../screens/admin/CategoriesScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -21,6 +22,7 @@ const AdminDashboardStack = () => (
     <Stack.Screen name="Reports" component={ReportsScreen} />
     <Stack.Screen name="Businesses" component={BusinessesScreen} />
     <Stack.Screen name="Approvals" component={ApprovalsScreen} />
+    <Stack.Screen name="Categories" component={CategoriesScreen} />
   </Stack.Navigator>
 );
 
@@ -40,6 +42,8 @@ const AdminNavigator = () => {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'ApprovalsTab') {
             iconName = focused ? 'checkmark-circle' : 'checkmark-circle-outline';
+          } else if (route.name === 'CategoriesTab') {
+            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'ReportsTab') {
             iconName = focused ? 'document-text' : 'document-text-outline';
           }
@@ -51,6 +55,7 @@ const AdminNavigator = () => {
       <Tab.Screen name="DashboardTab" component={AdminDashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
       <Tab.Screen name="UsersTab" component={UsersScreen} options={{ tabBarLabel: 'Users' }} />
       <Tab.Screen name="ApprovalsTab" component={ApprovalsScreen} options={{ tabBarLabel: 'Approvals' }} />
+      <Tab.Screen name="CategoriesTab" component={CategoriesScreen} options={{ tabBarLabel: 'Categories' }} />
       <Tab.Screen name="ReportsTab" component={ReportsScreen} options={{ tabBarLabel: 'Reports' }} />
     </Tab.Navigator>
   );

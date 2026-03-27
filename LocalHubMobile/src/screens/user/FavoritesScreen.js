@@ -1,78 +1,149 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
 import BusinessCard from '../../components/BusinessCard';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import { useFavorites } from '../../hooks/useFavorites';
 
-const dummySavedBusinesses = [
-  {
-    id: '101',
-    name: 'Sagar Ratna Restaurant',
-    category: 'Restaurants',
-    rating: '4.8',
-    address: 'South Extension, New Delhi',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=400',
-  },
-  {
-    id: '103',
-    name: 'QuickFix Electricals',
-    category: 'Electricians',
-    rating: '4.5',
-    address: 'Andheri West, Mumbai',
-    image: 'https://images.unsplash.com/photo-1621905252507-eb6368d5ba18?q=80&w=400',
-  },
-];
-
+const CATEGORIES = ['All', 'Home Services', 'Personal Care', 'Cleaning', 'Repair'];
 
 const FavoritesScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isWeb = width > 768;
   const numColumns = isWeb ? (width > 1200 ? 3 : 2) : 1;
-  const [favorites, setFavorites] = useState(dummySavedBusinesses);
+  
+  const { favorites, loading } = useFavorites();
+  const [activeTab, setActiveTab] = useState('All');
+  const [search, setSearch] = useState('');
+
+  // Filtering Logic
+  const filteredFavorites = useMemo(() => {
+    let result = favorites;
+    
+    // Grouping by tab logic (mock category matching based on string inclusion)
+    if (activeTab !== 'All') {
+      result = result.filter(b => b.category?.toLowerCase() === activeTab.toLowerCase());
+    }
+
+    if (search.trim()) {
+      result = result.filter(b => 
+        b.name?.toLowerCase().includes(search.toLowerCase()) || 
+        b.category?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    return result;
+  }, [favorites, activeTab, search]);
 
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
+      
+      {/* ─── Premium Header ─── */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <Ionicons name="menu" size={28} color={colors.primary} />
+            <View style={styles.menuIconBg}>
+              <Ionicons name="menu" size={24} color={colors.primary} />
+            </View>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Saved Items</Text>
-          <TouchableOpacity style={styles.headerIcon}>
-            <Ionicons name="filter-outline" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>Saved Items</Text>
+            <Text style={styles.headerSubTitle}>{favorites.length} places favored</Text>
+          </View>
+          <View style={{ width: 44 }} />
         </View>
+
+        {favorites.length > 0 && (
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#9CA3AF" />
+            <TextInput 
+              placeholder="Search your favorites..." 
+              style={styles.searchInput}
+              value={search}
+              onChangeText={setSearch}
+              placeholderTextColor="#9CA3AF"
+            />
+            {search.length > 0 && (
+               <TouchableOpacity onPress={() => setSearch('')}>
+                 <Ionicons name="close-circle" size={20} color="#E5E7EB" />
+               </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {favorites.length > 0 && (
+          <View style={styles.tabsWrapper}>
+            <FlatList 
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={CATEGORIES}
+              keyExtractor={item => item}
+              contentContainerStyle={styles.tabsContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[styles.tabButton, activeTab === item && styles.activeTabButton]}
+                  onPress={() => setActiveTab(item)}
+                >
+                  <Text style={[styles.tabText, activeTab === item && styles.activeTabText]}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
       </View>
       
-      {favorites.length === 0 ? (
-        <AnimatedFadeIn duration={600}>
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconBg}>
-              <Ionicons name="heart-outline" size={100} color={colors.primary} />
+      {/* ─── Content Area ─── */}
+      {favorites.length === 0 && !loading ? (
+        
+        // ─── Stunning Empty State ───
+        <AnimatedFadeIn duration={600} style={styles.emptyContainer}>
+          <View style={styles.emptyIconBg}>
+            <Ionicons name="heart" size={80} color="#EF4444" />
+            <View style={styles.floatingStar1}>
+               <Ionicons name="star" size={24} color="#F59E0B" />
             </View>
-            <Text style={styles.emptyTitle}>Nothing saved yet</Text>
-            <Text style={styles.emptyDesc}>
-              Tap the heart icon on any business page to save it for quick access later.
-            </Text>
-            <TouchableOpacity 
-              style={styles.exploreBtn} 
-              onPress={() => navigation.navigate('HomeTab')}
-            >
-              <Text style={styles.exploreBtnText}>Explore Services</Text>
-            </TouchableOpacity>
+            <View style={styles.floatingStar2}>
+               <Ionicons name="sparkles" size={20} color={colors.primary} />
+            </View>
           </View>
+          <Text style={styles.emptyTitle}>Nothing feels like home yet</Text>
+          <Text style={styles.emptyDesc}>
+            Found a local service you love? Tap the heart icon to save them for quick booking next time.
+          </Text>
+          <TouchableOpacity 
+            style={styles.exploreBtn} 
+            onPress={() => navigation.navigate('HomeTab')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient colors={[colors.primary, '#4338CA']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.exploreBtnGradient}>
+              <Ionicons name="search" size={20} color="#FFF" />
+              <Text style={styles.exploreBtnText}>Discover Services</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </AnimatedFadeIn>
+
       ) : (
+
+        // ─── Favorites Grid ───
         <FlatList
           key={numColumns}
-          data={favorites}
+          data={filteredFavorites}
           numColumns={numColumns}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.noSearchMatch}>
+              <Ionicons name="search-outline" size={60} color="#E5E7EB" />
+              <Text style={styles.noMatchText}>No matching favorites found.</Text>
+            </View>
+          }
           renderItem={({ item, index }) => (
             <BusinessCard 
               business={item} 
@@ -89,78 +160,74 @@ const FavoritesScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { backgroundColor: '#F9FAFB' },
+  
   header: { 
     backgroundColor: '#FFF', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#F3F4F6' 
+    borderBottomColor: '#F3F4F6',
+    paddingBottom: 8,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
-  headerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  menuIconBg: {
+    width: 44, height: 44, borderRadius: 14,
     backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
+  headerTitle: { fontSize: 24, fontWeight: '900', color: '#111827', textAlign: 'center', letterSpacing: -0.5 },
+  headerSubTitle: { fontSize: 13, color: '#6B7280', textAlign: 'center', fontWeight: '600', marginTop: 2 },
+  
+  searchContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 20, marginBottom: 16,
+    paddingHorizontal: 16, height: 48,
+    borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB',
+  },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '600', color: '#111827' },
+  
+  tabsWrapper: { marginBottom: 4 },
+  tabsContent: { paddingHorizontal: 16, gap: 10 },
+  tabButton: {
+    paddingHorizontal: 18, paddingVertical: 8,
+    borderRadius: 20, backgroundColor: '#F3F4F6',
+  },
+  activeTabButton: { backgroundColor: '#111827' },
+  tabText: { fontSize: 13, fontWeight: '700', color: '#6B7280' },
+  activeTabText: { color: '#FFF' },
+
   listContent: {
-    padding: 10,
-    paddingBottom: 40,
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
+    padding: 10, paddingBottom: 60,
+    maxWidth: 1200, alignSelf: 'center', width: '100%',
   },
+  
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-    marginTop: 60,
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    padding: 32, marginTop: -40,
   },
   emptyIconBg: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: `${colors.primary}10`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 24, position: 'relative',
+    shadowColor: '#EF4444', shadowOpacity: 0.15, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5,
   },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  emptyDesc: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-    paddingHorizontal: 20,
-  },
-  exploreBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: colors.primary,
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-  exploreBtnText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '800',
-  },
+  floatingStar1: { position: 'absolute', top: 10, right: 10, transform: [{ rotate: '15deg' }] },
+  floatingStar2: { position: 'absolute', bottom: 20, left: 10, transform: [{ rotate: '-15deg' }] },
+  emptyTitle: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 12, textAlign: 'center', letterSpacing: -0.5 },
+  emptyDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', lineHeight: 22, marginBottom: 40, paddingHorizontal: 10 },
+  
+  exploreBtn: { borderRadius: 16, overflow: 'hidden', shadowColor: colors.primary, shadowOpacity: 0.3, shadowRadius: 15, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  exploreBtnGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 32, paddingVertical: 18, gap: 10 },
+  exploreBtnText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+
+  noSearchMatch: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 100 },
+  noMatchText: { marginTop: 16, fontSize: 16, color: '#9CA3AF', fontWeight: '700' },
 });
 
 export default FavoritesScreen;

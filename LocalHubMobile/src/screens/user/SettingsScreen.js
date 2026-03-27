@@ -2,15 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/authSlice';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import Toast from 'react-native-toast-message';
 
 const SettingsScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [notifications, setNotifications] = React.useState(true);
   const [location, setLocation] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
 
-  const SettingItem = ({ icon, title, type = 'chevron', value, onValueChange }) => (
-    <TouchableOpacity style={styles.item} disabled={type === 'switch'}>
+  const SettingItem = ({ icon, title, type = 'chevron', value, onValueChange, onPress }) => (
+    <TouchableOpacity style={styles.item} disabled={type === 'switch'} onPress={onPress}>
       <View style={styles.itemLeft}>
         <View style={styles.iconBox}>
           <Ionicons name={icon} size={20} color={colors.primary} />
@@ -41,9 +46,9 @@ const SettingsScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Account</Text>
-          <SettingItem icon="person-outline" title="Edit Profile" />
-          <SettingItem icon="lock-closed-outline" title="Change Password" />
-          <SettingItem icon="shield-checkmark-outline" title="Privacy Policy" />
+          <SettingItem icon="person-outline" title="Edit Profile" onPress={() => navigation.navigate('EditProfile')} />
+          <SettingItem icon="lock-closed-outline" title="Change Password" onPress={() => Toast.show({ type: 'info', text1: 'Feature Coming Soon', text2: 'Password change is coming in the next update.' })} />
+          <SettingItem icon="shield-checkmark-outline" title="Privacy Policy" onPress={() => navigation.navigate('Info', { title: 'Privacy Policy' })} />
         </View>
 
         <View style={styles.section}>
@@ -66,11 +71,11 @@ const SettingsScreen = ({ navigation }) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>More</Text>
-          <SettingItem icon="information-circle-outline" title="About LocalHub" />
-          <SettingItem icon="document-text-outline" title="Terms of Service" />
+          <SettingItem icon="information-circle-outline" title="About LocalHub" onPress={() => navigation.navigate('AboutUs')} />
+          <SettingItem icon="document-text-outline" title="Terms of Service" onPress={() => navigation.navigate('Info', { title: 'Terms of Service' })} />
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={() => { dispatch(logout()); navigation.navigate('Login'); }}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>

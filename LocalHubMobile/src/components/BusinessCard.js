@@ -6,8 +6,12 @@ import * as Haptics from 'expo-haptics';
 import colors from '../styles/colors';
 import Badge from './Badge';
 import AnimatedFadeIn from './AnimatedFadeIn';
+import { useFavorites } from '../hooks/useFavorites';
 
 const BusinessCard = ({ business, onPress, horizontal, grid, index = 0 }) => {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isFav = isFavorite(business.id);
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if(onPress) onPress();
@@ -41,6 +45,19 @@ const BusinessCard = ({ business, onPress, horizontal, grid, index = 0 }) => {
             <Text style={styles.ratingText}>{business.rating}</Text>
             <Ionicons name="star" size={12} color={colors.secondary} />
           </BlurView>
+
+          <TouchableOpacity 
+            style={styles.favoriteBadge}
+            onPress={(e) => {
+              e.stopPropagation();
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toggleFavorite(business);
+            }}
+          >
+            <BlurView intensity={isFav ? 80 : 60} tint="dark" style={styles.favoriteGlass}>
+              <Ionicons name={isFav ? "heart" : "heart-outline"} size={16} color={isFav ? "#EF4444" : "#FFF"} />
+            </BlurView>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
@@ -143,6 +160,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     marginRight: 4,
+  },
+  favoriteBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 5,
+  },
+  favoriteGlass: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   content: {
     padding: 16,

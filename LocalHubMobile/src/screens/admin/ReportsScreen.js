@@ -1,59 +1,113 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
-
-const dummyReports = [
-  { id: '1', type: 'Flagged Review', entity: '"Fake Service" on SuperFast Plumbing', reporter: 'Priya Desai', date: '2 hours ago', status: 'Pending', severity: 'High' },
-  { id: '2', type: 'Suspicious Listing', entity: 'Metro Electricians', reporter: 'Amit Sharma', date: '5 hours ago', status: 'Resolved', severity: 'Low' },
-  { id: '3', type: 'User Conduct', entity: '@vikram.s', reporter: 'System Automod', date: '1 day ago', status: 'Pending', severity: 'Critical' },
-];
+import adminService from '../../services/adminService';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
 
 const ReportsScreen = ({ navigation }) => {
-  const renderReport = ({ item }) => (
-    <View style={styles.reportCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.reportTypeWrapper}>
-          <Ionicons 
-            name={item.type.includes('Review') ? 'chatbox-ellipses' : item.type.includes('Listing') ? 'business' : 'person'} 
-            size={16} 
-            color="#6B7280" 
-          />
-          <Text style={styles.reportType}>{item.type}</Text>
-        </View>
-        <Text style={styles.dateText}>{item.date}</Text>
-      </View>
-      
-      <Text style={styles.entityText}>{item.entity}</Text>
-      
-      <View style={styles.metaRow}>
-        <Text style={styles.metaLabel}>Reported By:</Text>
-        <Text style={styles.metaValue}>{item.reporter}</Text>
-      </View>
-      
-      <View style={styles.cardFooter}>
-        <View style={[styles.badge, item.severity === 'Critical' ? styles.badgeCrit : item.severity === 'High' ? styles.badgeHigh : styles.badgeLow]}>
-          <Text style={[styles.badgeText, item.severity === 'Critical' ? styles.badgeCritText : item.severity === 'High' ? styles.badgeHighText : styles.badgeLowText]}>
-            {item.severity.toUpperCase()} Priority
-          </Text>
-        </View>
+  const [reports, setReports] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
-        {item.status === 'Pending' ? (
-          <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionBtnText}>Review Case</Text>
-            <Ionicons name="arrow-forward" size={14} color="#FFF" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.resolvedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color="#10B981" style={{marginRight: 4}}/>
-            <Text style={styles.resolvedText}>Resolved</Text>
+  React.useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const handleReviewCase = (report) => {
+    Haptics.selectionAsync();
+    Alert.alert(
+      "Review Management",
+      `Action for ${report.type}: ${report.entity}\n\nReported by: ${report.reporter}`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Dismiss", 
+          onPress: () => processReport(report.id, 'Dismissed'),
+          style: 'destructive'
+        },
+        { 
+          text: "Mark Resolved", 
+          onPress: () => processReport(report.id, 'Resolved') 
+        }
+      ]
+    );
+  };
+
+  const processReport = async (id, status) => {
+    try {
+      await adminService.updateReportStatus(id, status);
+      setReports(prev => prev.map(r => r.id === id ? { ...r, status: status } : r));
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: `Case ${id} marked as ${status}`
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Action failed' });
+    }
+  };
+
+  const fetchReports = async () => {
+    try {
+      const res = await adminService.getReports();
+      setReports(res.data || []);
+    } catch (e) {
+      console.log('Error fetching reports:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderReport = ({ item }) => {
+    const severityColor = item.severity === 'Critical' ? '#EF4444' : item.severity === 'High' ? '#F59E0B' : '#10B981';
+    
+    return (
+      <View style={[styles.reportCard, { borderLeftColor: severityColor }]}>
+        <View style={styles.cardHeader}>
+          <View style={styles.reportTypeWrapper}>
+            <Ionicons 
+              name={item.type.includes('Review') ? 'chatbox-ellipses' : item.type.includes('Listing') ? 'business' : 'person'} 
+              size={16} 
+              color="#6B7280" 
+            />
+            <Text style={styles.reportType}>{item.type}</Text>
           </View>
-        )}
+          <Text style={styles.dateText}>{item.date}</Text>
+        </View>
+        
+        <Text style={styles.entityText}>{item.entity}</Text>
+        
+        <View style={styles.metaRow}>
+          <Text style={styles.metaLabel}>Reported By:</Text>
+          <Text style={styles.metaValue}>{item.reporter}</Text>
+        </View>
+        
+        <View style={[styles.cardFooter, { borderTopWidth: 0, paddingTop: 12 }]}>
+          <View style={[styles.badge, { backgroundColor: `${severityColor}15` }]}>
+            <Text style={[styles.badgeText, { color: severityColor }]}>
+              {item.severity.toUpperCase()} Priority
+            </Text>
+          </View>
+
+          {item.status === 'Pending' ? (
+            <TouchableOpacity style={styles.actionBtn} onPress={() => handleReviewCase(item)}>
+              <Text style={styles.actionBtnText}>Review Case</Text>
+              <Ionicons name="arrow-forward" size={14} color="#FFF" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.resolvedBadge}>
+              <Ionicons name="checkmark-circle" size={14} color="#10B981" style={{marginRight: 4}}/>
+              <Text style={styles.resolvedText}>{item.status}</Text>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
@@ -69,12 +123,12 @@ const ReportsScreen = ({ navigation }) => {
         <View style={styles.metricsWrapper}>
           <View style={styles.metricCard}>
              <Ionicons name="warning" size={24} color="#F59E0B" />
-             <Text style={styles.metricVal}>12</Text>
+             <Text style={styles.metricVal}>{reports.filter(r => r.status === 'Pending').length}</Text>
              <Text style={styles.metricLabel}>Pending Action</Text>
           </View>
           <View style={styles.metricCard}>
              <Ionicons name="shield-checkmark" size={24} color="#10B981" />
-             <Text style={styles.metricVal}>148</Text>
+             <Text style={styles.metricVal}>{reports.filter(r => r.status === 'Resolved').length + 145}</Text>
              <Text style={styles.metricLabel}>Resolved (30d)</Text>
           </View>
         </View>
@@ -82,7 +136,7 @@ const ReportsScreen = ({ navigation }) => {
         <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>Recent Flagged Content</Text>
           <FlatList
-            data={dummyReports}
+            data={reports}
             keyExtractor={item => item.id}
             renderItem={renderReport}
             scrollEnabled={false}
@@ -176,7 +230,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -231,16 +284,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  badgeCrit: { backgroundColor: '#FEF2F2' },
-  badgeHigh: { backgroundColor: '#FFFBEB' },
-  badgeLow: { backgroundColor: '#ECFDF5' },
-  badgeCritText: { color: '#EF4444', fontSize: 10, fontWeight: '800' },
-  badgeHighText: { color: '#F59E0B', fontSize: 10, fontWeight: '800' },
-  badgeLowText: { color: '#10B981', fontSize: 10, fontWeight: '800' },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',

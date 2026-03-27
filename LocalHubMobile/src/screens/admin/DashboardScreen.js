@@ -11,6 +11,7 @@ import globalStyles from '../../styles/globalStyles';
 import businessService from '../../services/businessService';
 import adminService from '../../services/adminService';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 const isLargeScreen = width > 768;
@@ -20,6 +21,7 @@ const sidebarMenu = [
   { id: 'users', title: 'Manage Users', icon: 'people-outline' },
   { id: 'businesses', title: 'Businesses', icon: 'business-outline' },
   { id: 'approvals', title: 'Approvals', icon: 'checkmark-circle-outline' },
+  { id: 'categories', title: 'Categories', icon: 'grid-outline' },
   { id: 'reports', title: 'Reports', icon: 'document-text-outline' },
   { id: 'settings', title: 'Settings', icon: 'options-outline' },
 ];
@@ -104,6 +106,8 @@ const DashboardScreen = ({ navigation }) => {
                  navigation.navigate('Businesses');
                } else if (item.id === 'approvals') {
                  navigation.navigate('ApprovalsTab');
+               } else if (item.id === 'categories') {
+                 navigation.navigate('Categories');
                } else if (item.id === 'reports') {
                  navigation.navigate('ReportsTab');
                }
@@ -139,11 +143,14 @@ const DashboardScreen = ({ navigation }) => {
         {/* Top Navigation / Header Area */}
         <View style={styles.topHeader}>
           <View>
-            <Text style={styles.greetingGreeting}>System Overview,</Text>
+            <View style={styles.statusRow}>
+               <View style={styles.statusDot} />
+               <Text style={styles.statusText}>System Live • v1.0.4</Text>
+            </View>
             <Text style={styles.greetingTitle}>{adminName}</Text>
           </View>
           <View style={styles.topActions}>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => Toast.show({ type: 'info', text1: 'System Alert', text2: 'No critical system issues found.' })}>
               <View style={styles.badge} />
               <Ionicons name="notifications" size={20} color="#FFF" />
             </TouchableOpacity>
@@ -262,6 +269,8 @@ const DashboardScreen = ({ navigation }) => {
                     navigation.navigate('Businesses');
                   } else if (item.id === 'approvals') {
                     navigation.navigate('ApprovalsTab');
+                  } else if (item.id === 'categories') {
+                    navigation.navigate('Categories');
                   } else if (item.id === 'reports') {
                     navigation.navigate('ReportsTab');
                   }
@@ -429,6 +438,29 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     color: '#FFF',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 10,
+    color: '#10B981',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   topActions: {
     flexDirection: 'row',

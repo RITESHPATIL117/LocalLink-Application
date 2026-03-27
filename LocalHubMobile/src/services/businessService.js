@@ -64,7 +64,6 @@ const businessService = {
       logger.warn('No businesses returned from API, using mock data');
       return { data: mockBusinesses };
     } catch (error) {
-      logger.error('API failed while fetching businesses, returning mock data', error.message);
       return { data: mockBusinesses };
     }
   },

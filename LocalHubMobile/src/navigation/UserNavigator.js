@@ -16,6 +16,7 @@ import ProfileScreen from '../screens/user/ProfileScreen';
 import PricingScreen from '../screens/user/PricingScreen';
 import SubcategoryScreen from '../screens/user/SubcategoryScreen';
 import RequestsScreen from '../screens/user/RequestsScreen';
+import EditProfileScreen from '../screens/user/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -55,7 +56,7 @@ const FavoritesStack = () => (
 const ProfileStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-    {/* Add other profile-related stacks here if needed */}
+    <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 
