@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../styles/colors';
@@ -61,6 +61,9 @@ const ProfileStack = () => (
 );
 
 const UserNavigator = () => {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -68,6 +71,7 @@ const UserNavigator = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
+          display: isDesktop ? 'none' : 'flex',
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F1F5F9',

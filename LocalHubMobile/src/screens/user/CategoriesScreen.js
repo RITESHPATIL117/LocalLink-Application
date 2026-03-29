@@ -11,69 +11,51 @@ import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import categoryService from '../../services/categoryService';
+import LeadGatekeeper from '../../components/LeadGatekeeper';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import { renderDynamicIcon } from '../../utils/iconHelper';
+import { useSelector } from 'react-redux';
 
 
 
 // ─── Fallback & Mock Data ──────────────────────────────────────────────────
 
 const FALLBACK_CATEGORIES = [
-  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF' },
-  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB' },
-  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5' },
-  { id: 'c4', name: 'AC & Appliance',  icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF' },
-  { id: 'c5', name: 'Beauty & Salon',  icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8' },
-  { id: 'c6', name: 'Carpenter',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED' },
-  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF' },
-  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2' },
+  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300' },
+  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
+  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
+  { id: 'c4', name: 'AC Service',      icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300' },
+  { id: 'c5', name: 'Beauty',          icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=300' },
+  { id: 'c6', name: 'Carpentry',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=300' },
+  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF', image: 'https://images.unsplash.com/photo-1562591176-3293099a0bf3?q=80&w=300' },
+  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2', image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=300' },
 ];
-
-const SUBCAT_MAP = {
-  'Plumbing': [
-    { name: 'Pipe Leak Repair', icon: 'water', image: 'https://images.unsplash.com/photo-1542013936693-884638332954?q=80&w=300' },
-    { name: 'Water Heater', icon: 'thermometer', image: 'https://images.unsplash.com/photo-1585938389612-a552a28d6914?q=80&w=300' },
-    { name: 'Toilet Repair', icon: 'business', image: 'https://images.unsplash.com/photo-1584622781564-1d987f7333c1?q=80&w=300' },
-    { name: 'Drain Cleaning', icon: 'sync', image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=300' }
-  ],
-  'Electrical': [
-    { name: 'Wiring & Panels', icon: 'flash', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
-    { name: 'Lighting Setup', icon: 'sunny', image: 'https://images.unsplash.com/photo-1551029506-0807df4e2031?q=80&w=300' },
-    { name: 'Inverter Repair', icon: 'battery-charging', image: 'https://images.unsplash.com/photo-1521747669139-02cd71498b04?q=80&w=300' },
-    { name: 'Fan Repair', icon: 'aperture', image: 'https://images.unsplash.com/photo-1574343867664-850970d4fc6a?q=80&w=300' }
-  ],
-  'Cleaning': [
-    { name: 'Deep Home Clean', icon: 'sparkles', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
-    { name: 'Sofa Cleaning', icon: 'bed', image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=300' },
-    { name: 'Kitchen Clean', icon: 'restaurant', image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=300' },
-    { name: 'Bathroom Clean', icon: 'water', image: 'https://images.unsplash.com/photo-1584622781564-1d987f7333c1?q=80&w=300' }
-  ],
-  'AC & Appliance': [
-    { name: 'AC Service', icon: 'snow', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300' },
-    { name: 'Fridge Repair', icon: 'cube', image: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?q=80&w=300' },
-    { name: 'Washing Machine', icon: 'sync', image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?q=80&w=300' }
-  ],
-  'Beauty & Salon': [
-    { name: 'Hair Styling', icon: 'cut', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=300' },
-    { name: 'Facial & Cleanup', icon: 'happy', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=300' },
-    { name: 'Manicure', icon: 'hand-left', image: 'https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?q=80&w=300' },
-    { name: 'Bridal Makeup', icon: 'color-palette', image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=300' }
-  ]
-};
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
+const MAX_APP_WIDTH = 1200;
+
 const CategoriesScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const contentWidth = Math.min(width, MAX_APP_WIDTH);
+  const leftNavWidth = 90;
+  const rightPaneWidth = isDesktop ? (contentWidth - leftNavWidth) : (width - leftNavWidth);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [subLoading, setSubLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedMainCat, setSelectedMainCat] = useState(null);
+  const [activeSubcategories, setActiveSubcategories] = useState([]);
+
+  // Lead Modal State
+  const [leadModalVisible, setLeadModalVisible] = useState(false);
+  const [pendingSubItem, setPendingSubItem] = useState(null);
+  const { isAuthenticated, leadCaptured } = useSelector(state => state.auth);
 
   // Responsive Grid
   // Left nav takes ~90px. Remaining is right pane.
-  const rightPaneWidth = width - 90;
-  const numColumns = rightPaneWidth > 600 ? 3 : 2;
+  const numColumns = rightPaneWidth > 800 ? 4 : (rightPaneWidth > 500 ? 3 : 2);
   const itemWidth = (rightPaneWidth - 40 - (10 * (numColumns - 1))) / numColumns;
 
   useEffect(() => {
@@ -82,8 +64,8 @@ const CategoriesScreen = ({ navigation }) => {
 
   const fetchCategories = async () => {
     try {
-      const res = await categoryService.getCategories().catch(() => ({ data: [] }));
-      const rawData = res.data && res.data.length > 0 ? res.data : FALLBACK_CATEGORIES;
+      const res = await categoryService.getCategories();
+      const rawData = res.data || [];
       
       const structured = rawData.map((c, i) => ({
         ...c,
@@ -91,15 +73,11 @@ const CategoriesScreen = ({ navigation }) => {
         color: c.color || '#3B82F6',
         bg: c.bg || '#EFF6FF',
         icon: c.icon || 'grid-outline',
-        subcategories: SUBCAT_MAP[c.name] || [
-          { name: `${c.name} Pro`, icon: 'star', image: 'https://images.unsplash.com/photo-1581094488221-757774cc1e5b?q=80&w=300' },
-          { name: `Standard ${c.name}`, icon: 'hammer', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=300' }
-        ]
       }));
 
       setCategories(structured);
       if (structured.length > 0) {
-        setSelectedMainCat(structured[0].id);
+        handleSelectNav(structured[0].id);
       }
     } catch (error) {
       console.log('Error fetching categories:', error);
@@ -110,17 +88,40 @@ const CategoriesScreen = ({ navigation }) => {
 
   const activeCategoryData = categories.find(c => c.id === selectedMainCat) || categories[0];
 
-  const handleSelectNav = (id) => {
+  const handleSelectNav = async (id) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelectedMainCat(id);
+    setSubLoading(true);
+    try {
+      const subRes = await categoryService.getSubcategories(id);
+      setActiveSubcategories(subRes.data || []);
+    } catch (e) {
+      console.error('Failed to fetch subcategories', e);
+    } finally {
+      setSubLoading(false);
+    }
   };
 
   // Filter Subcategories if searching, otherwise show active main category content
   const isSearching = search.trim().length > 0;
   
+  const handleSubcategoryPress = (subItem) => {
+    if (isAuthenticated || leadCaptured) {
+      navigation.navigate('SearchResults', { query: subItem.name });
+    } else {
+      setPendingSubItem(subItem);
+      setLeadModalVisible(true);
+    }
+  };
+
+  const handleLeadSuccess = () => {
+    setLeadModalVisible(false);
+    navigation.navigate('SearchResults', { query: pendingSubItem?.name });
+  };
+
   const searchResults = isSearching 
     ? categories.flatMap(cat => 
-        cat.subcategories
+        (cat.subcategories || [])
            .filter(sub => sub.name.toLowerCase().includes(search.toLowerCase()) || cat.name.toLowerCase().includes(search.toLowerCase()))
            .map(sub => ({ ...sub, parentCat: cat.name }))
       )
@@ -128,6 +129,7 @@ const CategoriesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
+      <View style={[styles.mainWrapper, isDesktop && styles.mainWrapperDesktop]}>
       
       {/* ─── Header ─── */}
       <View style={styles.header}>
@@ -175,7 +177,7 @@ const CategoriesScreen = ({ navigation }) => {
                 <SubcategoryCard 
                   item={subItem} 
                   parentName={subItem.parentCat}
-                  onPress={() => navigation.navigate('SearchResults', { query: subItem.name })} 
+                  onPress={() => handleSubcategoryPress(subItem)} 
                 />
               </AnimatedFadeIn>
             )) : (
@@ -238,19 +240,26 @@ const CategoriesScreen = ({ navigation }) => {
 
                   {/* Subcategory Grid */}
                   <View style={styles.subCatGrid}>
-                    {activeCategoryData.subcategories.map((subItem, index) => (
-                      <AnimatedFadeIn 
-                        key={`${activeCategoryData.id}-${index}`} 
-                        delay={index * 50} 
-                        duration={300} 
-                        style={[styles.gridItem, { width: itemWidth }]}
-                      >
-                        <SubcategoryCard 
-                          item={subItem} 
-                          onPress={() => navigation.navigate('SearchResults', { query: subItem.name })} 
-                        />
-                      </AnimatedFadeIn>
-                    ))}
+                    {subLoading ? (
+                      <View style={styles.subLoader}>
+                        <ActivityIndicator color={activeCategoryData.color} />
+                        <Text style={styles.subLoaderText}>Fetching services...</Text>
+                      </View>
+                    ) : (
+                      activeSubcategories.map((subItem, index) => (
+                        <AnimatedFadeIn 
+                          key={`${selectedMainCat}-${index}`} 
+                          delay={index * 50} 
+                          duration={300} 
+                          style={[styles.gridItem, { width: itemWidth }]}
+                        >
+                          <SubcategoryCard 
+                            item={subItem} 
+                            onPress={() => handleSubcategoryPress(subItem)} 
+                          />
+                        </AnimatedFadeIn>
+                      ))
+                    )}
                   </View>
                   
                   {/* Space at bottom for safe scrolling */}
@@ -259,9 +268,15 @@ const CategoriesScreen = ({ navigation }) => {
               </ScrollView>
             )}
           </View>
-
         </View>
       )}
+      <LeadGatekeeper 
+        visible={leadModalVisible}
+        category={pendingSubItem}
+        onClose={() => setLeadModalVisible(false)}
+        onSuccess={handleLeadSuccess}
+      />
+      </View>
     </SafeAreaView>
   );
 };
@@ -284,6 +299,16 @@ const SubcategoryCard = ({ item, parentName, onPress }) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
+  mainWrapper: { flex: 1, width: '100%' },
+  mainWrapperDesktop: {
+    maxWidth: MAX_APP_WIDTH,
+    alignSelf: 'center',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#F3F4F6',
+    backgroundColor: '#FFF',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 20, elevation: 5,
+  },
 
   // Header area
   header: {
@@ -381,6 +406,10 @@ const styles = StyleSheet.create({
   searchResultsHeader: { fontSize: 16, fontWeight: '800', color: '#111827', marginBottom: 16 },
   noResultsBox: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100, width: '100%' },
   noResultsText: { marginTop: 16, fontSize: 15, color: '#9CA3AF', fontWeight: '700' },
+
+  // Sub Loader
+  subLoader: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40, width: '100%' },
+  subLoaderText: { marginTop: 10, fontSize: 13, color: '#9CA3AF', fontWeight: '600' },
 });
 
 export default CategoriesScreen;

@@ -4,162 +4,193 @@ import logger from '../utils/logger';
 const mockCategories = [
   {
     id: '1',
-    name: 'Home Services',
-    title: 'Home Services',
-    icon: 'home',
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=400',
-    isMaterial: false,
+    name: 'Cleaning',
+    title: 'Cleaning Services',
+    icon: 'sparkles',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400',
     color: '#3B82F6',
     subcategories: [
-      { id: '1-1', name: 'Cleaning', icon: 'broom', isMaterial: true, color: '#3B82F6' },
-      { id: '1-2', name: 'Plumbing', icon: 'water', isMaterial: true, color: '#3B82F6' },
-      { id: '1-3', name: 'Electrician', icon: 'lightning-bolt', isMaterial: true, color: '#3B82F6' },
+      { id: '1-1', name: 'Home Deep Cleaning', icon: 'sparkles', isMaterial: true, color: '#3B82F6' },
+      { id: '1-2', name: 'Sofa & Carpet Cleaning', icon: 'water', isMaterial: true, color: '#3B82F6' },
+      { id: '1-3', name: 'Kitchen & Bathroom', icon: 'color-filter', isMaterial: true, color: '#3B82F6' },
+      { id: '1-4', name: 'Pest Control', icon: 'bug', isMaterial: true, color: '#3B82F6' },
     ]
   },
   {
     id: '2',
-    name: 'Auto Repair',
-    title: 'Auto Repair',
-    icon: 'car-wrench',
-    image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=400',
-    isMaterial: true,
-    color: '#EF4444',
+    name: 'Plumbing',
+    title: 'Plumbing & Repair',
+    icon: 'water',
+    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=400',
+    color: '#3B82F6',
     subcategories: [
-      { id: '2-1', name: 'Mechanic', icon: 'wrench', isMaterial: true, color: '#EF4444' },
-      { id: '2-2', name: 'Car Wash', icon: 'car-wash', isMaterial: true, color: '#EF4444' },
+      { id: '2-1', name: 'Pipe Leaks', icon: 'water', isMaterial: true, color: '#3B82F6' },
+      { id: '2-2', name: 'Water Heater', icon: 'thermometer', isMaterial: true, color: '#3B82F6' },
+      { id: '2-3', name: 'Toilet Repair', icon: 'business', isMaterial: true, color: '#3B82F6' },
+      { id: '2-4', name: 'Drain Cleaning', icon: 'sync', isMaterial: true, color: '#3B82F6' },
     ]
   },
   {
     id: '3',
-    name: 'Beauty & Salon',
-    title: 'Beauty & Salon',
-    icon: 'content-cut',
-    image: 'https://images.unsplash.com/photo-1560066984-138be5ba5499?q=80&w=400',
-    isMaterial: true,
-    color: '#EC4899',
+    name: 'Electrical',
+    title: 'Electrical Work',
+    icon: 'flash',
+    image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=400',
+    color: '#F59E0B',
     subcategories: [
-      { id: '3-1', name: 'Haircut', icon: 'content-cut', isMaterial: true, color: '#EC4899' },
-      { id: '3-2', name: 'Spa', icon: 'spa', isMaterial: true, color: '#EC4899' },
+      { id: '3-1', name: 'Wiring & Panels', icon: 'flash', isMaterial: true, color: '#F59E0B' },
+      { id: '3-2', name: 'Lighting Fix', icon: 'sunny', isMaterial: true, color: '#F59E0B' },
+      { id: '3-3', name: 'Appliance Repair', icon: 'hammer', isMaterial: true, color: '#F59E0B' },
+      { id: '3-4', name: 'Fan & Cooler', icon: 'aperture', isMaterial: true, color: '#F59E0B' },
     ]
   },
   {
     id: '4',
-    name: 'Local Shops',
-    title: 'Local Shops',
-    icon: 'storefront',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400',
-    isMaterial: false,
-    color: '#10B981',
+    name: 'HVAC',
+    title: 'AC & Cooling',
+    icon: 'snow',
+    image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=400',
+    color: '#06B6D4',
     subcategories: [
-      { id: '4-1', name: 'Grocery', icon: 'cart', isMaterial: true, color: '#10B981' },
-      { id: '4-2', name: 'Hardware', icon: 'hammer-wrench', isMaterial: true, color: '#10B981' },
+      { id: '4-1', name: 'AC Service & Repair', icon: 'snow', isMaterial: true, color: '#06B6D4' },
+      { id: '4-2', name: 'AC Installation', icon: 'build', isMaterial: true, color: '#06B6D4' },
+      { id: '4-3', name: 'Gas Refill', icon: 'flask', isMaterial: true, color: '#06B6D4' },
+      { id: '4-4', name: 'AMC Plans', icon: 'calendar', isMaterial: true, color: '#06B6D4' },
     ]
   },
   {
     id: '5',
-    name: 'Events & Catering',
-    title: 'Events & Catering',
-    icon: 'party-popper',
-    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=400',
-    isMaterial: true,
-    color: '#F59E0B',
+    name: 'Pet Care',
+    title: 'Dog & Cat Services',
+    icon: 'paw',
+    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=400',
+    color: '#EC4899',
     subcategories: [
-      { id: '5-1', name: 'Catering', icon: 'food', isMaterial: true, color: '#F59E0B' },
-      { id: '5-2', name: 'Decor', icon: 'balloon', isMaterial: true, color: '#F59E0B' },
+      { id: '5-1', name: 'Pet Grooming', icon: 'cut', isMaterial: true, color: '#EC4899' },
+      { id: '5-2', name: 'Dog Walking', icon: 'walk', isMaterial: true, color: '#EC4899' },
+      { id: '5-3', name: 'Vet Consultation', icon: 'medical', isMaterial: true, color: '#EC4899' },
+      { id: '5-4', name: 'Pet Sitting', icon: 'heart', isMaterial: true, color: '#EC4899' },
     ]
   },
   {
     id: '6',
-    name: 'Health & Fitness',
-    title: 'Health & Fitness',
-    icon: 'dumbbell',
-    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
-    isMaterial: true,
-    color: '#8B5CF6',
+    name: 'Automobile',
+    title: 'Car & Bike Repair',
+    icon: 'car-sport',
+    image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=400',
+    color: '#EF4444',
     subcategories: [
-      { id: '6-1', name: 'Gym', icon: 'dumbbell', isMaterial: true, color: '#8B5CF6' },
-      { id: '6-2', name: 'Yoga', icon: 'yoga', isMaterial: true, color: '#8B5CF6' },
+      { id: '6-1', name: 'Car Wash & Spa', icon: 'water', isMaterial: true, color: '#EF4444' },
+      { id: '6-2', name: 'Mechanic Services', icon: 'wrench', isMaterial: true, color: '#EF4444' },
+      { id: '6-3', name: 'Wheel Alignment', icon: 'color-wheel', isMaterial: true, color: '#EF4444' },
+      { id: '6-4', name: 'Battery Service', icon: 'battery-full', isMaterial: true, color: '#EF4444' },
     ]
   },
   {
     id: '7',
-    name: 'Education',
-    title: 'Education',
-    icon: 'school',
-    image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=400',
-    isMaterial: false,
-    color: '#F43F5E',
+    name: 'Events',
+    title: 'Plan & Execute',
+    icon: 'calendar',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=400',
+    color: '#8B5CF6',
     subcategories: [
-      { id: '7-1', name: 'Tutors', icon: 'book', isMaterial: false, color: '#F43F5E' },
-      { id: '7-2', name: 'Music Lessons', icon: 'musical-notes', isMaterial: false, color: '#F43F5E' },
+      { id: '7-1', name: 'Photography', icon: 'camera', isMaterial: true, color: '#8B5CF6' },
+      { id: '7-2', name: 'Catering Services', icon: 'restaurant', isMaterial: true, color: '#8B5CF6' },
+      { id: '7-3', name: 'DJ & Sound', icon: 'musical-notes', isMaterial: true, color: '#8B5CF6' },
+      { id: '7-4', name: 'Decor & Flowers', icon: 'rose', isMaterial: true, color: '#8B5CF6' },
     ]
   },
   {
     id: '8',
-    name: 'Pet Services',
-    title: 'Pet Services',
-    icon: 'paw',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=400',
-    isMaterial: true,
-    color: '#06B6D4',
+    name: 'Health',
+    title: 'Personal Wellness',
+    icon: 'fitness',
+    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
+    color: '#10B981',
     subcategories: [
-      { id: '8-1', name: 'Pet Grooming', icon: 'dog', isMaterial: true, color: '#06B6D4' },
-      { id: '8-2', name: 'Vet', icon: 'stethoscope', isMaterial: true, color: '#06B6D4' },
+      { id: '8-1', name: 'Yoga Instructor', icon: 'body', isMaterial: true, color: '#10B981' },
+      { id: '8-2', name: 'Gym Training', icon: 'barbell', isMaterial: true, color: '#10B981' },
+      { id: '8-3', name: 'Physiotherapy', icon: 'bandage', isMaterial: true, color: '#10B981' },
+      { id: '8-4', name: 'Diet Plan', icon: 'leaf', isMaterial: true, color: '#10B981' },
     ]
   },
   {
     id: '9',
-    name: 'Real Estate',
-    title: 'Real Estate',
-    icon: 'home-city',
+    name: 'Home Design',
+    title: 'Interior & Decor',
+    icon: 'home',
     image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400',
-    isMaterial: true,
     color: '#6366F1',
     subcategories: [
-      { id: '9-1', name: 'Rentals', icon: 'key', isMaterial: true, color: '#6366F1' },
-      { id: '9-2', name: 'Buying', icon: 'home-search', isMaterial: true, color: '#6366F1' },
-      { id: '9-3', name: 'Commercial', icon: 'office-building', isMaterial: true, color: '#6366F1' },
+      { id: '9-1', name: 'Wall Painting', icon: 'color-palette', isMaterial: true, color: '#6366F1' },
+      { id: '9-2', name: 'Interior Design', icon: 'cube', isMaterial: true, color: '#6366F1' },
+      { id: '9-3', name: 'Modular Kitchen', icon: 'grid', isMaterial: true, color: '#6366F1' },
+      { id: '9-4', name: 'False Ceiling', icon: 'layers', isMaterial: true, color: '#6366F1' },
     ]
   },
   {
     id: '10',
-    name: 'Restaurants',
-    title: 'Restaurants',
-    icon: 'silverware-fork-knife',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=400',
-    isMaterial: true,
-    color: '#EAB308',
+    name: 'Legal',
+    title: 'Professional Help',
+    icon: 'briefcase',
+    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=400',
+    color: '#374151',
     subcategories: [
-      { id: '10-1', name: 'Cafe', icon: 'coffee', isMaterial: true, color: '#EAB308' },
-      { id: '10-2', name: 'Fast Food', icon: 'hamburger', isMaterial: true, color: '#EAB308' },
-      { id: '10-3', name: 'Fine Dining', icon: 'glass-wine', isMaterial: true, color: '#EAB308' },
+      { id: '10-1', name: 'Notary Help', icon: 'document-text', isMaterial: true, color: '#374151' },
+      { id: '10-2', name: 'GST & Tax Consult', icon: 'calculator', isMaterial: true, color: '#374151' },
+      { id: '10-3', name: 'Legal Advice', icon: 'library', isMaterial: true, color: '#374151' },
+      { id: '10-4', name: 'Property Reg', icon: 'key', isMaterial: true, color: '#374151' },
     ]
   },
   {
     id: '11',
-    name: 'Laundry',
-    title: 'Laundry',
-    icon: 'washing-machine',
-    image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=400',
-    isMaterial: true,
-    color: '#0EA5E9',
+    name: 'Education',
+    title: 'Learning & Tutors',
+    icon: 'school',
+    image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=400',
+    color: '#F43F5E',
     subcategories: [
-      { id: '11-1', name: 'Dry Cleaning', icon: 'hanger', isMaterial: true, color: '#0EA5E9' },
-      { id: '11-2', name: 'Ironing', icon: 'iron', isMaterial: true, color: '#0EA5E9' },
-      { id: '11-3', name: 'Normal Wash', icon: 'tshirt-crew', isMaterial: true, color: '#0EA5E9' },
+      { id: '11-1', name: 'Private Tutors', icon: 'book', isMaterial: true, color: '#F43F5E' },
+      { id: '11-2', name: 'Music Lessons', icon: 'musical-notes', isMaterial: true, color: '#F43F5E' },
+      { id: '11-3', name: 'Language classes', icon: 'language', isMaterial: true, color: '#F43F5E' },
     ]
   },
   {
     id: '12',
-    name: 'Moving & Storage',
-    title: 'Moving & Storage',
-    icon: 'truck',
-    image: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?q=80&w=400',
-    isMaterial: true,
-    color: '#84CC16',
+    name: 'Real Estate',
+    title: 'Buy, Sell, Rent',
+    icon: 'home-city',
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400',
+    color: '#6366F1',
     subcategories: [
-      { id: '12-1', name: 'Packers & Movers', icon: 'box', isMaterial: true, color: '#84CC16' },
-      { id: '12-2', name: 'Storage Units', icon: 'warehouse', isMaterial: true, color: '#84CC16' },
+      { id: '12-1', name: 'Rentals', icon: 'key', isMaterial: true, color: '#6366F1' },
+      { id: '12-2', name: 'Property Buying', icon: 'business', isMaterial: true, color: '#6366F1' },
+      { id: '12-3', name: 'Commercial', icon: 'briefcase', isMaterial: true, color: '#6366F1' },
+    ]
+  },
+  {
+    id: '13',
+    name: 'Laundry',
+    title: 'Wash & Fold',
+    icon: 'washing-machine',
+    image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=400',
+    color: '#0EA5E9',
+    subcategories: [
+      { id: '13-1', name: 'Dry Cleaning', icon: 'shirt', isMaterial: true, color: '#0EA5E9' },
+      { id: '13-2', name: 'Ironing', icon: 'layers', isMaterial: true, color: '#0EA5E9' },
+    ]
+  },
+  {
+    id: '14',
+    name: 'Restaurants',
+    title: 'Dine & Order',
+    icon: 'restaurant',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=400',
+    color: '#EAB308',
+    subcategories: [
+      { id: '14-1', name: 'Cafe', icon: 'cafe', isMaterial: true, color: '#EAB308' },
+      { id: '14-2', name: 'Fast Food', icon: 'fast-food', isMaterial: true, color: '#EAB308' },
+      { id: '14-3', name: 'Fine Dining', icon: 'wine', isMaterial: true, color: '#EAB308' },
     ]
   }
 ];
@@ -169,15 +200,36 @@ const categoryService = {
     try {
       logger.info('Fetching categories...');
       const response = await api.get('/categories');
-      // If we got a response (already unwrapped by interceptor), return it in the expected format
-      if (response && (Array.isArray(response) ? response.length > 0 : response)) {
-        logger.info(`Successfully fetched ${Array.isArray(response) ? response.length : 1} categories`);
-        return { data: response };
-      }
-      logger.warn('API returned empty categories, using mock data');
-      return { data: mockCategories };
+      
+      // Standardize response extraction
+      const apiCats = Array.isArray(response) 
+        ? response 
+        : (response?.data && Array.isArray(response.data) ? response.data : []);
+      
+      // Merge Strategy: Sync IDs from DB into our rich mock data
+      mockCategories.forEach(m => {
+        const apiMatch = apiCats.find(a => a.name.toLowerCase() === m.name.toLowerCase());
+        if (apiMatch) {
+          m.id = apiMatch.id.toString();
+        }
+      });
+
+      // Prepare return set: Use all mocks, and add any API-only categories
+      const merged = [...mockCategories];
+      apiCats.forEach(apiCat => {
+        if (!merged.find(m => m.name.toLowerCase() === apiCat.name.toLowerCase())) {
+          merged.push({
+            ...apiCat,
+            id: apiCat.id.toString(),
+            subcategories: []
+          });
+        }
+      });
+
+      logger.info(`Successfully prepared ${merged.length} categories (Merged API + Mocks)`);
+      return { data: merged };
     } catch (error) {
-      // Quiet fallback for production-ready "Real-time" feel
+      logger.warn('API failed, falling back to pure mocks');
       return { data: mockCategories };
     }
   },
@@ -191,6 +243,23 @@ const categoryService = {
       const newCategory = { ...categoryData, id: Math.random().toString() };
       mockCategories.unshift(newCategory); // Add locally so it appears in immediate fetches
       return { data: newCategory };
+    }
+  },
+  getSubcategories: async (catId) => {
+    try {
+      logger.info(`Fetching subcategories for cat: ${catId}`);
+      await new Promise(resolve => setTimeout(resolve, 300)); 
+      
+      // Robust lookup: Match by id directly or try to find by ID in current state if we had access.
+      // Since it's a singleton, mockCategories is now synced.
+      let cat = mockCategories.find(c => c.id === catId.toString());
+      
+      // Final fallback: If we can't find it by ID, it might be because the ID didn't sync correctly.
+      // But we should have synced them in getCategories.
+      
+      return { data: cat ? cat.subcategories : [] };
+    } catch (error) {
+      return { data: [] };
     }
   }
 };

@@ -28,7 +28,18 @@ const getBusinessReviews = async (req, res, next) => {
     }
 };
 
+const getTopReviews = async (req, res, next) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit) : 6;
+        const reviews = await Review.getTopReviews(limit);
+        res.json(reviews);
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     createReview,
-    getBusinessReviews
+    getBusinessReviews,
+    getTopReviews
 };

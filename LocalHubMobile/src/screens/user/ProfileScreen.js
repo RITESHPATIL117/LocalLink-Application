@@ -42,7 +42,7 @@ const menuGroups = [
 
 const ProfileScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
-  const isWeb = width > 768;
+  const isDesktop = width >= 768;
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { favorites } = useFavorites();
@@ -78,10 +78,12 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
       {/* Header with Menu */}
-      <View style={styles.pageHeader}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
-          <Ionicons name="menu" size={28} color={colors.primary} />
-        </TouchableOpacity>
+      <View style={[styles.pageHeader, isDesktop && styles.pageHeaderDesktop]}>
+        {!isDesktop && (
+          <TouchableOpacity onPress={() => navigation.openDrawer()}>
+            <Ionicons name="menu" size={28} color={colors.primary} />
+          </TouchableOpacity>
+        )}
         <Text style={styles.pageTitle}>Profile</Text>
         <View style={{ width: 28 }} />
       </View>
@@ -200,6 +202,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3F4F6',
   },
   pageTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+  pageHeaderDesktop: {
+    paddingHorizontal: 40,
+    maxWidth: 800,
+    alignSelf: 'center',
+    width: '100%',
+    backgroundColor: 'transparent',
+    borderBottomWidth: 0,
+  },
   scrollContent: { paddingBottom: 20 },
   maxContainer: { maxWidth: 800, alignSelf: 'center', width: '100%' },
   guestContainer: { backgroundColor: '#FFF', justifyContent: 'center' },

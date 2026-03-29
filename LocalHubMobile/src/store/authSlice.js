@@ -59,6 +59,8 @@ const initialState = {
   user: null,
   loading: true, // Initially true while checking auth status
   error: null,
+  leadCaptured: false,
+  temporaryLeadInfo: null, // { name, phone }
 };
 
 const authSlice = createSlice({
@@ -79,6 +81,12 @@ const authSlice = createSlice({
       state.role = null;
       state.isAuthenticated = false;
       state.loading = false;
+      state.leadCaptured = false;
+      state.temporaryLeadInfo = null;
+    },
+    setLeadCaptured: (state, action) => {
+      state.leadCaptured = true;
+      state.temporaryLeadInfo = action.payload; // { name, phone }
     },
   },
   extraReducers: (builder) => {
@@ -142,5 +150,5 @@ export const logout = () => async (dispatch) => {
   dispatch(authSlice.actions.clearCredentials());
 };
 
-export const { setCredentials, clearCredentials } = authSlice.actions;
+export const { setCredentials, clearCredentials, setLeadCaptured } = authSlice.actions;
 export default authSlice.reducer;

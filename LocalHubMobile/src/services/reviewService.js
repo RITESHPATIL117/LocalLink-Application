@@ -1,41 +1,31 @@
 import api from './api';
 
-const mockReviews = [
-  {
-    id: 'r1',
-    user: { name: 'Alice Smith', avatar: 'https://i.pravatar.cc/150?img=1' },
-    rating: 5,
-    comment: 'Amazing service! Highly recommended.',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'r2',
-    user: { name: 'Bob Jones', avatar: 'https://i.pravatar.cc/150?img=2' },
-    rating: 4,
-    comment: 'Good experience overall, will use again.',
-    createdAt: new Date(Date.now() - 86400000).toISOString()
-  }
-];
-
 const reviewService = {
-  createReview: async (data) => {
+  getTopReviews: async (limit = 6) => {
     try {
-      const response = await api.post('/reviews', data);
-      return { data: response || { ...data, id: 'r_new', createdAt: new Date().toISOString() } };
+      const response = await api.get(`/reviews/top?limit=${limit}`);
+      return { data: response || [] };
     } catch (e) {
-      console.log('API createReview failed:', e.message || e);
-      return { data: { ...data, id: 'r_new', createdAt: new Date().toISOString() } };
+      // Fallback for testimonials is handled in the UI
+      return { data: [] };
     }
   },
-  getReviewsByBusiness: async (businessId) => {
+  getBusinessReviews: async (businessId) => {
     try {
       const response = await api.get(`/reviews/business/${businessId}`);
-      return { data: response || mockReviews };
+      return { data: response || [] };
     } catch (e) {
-      console.log('API getReviews failed:', e.message || e);
-      return { data: mockReviews };
+      return { data: [] };
     }
   },
+  createReview: async (reviewData) => {
+    try {
+      const response = await api.post('/reviews', reviewData);
+      return { data: response };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
+  }
 };
 
 export default reviewService;

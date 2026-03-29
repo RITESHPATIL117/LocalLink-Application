@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
-  Dimensions, FlatList, ActivityIndicator, RefreshControl, Platform, Animated,
+  Dimensions, FlatList, ActivityIndicator, RefreshControl, Platform, Animated, useWindowDimensions, Modal, TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +16,9 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import { renderDynamicIcon } from '../../utils/iconHelper';
 import categoryService from '../../services/categoryService';
 import businessService from '../../services/businessService';
+import LeadGatekeeper from '../../components/LeadGatekeeper';
 import PremiumLoader from '../../components/PremiumLoader';
+import reviewService from '../../services/reviewService';
 import Toast from 'react-native-toast-message';
 
 const { width, height } = Dimensions.get('window');
@@ -26,44 +28,40 @@ const MAX_APP_WIDTH = 800;
 // ─── Fallback Data ─────────────────────────────────────────────────────────────
 
 const FALLBACK_CATEGORIES = [
-  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF' },
-  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB' },
-  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5' },
-  { id: 'c4', name: 'AC & Appliance',  icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF' },
-  { id: 'c5', name: 'Beauty & Salon',  icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8' },
-  { id: 'c6', name: 'Carpenter',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED' },
-  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF' },
-  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2' },
-  { id: 'c9', name: 'Healthcare',      icon: 'medkit-outline',         color: '#14B8A6', bg: '#F0FDFA' },
-  { id: 'c10', name: 'Education',      icon: 'school-outline',         color: '#6366F1', bg: '#EEF2FF' },
-  { id: 'c11', name: 'Photography',    icon: 'camera-outline',         color: '#F97316', bg: '#FFF7ED' },
-  { id: 'c12', name: 'More',           icon: 'grid-outline',           color: '#6B7280', bg: '#F9FAFB' },
+  { id: '1', name: 'Cleaning',     icon: 'sparkles-outline',   color: '#3B82F6', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
+  { id: '2', name: 'Plumbing',     icon: 'water-outline',      color: '#3B82F6', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300' },
+  { id: '3', name: 'Electrical',   icon: 'flash-outline',      color: '#F59E0B', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
+  { id: '4', name: 'HVAC',         icon: 'snow-outline',       color: '#06B6D4', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300' },
+  { id: '5', name: 'Pet Care',     icon: 'paw-outline',        color: '#EC4899', image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=300' },
+  { id: '6', name: 'Automobile',   icon: 'car-sport-outline',  color: '#EF4444', image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=300' },
+  { id: '7', name: 'Events',       icon: 'calendar-outline',   color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=300' },
+  { id: '8', name: 'Health',       icon: 'fitness-outline',    color: '#10B981', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=300' },
 ];
 
 const FALLBACK_BUSINESSES = [
   {
-    id: 'b1', name: 'SuperFast Plumbing', category: 'Plumbing', rating: '4.9',
-    reviewsCount: 230, address: 'Sangli, Maharashtra', tier: 'Diamond',
-    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=400',
+    id: 'b1', name: 'Elite Plumbers', category: 'Plumbing', rating: '4.8',
+    reviewsCount: 156, address: '123 Water St', tier: 'Diamond',
+    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=400',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
   },
   {
-    id: 'b2', name: 'Glow Beauty Studio', category: 'Beauty & Salon', rating: '4.8',
-    reviewsCount: 189, address: 'Kolhapur, Maharashtra', tier: 'Gold',
-    image: 'https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    id: 'b2', name: 'Sparky Electricians', category: 'Electrical', rating: '4.9',
+    reviewsCount: 220, address: '456 Flow Ave', tier: 'Gold',
+    image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=400',
+    avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
   },
   {
-    id: 'b3', name: 'CoolAir AC Services', category: 'AC & Appliance', rating: '4.7',
-    reviewsCount: 312, address: 'Pune, Maharashtra', tier: 'Gold',
-    image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/men/57.jpg',
-  },
-  {
-    id: 'b4', name: 'Sparkle Home Cleaning', category: 'Cleaning', rating: '4.6',
-    reviewsCount: 145, address: 'Nashik, Maharashtra', tier: 'Silver',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400',
+    id: 'b3', name: 'Pest Control Pro', category: 'Pest', rating: '4.7',
+    reviewsCount: 89, address: '789 Bug Way', tier: 'Silver',
+    image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=400',
     avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
+  },
+  {
+    id: 'b4', name: 'Glow Salon', category: 'Beauty', rating: '4.9',
+    reviewsCount: 442, address: 'Saket, New Delhi', tier: 'Diamond',
+    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400',
+    avatar: 'https://randomuser.me/api/portraits/women/12.jpg',
   },
 ];
 
@@ -141,11 +139,12 @@ const SectionHeader = ({ title, onSeeAll, style }) => (
 );
 
 const CategoryPill = ({ item, onPress }) => (
-  <TouchableOpacity style={[styles.catPill, { backgroundColor: item.bg || '#F3F4F6' }]} onPress={onPress} activeOpacity={0.8}>
-    <View style={[styles.catIconBg, { backgroundColor: item.color || colors.primary }]}>
-      {renderDynamicIcon(item.icon || 'grid-outline', 22, "#FFF")}
+  <TouchableOpacity style={styles.catPill} onPress={onPress} activeOpacity={0.8}>
+    <View style={styles.catImageContainer}>
+      <Image source={{ uri: item.image }} style={styles.catImage} resizeMode="cover" />
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.catOverlay} />
     </View>
-    <Text style={[styles.catPillText, { color: item.color || '#374151' }]} numberOfLines={1}>{item.name}</Text>
+    <Text style={styles.catPillText} numberOfLines={1}>{item.name}</Text>
   </TouchableOpacity>
 );
 
@@ -175,22 +174,44 @@ const HomeScreen = ({ navigation }) => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [featuredBusinesses, setFeaturedBusinesses] = useState(FALLBACK_BUSINESSES);
+  const [testimonials, setTestimonials] = useState(TESTIMONIALS);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Lead Modal State
+  const [leadModalVisible, setLeadModalVisible] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState(null);
+  
+  const { leadCaptured } = useSelector(state => state.auth);
+
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const bannerWidth = Math.min(width, MAX_APP_WIDTH);
 
   const fetchData = useCallback(async () => {
     try {
-      const [categoriesRes, businessesRes] = await Promise.all([
+      const [categoriesRes, businessesRes, reviewsRes] = await Promise.all([
         categoryService.getCategories().catch(() => ({ data: [] })),
         businessService.getAllBusinesses({ featured: true }).catch(() => ({ data: [] })),
+        reviewService.getTopReviews(5).catch(() => ({ data: [] })),
       ]);
       const apiCats = categoriesRes.data || [];
       const apiBiz  = businessesRes.data || [];
+      const apiRevs = reviewsRes.data || [];
 
       if (apiCats.length > 0) setCategories(apiCats);
       if (apiBiz.length > 0) setFeaturedBusinesses(apiBiz);
+      if (apiRevs.length > 0) {
+        const processed = apiRevs.map(r => ({
+          id: r.id.toString(),
+          name: r.user_name,
+          role: `${r.business_name} Customer`,
+          text: `"${r.comment}"`,
+          rating: r.rating,
+          avatar: `https://ui-avatars.com/api/?name=${r.user_name}&background=random`
+        }));
+        setTestimonials(processed);
+      }
     } catch (e) {
       // Silently fall back to mock data
     } finally {
@@ -202,6 +223,20 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => { fetchData(); }, []);
 
   const onRefresh = useCallback(() => { setRefreshing(true); fetchData(); }, [fetchData]);
+
+  const handleCategoryPress = (cat) => {
+    if (isAuthenticated || leadCaptured) {
+      navigation.navigate('SearchResults', { query: cat.name });
+    } else {
+      setPendingCategory(cat);
+      setLeadModalVisible(true);
+    }
+  };
+
+  const handleLeadSuccess = () => {
+    setLeadModalVisible(false);
+    navigation.navigate('SearchResults', { query: pendingCategory?.name });
+  };
 
   // Auto-scroll banner
   useEffect(() => {
@@ -248,10 +283,12 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ─ Header ─ */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuBtn} onPress={() => navigation.openDrawer()}>
-          <Ionicons name="menu" size={26} color="#111827" />
-        </TouchableOpacity>
+      <View style={[styles.header, isDesktop && styles.headerDesktop]}>
+        {!isDesktop && (
+          <TouchableOpacity style={styles.menuBtn} onPress={() => navigation.openDrawer()}>
+            <Ionicons name="menu" size={26} color="#111827" />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.logoContainer}>
           <View style={styles.logoIconBg}>
@@ -286,7 +323,7 @@ const HomeScreen = ({ navigation }) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
       >
         {/* ─ Greeting ─ */}
@@ -396,7 +433,7 @@ const HomeScreen = ({ navigation }) => {
               <CategoryPill
                 key={cat.id}
                 item={cat}
-                onPress={() => navigation.navigate('SearchResults', { query: cat.name })}
+                onPress={() => handleCategoryPress(cat)}
               />
             ))}
           </View>
@@ -414,7 +451,7 @@ const HomeScreen = ({ navigation }) => {
               <BusinessCard
                 key={biz.id || i}
                 business={biz}
-                horizontal
+                compact
                 index={i}
                 onPress={() => navigation.navigate('BusinessDetails', { business: biz })}
               />
@@ -479,7 +516,7 @@ const HomeScreen = ({ navigation }) => {
         <AnimatedFadeIn delay={550}>
           <SectionHeader title="What Customers Say ⭐" style={{ marginTop: 8 }} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.testimonialScroll}>
-            {TESTIMONIALS.map(t => <TestimonialCard key={t.id} item={t} />)}
+            {testimonials.map(t => <TestimonialCard key={t.id} item={t} />)}
           </ScrollView>
         </AnimatedFadeIn>
 
@@ -505,6 +542,14 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ─── Category Lead Modal ─── */}
+      <LeadGatekeeper
+        visible={leadModalVisible}
+        category={pendingCategory}
+        onClose={() => setLeadModalVisible(false)}
+        onSuccess={handleLeadSuccess}
+      />
     </SafeAreaView>
   );
 };
@@ -514,6 +559,14 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   scrollContent: { paddingBottom: 20 },
+  scrollContentDesktop: { 
+    alignSelf: 'center', 
+    width: '100%', 
+    maxWidth: MAX_APP_WIDTH,
+    backgroundColor: '#FFF',
+    // Add a slight shadow to the "page" on desktop
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 5,
+  },
 
   // Header
   header: {
@@ -521,6 +574,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 3,
+  },
+  headerDesktop: {
+    paddingHorizontal: 40,
   },
   menuBtn: { padding: 6, borderRadius: 10, backgroundColor: '#F9FAFB' },
   logoContainer: { flexDirection: 'row', alignItems: 'center' },
@@ -582,14 +638,15 @@ const styles = StyleSheet.create({
   seeAll: { fontSize: 13, fontWeight: '700', color: colors.primary },
 
   // Categories
-  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, gap: 8 },
+  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 16 },
   catPill: { 
-    flexDirection: 'row', alignItems: 'center', gap: 8, 
-    paddingHorizontal: 12, paddingVertical: 10, borderRadius: 20,
-    minWidth: (width - 50) / 3 - 8,
+    width: (width - 44) / 4 - 12,
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  catIconBg: { width: 34, height: 34, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  catPillText: { fontSize: 12, fontWeight: '700', flex: 1 },
+  catImageContainer: {
+    width: '100%',
+  },
 
   // Businesses
   bizScroll: { paddingHorizontal: 12, paddingBottom: 16, gap: 4 },
@@ -620,7 +677,73 @@ const styles = StyleSheet.create({
   // Testimonials
   testimonialScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
   testimonialCard: {
-    backgroundColor: '#FFF', borderRadius: 20, padding: 20, width: width * 0.75,
+    backgroundColor: '#FFF', borderRadius: 20, padding: 20, 
+    width: Platform.OS === 'web' && width >= 768 ? (MAX_APP_WIDTH - 60) / 2 : width * 0.75,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
+    borderWidth: 1, borderColor: '#F3F4F6',
+  },
+  testimonialStars: { flexDirection: 'row', gap: 2, marginBottom: 10 },
+  testimonialText: { fontSize: 14, color: '#4B5563', lineHeight: 22, fontStyle: 'italic', marginBottom: 16, fontWeight: '500' },
+  testimonialAuthor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  testimonialAvatar: { width: 40, height: 40, borderRadius: 20 },
+  testimonialName: { fontSize: 14, fontWeight: '800', color: '#111827' },
+  testimonialRole: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
+
+  // Categories
+  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 16 },
+  catPill: { 
+    width: (width - 44) / 4 - 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  catImageContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+  },
+  catImage: { width: '100%', height: '100%' },
+  catOverlay: { ...StyleSheet.absoluteFillObject, top: '40%' },
+  catIconFloat: {
+    position: 'absolute', top: 8, right: 8,
+    width: 28, height: 28, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+  },
+  catPillText: { fontSize: 11, fontWeight: '800', color: '#374151', marginTop: 6, textAlign: 'center' },
+
+  // Businesses
+  bizScroll: { paddingHorizontal: 12, paddingBottom: 16, gap: 4 },
+
+  // Trending
+  trendingScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
+  trendingChip: {
+    backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 12,
+    borderRadius: 24, borderWidth: 1, borderColor: '#E5E7EB',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
+  },
+  trendingText: { color: '#374151', fontWeight: '700', fontSize: 14 },
+
+  // How It Works
+  howItWorksSection: { backgroundColor: '#FFF', marginVertical: 8, paddingBottom: 20 },
+  stepsRow: { flexDirection: 'row', paddingHorizontal: 12, gap: 4 },
+  stepCard: { flex: 1, alignItems: 'center', paddingHorizontal: 4, position: 'relative' },
+  stepIconBg: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  stepConnector: { position: 'absolute', top: 26, right: -8, width: 16, height: 2, backgroundColor: '#E5E7EB' },
+  stepTitle: { fontSize: 13, fontWeight: '900', marginBottom: 4, textAlign: 'center' },
+  stepDesc: { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
+
+  // Trust
+  trustRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 20, paddingHorizontal: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F3F4F6', gap: 8 },
+  trustBadge: { flex: 1, alignItems: 'center', gap: 6 },
+  trustLabel: { fontSize: 11, color: '#4B5563', fontWeight: '700', textAlign: 'center', lineHeight: 16 },
+
+  // Testimonials
+  testimonialScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
+  testimonialCard: {
+    backgroundColor: '#FFF', borderRadius: 20, padding: 20, 
+    width: Platform.OS === 'web' && width >= 768 ? (MAX_APP_WIDTH - 60) / 2 : width * 0.75,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
     borderWidth: 1, borderColor: '#F3F4F6',
   },

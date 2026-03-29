@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform, Linking, ActivityIndicator, Dimensions } from 'react-native';
+import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform, Linking, ActivityIndicator, Dimensions, Modal, TextInput } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,8 +10,10 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import colors from '../../styles/colors';
 import Badge from '../../components/Badge';
 import reviewService from '../../services/reviewService';
+import leadService from '../../services/leadService';
 import PremiumLoader from '../../components/PremiumLoader';
 import { useFavorites } from '../../hooks/useFavorites';
+import Toast from 'react-native-toast-message';
 
 const dummyReviews = [
   { id: '1', user: 'Rahul Mehta', rating: 5, date: '2 days ago', text: 'Great Service!' },
@@ -43,6 +45,15 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [leadModalVisible, setLeadModalVisible] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const [leadInfo, setLeadInfo] = useState({ name: '', phone: '', message: '' });
+  const [submittingLead, setSubmittingLead] = useState(false);
+
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFav = isFavorite(business.id);
 
@@ -62,6 +73,52 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
   useEffect(() => {
     fetchReviews();
   }, [fetchReviews]);
+
+  const handleSubmitReview = async () => {
+    if (!reviewComment.trim()) {
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter a comment' });
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      await reviewService.createReview({
+        business_id: business.id,
+        rating: reviewRating,
+        comment: reviewComment
+      });
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Review submitted!' });
+      setReviewModalVisible(false);
+      setReviewComment('');
+      fetchReviews();
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Failed', text2: 'Could not submit review' });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleSubmitLead = async () => {
+    if (!leadInfo.name || !leadInfo.phone) {
+      Toast.show({ type: 'error', text1: 'Required', text2: 'Please fill name and phone' });
+      return;
+    }
+    setSubmittingLead(true);
+    try {
+      await leadService.sendLead({
+        business_id: business.id,
+        customer_name: leadInfo.name,
+        customer_phone: leadInfo.phone,
+        message: leadInfo.message || `Inquiry about ${business.name}`
+      });
+      Toast.show({ type: 'success', text1: 'Lead Sent!', text2: 'The owner will contact you soon.' });
+      setLeadModalVisible(false);
+      setLeadInfo({ name: '', phone: '', message: '' });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Failed', text2: 'Could not send inquiry' });
+    } finally {
+      setSubmittingLead(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -119,11 +176,11 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
             </View>
 
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity style={styles.primaryBtn} onPress={() => Linking.openURL('tel:1234567890')}>
+              <TouchableOpacity style={styles.primaryBtn} onPress={() => setLeadModalVisible(true)}>
                 <Ionicons name="call" size={20} color="#FFF" />
-                <Text style={styles.primaryBtnText}>Call Now</Text>
+                <Text style={styles.primaryBtnText}>Inquire Now</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => navigation.navigate('RequestsTab')}>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setLeadModalVisible(true)}>
                 <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
                 <Text style={styles.secondaryBtnText}>Message</Text>
               </TouchableOpacity>
@@ -166,11 +223,19 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
                     ))}
                  </View>
                )}
-                {activeTab === 'Reviews' && (
-                  <View>
-                    {loadingReviews ? (
-                      <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-                    ) : reviews.length > 0 ? (
+                 {activeTab === 'Reviews' && (
+                   <View>
+                     <TouchableOpacity 
+                        style={styles.addReviewBtn} 
+                        onPress={() => setReviewModalVisible(true)}
+                     >
+                        <Ionicons name="create-outline" size={20} color="#FFF" />
+                        <Text style={styles.addReviewBtnText}>Write a Review</Text>
+                     </TouchableOpacity>
+
+                     {loadingReviews ? (
+                       <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+                     ) : reviews.length > 0 ? (
                       reviews.map((review, idx) => (
                         <View key={review.id || idx} style={styles.cardReview}>
                            <View style={styles.reviewHeader}>
@@ -212,6 +277,86 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* ─── Review Modal ─── */}
+      <Modal visible={reviewModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Rate your experience</Text>
+              <TouchableOpacity onPress={() => setReviewModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#111827" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.starsRow}>
+              {[1,2,3,4,5].map(i => (
+                <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
+                  <Ionicons name={i <= reviewRating ? "star" : "star-outline"} size={36} color={colors.star} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={styles.reviewInput}
+              placeholder="Tell others about your experience..."
+              multiline
+              numberOfLines={4}
+              value={reviewComment}
+              onChangeText={setReviewComment}
+            />
+            <TouchableOpacity 
+              style={[styles.primaryBtn, submittingReview && { opacity: 0.7 }]} 
+              onPress={handleSubmitReview}
+              disabled={submittingReview}
+            >
+              {submittingReview ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Submit Review</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ─── Lead Modal ─── */}
+      <Modal visible={leadModalVisible} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { paddingBottom: 30 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Quick Inquiry</Text>
+              <TouchableOpacity onPress={() => setLeadModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#111827" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSub}>The professional will get back to you shortly.</Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Your Name"
+              value={leadInfo.name}
+              onChangeText={val => setLeadInfo({...leadInfo, name: val})}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Phone Number"
+              keyboardType="phone-pad"
+              value={leadInfo.phone}
+              onChangeText={val => setLeadInfo({...leadInfo, phone: val})}
+            />
+            <TextInput
+              style={[styles.modalInput, { height: 100 }]}
+              placeholder="Your requirement (Optional)"
+              multiline
+              value={leadInfo.message}
+              onChangeText={val => setLeadInfo({...leadInfo, message: val})}
+            />
+
+            <TouchableOpacity 
+              style={[styles.primaryBtn, submittingLead && { opacity: 0.7 }]} 
+              onPress={handleSubmitLead}
+              disabled={submittingLead}
+            >
+              {submittingLead ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Send Inquiry</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -270,6 +415,48 @@ const styles = StyleSheet.create({
   emptyText: { marginTop: 12, fontSize: 16, color: '#9CA3AF', fontWeight: '600' },
   photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   photoThumb: { width: (screenWidth - 60) / 3, height: (screenWidth - 60) / 3, borderRadius: 12 },
+  
+  // Review Buttons
+  addReviewBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: colors.primary, 
+    marginVertical: 16, 
+    paddingVertical: 12, 
+    borderRadius: 12,
+    gap: 8,
+  },
+  addReviewBtnText: { color: '#FFF', fontSize: 15, fontWeight: '800' },
+
+  // Modals
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#FFF', borderRadius: 24, padding: 24 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#111827' },
+  modalSub: { fontSize: 14, color: '#6B7280', marginBottom: 20, fontWeight: '500' },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 24 },
+  reviewInput: { 
+    backgroundColor: '#F9FAFB', 
+    borderRadius: 16, 
+    padding: 16, 
+    fontSize: 15, 
+    color: '#111827', 
+    textAlignVertical: 'top', 
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  modalInput: {
+    backgroundColor: '#F9FAFB', 
+    borderRadius: 14, 
+    padding: 16, 
+    fontSize: 15, 
+    color: '#111827', 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
 });
 
 export default BusinessDetailsScreen;

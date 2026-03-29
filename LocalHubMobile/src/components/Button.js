@@ -1,9 +1,10 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, Text, StyleSheet, Platform } from 'react-native';
 import colors from '../styles/colors';
 import typography from '../styles/typography';
 
 const Button = ({ title, onPress, style, textStyle, variant = 'primary', disabled }) => {
+  const [isHovered, setIsHovered] = useState(false);
   let buttonVariantStyle = styles.primary;
   let textVariantStyle = styles.textPrimary;
 
@@ -15,10 +16,12 @@ const Button = ({ title, onPress, style, textStyle, variant = 'primary', disable
     textVariantStyle = styles.textOutline;
   }
 
-  const buttonStyle = [
+  const buttonStyle = ({ pressed }) => [
     styles.button,
     buttonVariantStyle,
+    isHovered && styles.buttonHovered,
     disabled && styles.disabled,
+    pressed && { opacity: 0.7, transform: [{ scale: 0.98 }] },
     style,
   ];
 
@@ -30,14 +33,15 @@ const Button = ({ title, onPress, style, textStyle, variant = 'primary', disable
 
 
   return (
-    <TouchableOpacity 
+    <Pressable 
       style={buttonStyle} 
       onPress={onPress} 
       disabled={disabled}
-      activeOpacity={0.8}
+      onHoverIn={() => Platform.OS === 'web' && setIsHovered(true)}
+      onHoverOut={() => Platform.OS === 'web' && setIsHovered(false)}
     >
       <Text style={labelStyle}>{title}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -57,6 +61,12 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: colors.primary,
+  },
+  buttonHovered: {
+    opacity: 0.9,
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    transform: [{ scale: 1.02 }],
   },
   secondary: {
     backgroundColor: colors.secondary,

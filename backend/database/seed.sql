@@ -31,8 +31,8 @@ DELETE FROM businesses;
 ALTER TABLE businesses AUTO_INCREMENT = 1;
 
 INSERT INTO businesses (provider_id, name, description, category_id, address, city, rating, review_count, image_url) VALUES 
-(@provider_id, 'Quick Fix Plumbing', 'Expert plumbing services for all your needs. 24/7 emergency support.', @plumbing_id, '123 Water St', 'New York', 4.8, 25, 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=500&auto=format'),
-(@provider_id, 'Elite Pipes', 'Professional drain cleaning and pipe repair.', @plumbing_id, '456 Flow Ave', 'New York', 4.5, 12, 'https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?w=500&auto=format'),
-(@provider_id, 'Sparky Pro', 'Licensed electricians for residential and commercial projects.', @electrician_id, '789 Voltage Dr', 'New York', 4.9, 40, 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format'),
-(@provider_id, 'Sparkle Squad', 'Complete home cleaning services for a spotless living space.', @cleaning_id, '555 Clean Rd', 'New York', 4.6, 35, 'https://images.unsplash.com/photo-1581578731548-c64695ce6958?w=500&auto=format'),
-(@provider_id, 'Green Gardens', 'Beautiful landscape design and regular maintenance.', @landscaping_id, '999 Nature Way', 'New York', 4.7, 22, 'https://images.unsplash.com/photo-1558904541-efa8c19681ef?w=500&auto=format');
+(@provider_id, 'Quick Fix Plumbing', 'Expert plumbing services for all your needs. 24/7 emergency support.', @plumbing_id, '123 Water St', 'New York', 4.8, 25, 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=400'),
+(@provider_id, 'Elite Pipes', 'Professional drain cleaning and pipe repair.', @plumbing_id, '456 Flow Ave', 'New York', 4.9, 220, 'https://images.unsplash.com/photo-1542013936693-884638332954?q=80&w=400'),
+(@provider_id, 'Sparky Pro', 'Licensed electricians for residential and commercial projects.', @electrician_id, '789 Voltage Dr', 'New York', 4.9, 40, 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=400'),
+(@provider_id, 'Sparkle Squad', 'Complete home cleaning services for a spotless living space.', @cleaning_id, '555 Clean Rd', 'New York', 4.7, 89, 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400'),
+(@provider_id, 'Glow Salon', 'Beautiful landscape design and regular maintenance.', @landscaping_id, 'Saket, New Delhi', 'New Delhi', 4.9, 442, 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400');

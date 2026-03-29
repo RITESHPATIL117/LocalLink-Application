@@ -9,7 +9,7 @@ const mockBusinesses = [
     rating: 4.8,
     reviews: 124,
     address: '123 Clean St, City Center',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400',
     distance: '1.2 km',
     tier: 'premium',
     featured: true
@@ -21,31 +21,31 @@ const mockBusinesses = [
     rating: 4.6,
     reviews: 89,
     address: '456 Garage Ave, Westside',
-    image: 'https://images.unsplash.com/photo-1516321165247-4aa89a48be28?q=80&w=1000',
+    image: 'https://images.unsplash.com/photo-1516321165247-4aa89a48be28?q=80&w=400',
     distance: '2.5 km',
     tier: 'basic',
     featured: true
   },
   {
     id: 'b3',
-    name: 'Fresh Market Groceries',
-    category: 'Local Shops',
+    name: 'Glow Beauty Salon',
+    category: 'Beauty',
     rating: 4.9,
     reviews: 312,
     address: '789 Main St, Downtown',
-    image: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?q=80&w=1000',
+    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400',
     distance: '0.8 km',
     tier: 'premium',
     featured: true
   },
   {
     id: 'b4',
-    name: 'Glow Beauty Salon',
-    category: 'Beauty & Salon',
+    name: 'Elite Electricians',
+    category: 'Electrical',
     rating: 4.7,
     reviews: 156,
     address: '321 Style Blvd, Uptown',
-    image: 'https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?q=80&w=1000',
+    image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=400',
     distance: '3.1 km',
     tier: 'standard',
     featured: true
@@ -59,7 +59,11 @@ const businessService = {
       const response = await api.get('/businesses', { params });
       if (response && (Array.isArray(response) ? response.length > 0 : response)) {
         logger.info(`Successfully fetched ${Array.isArray(response) ? response.length : 1} businesses`);
-        return { data: response };
+        // Map backend image_url to image frontend expectations
+        const mapped = Array.isArray(response) 
+          ? response.map(b => ({ ...b, image: b.image_url || b.image }))
+          : { ...response, image: response.image_url || response.image };
+        return { data: mapped };
       }
       logger.warn('No businesses returned from API, using mock data');
       return { data: mockBusinesses };

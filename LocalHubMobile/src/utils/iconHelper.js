@@ -47,7 +47,9 @@ export const renderDynamicIcon = (name, isMaterialOrSize, sizeOrColor, colorOnly
     'car-wrench', 'content-cut', 'party-popper', 'dumbbell', 'format-paint', 'moped',
     'broom', 'water', 'lightning-bolt', 'car-wash', 'hammer-wrench', 'balloon', 'food',
     'yoga', 'home-city', 'silverware-fork-knife', 'washing-machine', 'hanger', 'iron', 'tshirt-crew',
-    'truck', 'box', 'warehouse', 'home-search', 'office-building'
+    'truck', 'box', 'warehouse', 'home-search', 'office-building',
+    'car-brake-alert', 'tools', 'pine-tree', 'account-tie', 'scale-balance',
+    'vacuum', 'toilet', 'pipe-leak', 'water-boiler', 'paper-roll-outline', 'pipe'
   ];
   
   if (mcoIcons.includes(iconName)) {

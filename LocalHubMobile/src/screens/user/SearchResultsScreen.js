@@ -14,8 +14,8 @@ const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price', 'Newest'];
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { width } = useWindowDimensions();
-  const isWeb = width > 768;
-  const numColumns = isWeb ? (width > 1200 ? 3 : 2) : 1;
+  const isDesktop = width >= 768;
+  const numColumns = isDesktop ? (width > 1200 ? 3 : 2) : 1;
 
   const [activeFilter, setActiveFilter] = useState('Top Rated');
   const [results, setResults] = useState([]);
@@ -46,11 +46,13 @@ const SearchResultsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F9FAFB' }]} edges={['top']}>
-      <View style={styles.header}>
+      <View style={[styles.header, isDesktop && styles.headerDesktop]}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <Ionicons name="menu" size={28} color={colors.primary} />
-          </TouchableOpacity>
+          {!isDesktop && (
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <Ionicons name="menu" size={28} color={colors.primary} />
+            </TouchableOpacity>
+          )}
           <View style={styles.headerSearch}>
             <Ionicons name="search" size={18} color="#9CA3AF" />
             <TextInput 
@@ -132,11 +134,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   headerTop: {
+    paddingVertical: 14,
+    gap: 16,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 16,
+  },
+  headerDesktop: {
+    paddingHorizontal: 40,
   },
   headerSearch: {
     flex: 1,

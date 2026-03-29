@@ -37,6 +37,19 @@ class Review {
             [avg_rating || 0, review_count, businessId]
         );
     }
+
+    static async getTopReviews(limit = 6) {
+        const [rows] = await db.query(`
+            SELECT r.*, u.name as user_name, u.role as user_role, b.name as business_name, b.image_url as business_image
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            JOIN businesses b ON r.business_id = b.id
+            WHERE r.rating >= 4
+            ORDER BY r.created_at DESC
+            LIMIT ?
+        `, [limit]);
+        return rows;
+    }
 }
 
 module.exports = Review;

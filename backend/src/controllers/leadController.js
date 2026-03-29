@@ -19,6 +19,16 @@ const getLeadsByBusiness = async (req, res, next) => {
     }
 };
 
+const getLeadsByUser = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const leads = await Lead.getByUser(userId);
+        res.json(leads);
+    } catch (err) {
+        next(err);
+    }
+};
+
 const updateLeadStatus = async (req, res, next) => {
     try {
         const { status } = req.body;
@@ -32,5 +42,6 @@ const updateLeadStatus = async (req, res, next) => {
 module.exports = {
     sendLead,
     getLeadsByBusiness,
+    getLeadsByUser,
     updateLeadStatus
 };
