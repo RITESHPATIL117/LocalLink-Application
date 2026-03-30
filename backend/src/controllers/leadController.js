@@ -1,9 +1,35 @@
 const Lead = require('../models/leadModel');
 
+const Business = require('../models/businessModel');
+
 const sendLead = async (req, res, next) => {
     try {
         const { business_id, customer_name, customer_email, customer_phone, message } = req.body;
-        const leadId = await Lead.create({ business_id, customer_name, customer_email, customer_phone, message });
+        const user_id = req.user ? req.user.id : null;
+        
+        const leadId = await Lead.create({ 
+            business_id, 
+            user_id,
+            customer_name, 
+            customer_email: customer_email || null, 
+            customer_phone, 
+            message 
+        });
+
+        // Real-time notification
+        const business = await Business.getById(business_id);
+        if (business && business.provider_id) {
+            const io = req.app.get('io');
+            io.to(business.provider_id.toString()).emit('new_lead', {
+                id: leadId,
+                businessId: business_id,
+                customerName: customer_name,
+                message: message,
+                createdAt: new Date()
+            });
+            console.log(`Real-time lead emitted to provider ${business.provider_id}`);
+        }
+
         res.status(201).json({ success: true, leadId });
     } catch (err) {
         next(err);

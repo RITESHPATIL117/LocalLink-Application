@@ -7,16 +7,18 @@ import AnimatedFadeIn from './AnimatedFadeIn';
 const AuthHeader = ({ title, subtitle }) => {
   return (
     <View style={styles.container}>
-      <AnimatedFadeIn delay={100} duration={600}>
+      <AnimatedFadeIn delay={100} duration={800}>
         <View style={styles.logoContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="pie-chart" size={32} color="#FFF" />
+            <Ionicons name="pie-chart" size={36} color={colors.secondary} />
           </View>
-          <Text style={styles.logoText}>Local<Text style={{color: '#F97316'}}>Hub</Text></Text>
+          <Text style={styles.logoText}>
+            Local<Text style={{color: colors.secondary}}>Hub</Text>
+          </Text>
         </View>
       </AnimatedFadeIn>
 
-      <AnimatedFadeIn delay={200} duration={600}>
+      <AnimatedFadeIn delay={300} duration={800}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
       </AnimatedFadeIn>
@@ -27,45 +29,48 @@ const AuthHeader = ({ title, subtitle }) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
+    marginBottom: 40,
+    marginTop: 40,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primary,
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    marginBottom: 12,
   },
   logoText: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
-    color: colors.primary,
-    letterSpacing: -0.5,
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    textShadowColor: 'rgba(30, 64, 175, 0.5)', // Sapphire shadow
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
+    lineHeight: 24,
+    fontWeight: '500',
   },
 });
 

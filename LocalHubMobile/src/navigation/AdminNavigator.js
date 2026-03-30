@@ -36,8 +36,8 @@ const AdminNavigator = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'DashboardTab') {
-            iconName = focused ? 'speedometer' : 'speedometer-outline';
+          if (route.name === 'HomeTab') {
+            iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'UsersTab') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'ApprovalsTab') {
@@ -52,7 +52,7 @@ const AdminNavigator = () => {
         },
       })}
     >
-      <Tab.Screen name="DashboardTab" component={AdminDashboardStack} options={{ tabBarLabel: 'Dashboard' }} />
+      <Tab.Screen name="HomeTab" component={AdminDashboardStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="UsersTab" component={UsersScreen} options={{ tabBarLabel: 'Users' }} />
       <Tab.Screen name="ApprovalsTab" component={ApprovalsScreen} options={{ tabBarLabel: 'Approvals' }} />
       <Tab.Screen name="CategoriesTab" component={CategoriesScreen} options={{ tabBarLabel: 'Categories' }} />

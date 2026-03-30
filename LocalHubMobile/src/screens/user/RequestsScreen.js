@@ -2,9 +2,13 @@ import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity,
   Image, Modal, Pressable, Animated, useWindowDimensions, Linking,
-  ActivityIndicator,
+  ActivityIndicator, Platform
 } from 'react-native';
+import { useSelector } from 'react-redux';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
@@ -95,7 +99,10 @@ const BookingModal = ({ item, visible, onClose, onConfirm, onCancel }) => {
                 {/* Contact Provider */}
                 <TouchableOpacity
                   style={styles.callBtn}
-                  onPress={() => Linking.openURL(`tel:${item.providerPhone}`)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    Linking.openURL(`tel:${item.providerPhone}`);
+                  }}
                 >
                   <Ionicons name="call" size={20} color="#FFF" />
                   <Text style={styles.callBtnText}>Call Provider</Text>
@@ -286,10 +293,17 @@ const RequestsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  
+  const { isAuthenticated } = useSelector(state => state.auth);
 
   React.useEffect(() => {
-    fetchRequests();
-  }, []);
+    if (isAuthenticated) {
+      fetchRequests();
+    } else {
+      setLoading(false);
+      setRequests([]);
+    }
+  }, [isAuthenticated]);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -310,18 +324,35 @@ const RequestsScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
-  const handleConfirm = (id, paymentMode) => {
-    setRequests(prev =>
-      prev.map(r => r.id === id
-        ? { ...r, status: 'Completed', paymentStatus: paymentMode === 'later' ? 'Pay After Service' : 'Paid', paymentMode: PAYMENT_METHODS.find(m => m.id === paymentMode)?.label }
-        : r)
-    );
-    Toast.show({ type: 'success', text1: 'Booking Confirmed!', text2: 'Your service has been scheduled.' });
+  const handleConfirm = async (id, paymentMode) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await leadService.updateLeadStatus(id, 'Completed');
+      setRequests(prev =>
+        prev.map(r => r.id === id
+          ? { 
+              ...r, 
+              status: 'Completed', 
+              paymentStatus: paymentMode === 'later' ? 'Pay After Service' : 'Paid', 
+              paymentMode: PAYMENT_METHODS.find(m => m.id === paymentMode)?.label 
+            }
+          : r)
+      );
+      Toast.show({ type: 'success', text1: 'Booking Confirmed!', text2: 'Your service has been scheduled.' });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Update Failed', text2: 'Could not sync with server.' });
+    }
   };
 
-  const handleCancel = (id) => {
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Cancelled' } : r));
-    Toast.show({ type: 'info', text1: 'Request Cancelled', text2: 'Your request has been cancelled.' });
+  const handleCancel = async (id) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await leadService.updateLeadStatus(id, 'Cancelled');
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Cancelled' } : r));
+      Toast.show({ type: 'info', text1: 'Request Cancelled', text2: 'Your request has been cancelled.' });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Cancel Failed', text2: 'Could not sync with server.' });
+    }
   };
 
   const counts = FILTERS.reduce((acc, f) => {
@@ -333,14 +364,26 @@ const RequestsScreen = ({ navigation }) => {
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuBtn}>
+        <TouchableOpacity 
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            navigation.openDrawer();
+          }} 
+          style={styles.menuBtn}
+        >
           <Ionicons name="menu" size={26} color={colors.primary} />
         </TouchableOpacity>
-        <View>
+        <View style={{ alignItems: 'center' }}>
           <Text style={styles.headerTitle}>My Requests</Text>
-          <Text style={styles.headerSub}>{requests.length} total bookings</Text>
+          <View style={styles.headerSubBadge}>
+            <View style={styles.pulseDot} />
+            <Text style={styles.headerSub}>{requests.length} total</Text>
+          </View>
         </View>
-        <TouchableOpacity style={styles.notifBtn}>
+        <TouchableOpacity 
+          style={styles.notifBtn}
+          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        >
           <Ionicons name="notifications-outline" size={22} color="#374151" />
         </TouchableOpacity>
       </View>
@@ -372,7 +415,10 @@ const RequestsScreen = ({ navigation }) => {
             <TouchableOpacity
               key={f}
               style={[styles.filterChip, active && styles.filterChipActive]}
-              onPress={() => setFilter(f)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFilter(f);
+              }}
             >
               <Text style={[styles.filterText, active && styles.filterTextActive]}>{f}</Text>
               {counts[f] > 0 && (
@@ -426,9 +472,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
   },
   menuBtn: { padding: 4 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#111827', textAlign: 'center' },
-  headerSub: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', textAlign: 'center' },
-  notifBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#111827', textAlign: 'center' },
+  headerSubBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2, backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  headerSub: { fontSize: 10, color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  pulseDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  notifBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center' },
 
   statsRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   statCard: { flex: 1, alignItems: 'center' },
@@ -451,9 +499,10 @@ const styles = StyleSheet.create({
   list: { padding: 16, paddingBottom: 40, gap: 12 },
 
   card: {
-    backgroundColor: '#FFF', borderRadius: 20, overflow: 'hidden',
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
-    borderWidth: 1, borderColor: '#F3F4F6',
+    backgroundColor: '#FFF', borderRadius: 24, overflow: 'hidden',
+    shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 24, elevation: 4,
+    borderWidth: 0,
+    marginHorizontal: 1, // Fix shadow clipping
   },
   cardTop: { flexDirection: 'row', padding: 16, gap: 14 },
   bizImg: { width: 72, height: 72, borderRadius: 16 },

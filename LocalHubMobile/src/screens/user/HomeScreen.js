@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 
 import colors from '../../styles/colors';
@@ -21,8 +22,6 @@ import PremiumLoader from '../../components/PremiumLoader';
 import reviewService from '../../services/reviewService';
 import Toast from 'react-native-toast-message';
 
-const { width, height } = Dimensions.get('window');
-const SLIDER_HEIGHT = height * 0.40;
 const MAX_APP_WIDTH = 800;
 
 // ─── Fallback Data ─────────────────────────────────────────────────────────────
@@ -138,15 +137,22 @@ const SectionHeader = ({ title, onSeeAll, style }) => (
   </View>
 );
 
-const CategoryPill = ({ item, onPress }) => (
-  <TouchableOpacity style={styles.catPill} onPress={onPress} activeOpacity={0.8}>
-    <View style={styles.catImageContainer}>
-      <Image source={{ uri: item.image }} style={styles.catImage} resizeMode="cover" />
-      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.catOverlay} />
-    </View>
-    <Text style={styles.catPillText} numberOfLines={1}>{item.name}</Text>
-  </TouchableOpacity>
-);
+const CategoryPill = ({ item, onPress }) => {
+  const fallbackMatch = FALLBACK_CATEGORIES.find(f => f.name === item.name) || FALLBACK_CATEGORIES[0];
+  const finalImage = item.image || item.image_url || fallbackMatch.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300';
+  const finalColor = item.color || fallbackMatch.color || '#3B82F6';
+  const finalIcon = item.icon || fallbackMatch.icon || 'grid-outline';
+
+  return (
+    <TouchableOpacity style={styles.catPill} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.catImageContainer}>
+        <Image source={{ uri: finalImage }} style={styles.catImage} resizeMode="cover" />
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.catOverlay} />
+      </View>
+      <Text style={styles.catPillText} numberOfLines={1}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+};
 
 const TestimonialCard = ({ item }) => (
   <View style={styles.testimonialCard}>
@@ -185,6 +191,7 @@ const HomeScreen = ({ navigation }) => {
   const { leadCaptured } = useSelector(state => state.auth);
 
   const { width } = useWindowDimensions();
+  const SLIDER_HEIGHT = width * 0.45;
   const isDesktop = width >= 768;
   const bannerWidth = Math.min(width, MAX_APP_WIDTH);
 
@@ -225,6 +232,7 @@ const HomeScreen = ({ navigation }) => {
   const onRefresh = useCallback(() => { setRefreshing(true); fetchData(); }, [fetchData]);
 
   const handleCategoryPress = (cat) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isAuthenticated || leadCaptured) {
       navigation.navigate('SearchResults', { query: cat.name });
     } else {
@@ -386,7 +394,10 @@ const HomeScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={a.label}
                 style={styles.quickAction}
-                onPress={() => navigation.navigate(a.route)}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate(a.route);
+                }}
                 activeOpacity={0.8}
               >
                 <View style={[styles.quickActionIcon, { backgroundColor: `${a.color}15` }]}>
@@ -467,7 +478,10 @@ const HomeScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={t.q}
                 style={styles.trendingChip}
-                onPress={() => navigation.navigate('SearchResults', { query: t.q })}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate('SearchResults', { query: t.q });
+                }}
                 activeOpacity={0.8}
               >
                 <Text style={styles.trendingText}>{t.label}</Text>
@@ -655,8 +669,8 @@ const styles = StyleSheet.create({
   trendingScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
   trendingChip: {
     backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 24, borderWidth: 1, borderColor: '#E5E7EB',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
+    borderRadius: 24, borderWidth: 0,
+    shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 16, elevation: 4,
   },
   trendingText: { color: '#374151', fontWeight: '700', fontSize: 14 },
 
@@ -705,12 +719,6 @@ const styles = StyleSheet.create({
   },
   catImage: { width: '100%', height: '100%' },
   catOverlay: { ...StyleSheet.absoluteFillObject, top: '40%' },
-  catIconFloat: {
-    position: 'absolute', top: 8, right: 8,
-    width: 28, height: 28, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
-  },
   catPillText: { fontSize: 11, fontWeight: '800', color: '#374151', marginTop: 6, textAlign: 'center' },
 
   // Businesses
@@ -720,8 +728,8 @@ const styles = StyleSheet.create({
   trendingScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
   trendingChip: {
     backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 24, borderWidth: 1, borderColor: '#E5E7EB',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
+    borderRadius: 24, borderWidth: 0,
+    shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 16, elevation: 4,
   },
   trendingText: { color: '#374151', fontWeight: '700', fontSize: 14 },
 

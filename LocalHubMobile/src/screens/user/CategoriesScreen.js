@@ -178,6 +178,7 @@ const CategoriesScreen = ({ navigation }) => {
                   item={subItem} 
                   parentName={subItem.parentCat}
                   onPress={() => handleSubcategoryPress(subItem)} 
+                  index={index}
                 />
               </AnimatedFadeIn>
             )) : (
@@ -256,6 +257,7 @@ const CategoriesScreen = ({ navigation }) => {
                           <SubcategoryCard 
                             item={subItem} 
                             onPress={() => handleSubcategoryPress(subItem)} 
+                            index={index}
                           />
                         </AnimatedFadeIn>
                       ))
@@ -283,17 +285,31 @@ const CategoriesScreen = ({ navigation }) => {
 
 // ─── Helper UI Components ────────────────────────────────────────────────────
 
-const SubcategoryCard = ({ item, parentName, onPress }) => (
-  <TouchableOpacity style={styles.subCatCard} onPress={onPress} activeOpacity={0.85}>
-    <Image source={{ uri: item.image || 'https://images.unsplash.com/photo-1581094488221-757774cc1e5b?q=80&w=300' }} style={styles.subCatImg} />
-    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.subCatGradient} />
-    
-    <View style={styles.subCatMeta}>
-      {parentName && <Text style={styles.parentCatText}>{parentName}</Text>}
-      <Text style={styles.subCatTitle} numberOfLines={2}>{item.name}</Text>
-    </View>
-  </TouchableOpacity>
-);
+const SUB_FALLBACKS = [
+  'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300',
+  'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300',
+  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300',
+  'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300',
+  'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=300',
+  'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=300'
+];
+
+const SubcategoryCard = ({ item, parentName, onPress, index = 0 }) => {
+  const isValidImage = item.image && item.image.length > 5 && item.image !== 'null' && item.image !== 'undefined';
+  const imgUri = isValidImage ? item.image : SUB_FALLBACKS[index % SUB_FALLBACKS.length];
+  
+  return (
+    <TouchableOpacity style={styles.subCatCard} onPress={onPress} activeOpacity={0.85}>
+      <Image source={{ uri: imgUri }} style={styles.subCatImg} resizeMode="cover" />
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.subCatGradient} />
+      
+      <View style={styles.subCatMeta}>
+        {parentName && <Text style={styles.parentCatText}>{parentName}</Text>}
+        <Text style={styles.subCatTitle} numberOfLines={2}>{item.name}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 

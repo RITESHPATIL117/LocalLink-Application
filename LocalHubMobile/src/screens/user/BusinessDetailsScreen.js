@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform, Linking, ActivityIndicator, Dimensions, Modal, TextInput } from 'react-native';
-
-const { width: screenWidth } = Dimensions.get('window');
+import { useWindowDimensions, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, FlatList, Platform, Linking, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -104,12 +102,17 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
     }
     setSubmittingLead(true);
     try {
-      await leadService.sendLead({
+      const result = await leadService.sendLead({
         business_id: business.id,
         customer_name: leadInfo.name,
         customer_phone: leadInfo.phone,
         message: leadInfo.message || `Inquiry about ${business.name}`
       });
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
       Toast.show({ type: 'success', text1: 'Lead Sent!', text2: 'The owner will contact you soon.' });
       setLeadModalVisible(false);
       setLeadInfo({ name: '', phone: '', message: '' });
@@ -119,6 +122,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
       setSubmittingLead(false);
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -414,7 +418,7 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyText: { marginTop: 12, fontSize: 16, color: '#9CA3AF', fontWeight: '600' },
   photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  photoThumb: { width: (screenWidth - 60) / 3, height: (screenWidth - 60) / 3, borderRadius: 12 },
+  photoThumb: { width: 100, height: 100, borderRadius: 12 }, // Used fixed size or calc inside component if needed
   
   // Review Buttons
   addReviewBtn: { 

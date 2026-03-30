@@ -37,7 +37,34 @@ app.use((err, req, res, next) => {
     });
 });
 
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Attach socket.io to app to use it in routes/controllers
+app.set('io', io);
+
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+    
+    socket.on('join_room', (roomId) => {
+        socket.join(roomId);
+        console.log(`User ${socket.id} joined room ${roomId}`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server with Socket.io is running on port ${PORT}`);
 });

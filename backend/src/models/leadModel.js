@@ -4,10 +4,18 @@ const Lead = {
     create: async ({ business_id, user_id, customer_name, customer_email, customer_phone, message }) => {
         const [result] = await db.query(
             'INSERT INTO leads (business_id, user_id, customer_name, customer_email, customer_phone, message) VALUES (?, ?, ?, ?, ?, ?)',
-            [business_id, user_id || null, customer_name, customer_email, customer_phone, message]
+            [
+                business_id || null, 
+                user_id || null, 
+                customer_name || null, 
+                customer_email || null, 
+                customer_phone || null, 
+                message || null
+            ]
         );
         return result.insertId;
     },
+
 
     getByBusiness: async (businessId) => {
         const [rows] = await db.query(
@@ -21,12 +29,20 @@ const Lead = {
         const [rows] = await db.query(`
             SELECT l.*, b.name as businessName, b.image_url as image, c.name as category
             FROM leads l
-            JOIN businesses b ON l.business_id = b.id
+            LEFT JOIN businesses b ON l.business_id = b.id
             LEFT JOIN categories c ON b.category_id = c.id
             WHERE l.user_id = ?
             ORDER BY l.created_at DESC
         `, [userId]);
         return rows;
+    },
+
+    updateStatus: async (id, status) => {
+        const [result] = await db.query(
+            'UPDATE leads SET status = ? WHERE id = ?',
+            [status, id]
+        );
+        return result.affectedRows > 0;
     },
 };
 

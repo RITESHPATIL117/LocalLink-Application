@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator, TouchableOpacity, ScrollView, useWindowDimensions, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { loginUser } from '../../store/authSlice';
 import Button from '../../components/Button';
@@ -35,6 +36,19 @@ const LoginScreen = ({ navigation }) => {
   const { loading } = useSelector((state) => state.auth);
   const [selectedRole, setSelectedRole] = useState('user');
 
+  const passwordRef = React.useRef(null);
+  const fadeAnims = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+
+  useEffect(() => {
+    Animated.stagger(200, fadeAnims.map(anim => 
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      })
+    )).start();
+  }, []);
+
   const handleLogin = (values) => {
     dispatch(loginUser({ ...values, role: selectedRole }))
       .unwrap()
@@ -55,115 +69,130 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-      <View style={styles.maxContainer}>
-        <View style={[globalStyles.container, styles.container]}>
-          
-          <AuthHeader 
-            title="Sign In" 
-            subtitle="Access your localized services and manage your requests." 
-          />
+    <LinearGradient colors={colors.gradient} style={styles.flex}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+        style={styles.flex}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+          <View style={styles.maxContainer}>
+            <View style={styles.container}>
+              
+              <Animated.View style={{ opacity: fadeAnims[0], transform: [{ translateY: fadeAnims[0].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+                <AuthHeader 
+                  title="Sign In" 
+                  subtitle="Access your localized services and manage your requests." 
+                />
+              </Animated.View>
 
-          {/* Card-Based Role Selection */}
-          <AnimatedFadeIn delay={300} duration={600}>
-            <Text style={styles.sectionLabel}>Sign in as:</Text>
-            <View style={styles.roleGrid}>
-              {roles.map((r, idx) => (
-                <TouchableOpacity
-                  key={r.value}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.roleCard,
-                    selectedRole === r.value && styles.activeRoleCard,
-                  ]}
-                  onPress={() => setSelectedRole(r.value)}
+              <Animated.View style={[styles.glassCard, { opacity: fadeAnims[1], transform: [{ translateY: fadeAnims[1].interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }]}>
+                {/* Card-Based Role Selection */}
+                <Text style={styles.sectionLabel}>Sign in as:</Text>
+                <View style={styles.roleGrid}>
+                  {roles.map((r, idx) => (
+                    <TouchableOpacity
+                      key={r.value}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.roleCard,
+                        selectedRole === r.value && styles.activeRoleCard,
+                      ]}
+                      onPress={() => setSelectedRole(r.value)}
+                    >
+                      <View style={[
+                        styles.roleIconCircle,
+                        selectedRole === r.value && styles.activeRoleIconCircle
+                      ]}>
+                        {renderDynamicIcon(r.icon, 20, selectedRole === r.value ? '#FFF' : colors.secondary)}
+                      </View>
+                      <Text style={[
+                        styles.roleCardLabel,
+                        selectedRole === r.value && styles.activeRoleCardLabel
+                      ]}>
+                        {r.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Formik
+                  initialValues={{ email: '', password: '' }}
+                  validationSchema={LoginSchema}
+                  onSubmit={handleLogin}
                 >
-                  <View style={[
-                    styles.roleIconCircle,
-                    selectedRole === r.value && styles.activeRoleIconCircle
-                  ]}>
-                    {renderDynamicIcon(r.icon, 20, selectedRole === r.value ? '#FFF' : colors.primary)}
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                  <View>
+                    <InputField 
+                      label="Email Address" 
+                      value={values.email} 
+                      onChangeText={handleChange('email')} 
+                      onBlur={handleBlur('email')}
+                      placeholder="you@example.com" 
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                    />
+                    {touched.email && errors.email && (
+                      <Text style={styles.errorText}>{errors.email}</Text>
+                    )}
+
+                    <View style={styles.passwordHeader}>
+                      <TouchableOpacity onPress={() => Toast.show({ type: 'info', text1: 'Feature coming soon' })}>
+                        <Text style={styles.forgotLink}>Forgot Password?</Text>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <InputField 
+                      ref={passwordRef}
+                      label="Password"
+                      value={values.password} 
+                      onChangeText={handleChange('password')} 
+                      onBlur={handleBlur('password')}
+                      placeholder="••••••••" 
+                      secureTextEntry 
+                      returnKeyType="go"
+                      onSubmitEditing={handleSubmit}
+                    />
+                    {touched.password && errors.password && (
+                      <Text style={styles.errorText}>{errors.password}</Text>
+                    )}
+
+                    <Button 
+                      title={loading ? "Authenticating..." : "Login to Account"} 
+                      onPress={handleSubmit} 
+                      disabled={loading}
+                      style={styles.loginBtn}
+                    />
                   </View>
-                  <Text style={[
-                    styles.roleCardLabel,
-                    selectedRole === r.value && styles.activeRoleCardLabel
-                  ]}>
-                    {r.label}
-                  </Text>
-                  {!isWeb && <Text style={styles.roleDescription} numberOfLines={1}>{r.description}</Text>}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </AnimatedFadeIn>
-
-          <AnimatedFadeIn delay={450} duration={600}>
-            <Formik
-              initialValues={{ email: '', password: '' }}
-              validationSchema={LoginSchema}
-              onSubmit={handleLogin}
-            >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-              <View>
-                <InputField 
-                  label="Email Address" 
-                  value={values.email} 
-                  onChangeText={handleChange('email')} 
-                  onBlur={handleBlur('email')}
-                  placeholder="you@example.com" 
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-                {touched.email && errors.email && (
-                  <Text style={styles.errorText}>{errors.email}</Text>
                 )}
+              </Formik>
 
-                <View style={styles.passwordHeader}>
-                  <Text style={styles.inputLabel}>Password</Text>
-                  <TouchableOpacity onPress={() => Toast.show({ type: 'info', text1: 'Feature coming soon' })}>
-                    <Text style={styles.forgotLink}>Forgot Password?</Text>
-                  </TouchableOpacity>
-                </View>
-                
-                <InputField 
-                  value={values.password} 
-                  onChangeText={handleChange('password')} 
-                  onBlur={handleBlur('password')}
-                  placeholder="••••••••" 
-                  secureTextEntry 
-                />
-                {touched.password && errors.password && (
-                  <Text style={styles.errorText}>{errors.password}</Text>
-                )}
-
-                <Button 
-                  title={loading ? "Authenticating..." : "Login to Account"} 
-                  onPress={handleSubmit} 
-                  disabled={loading}
-                  style={styles.loginBtn}
-                />
-                
-                <View style={styles.registerContainer}>
-                  <Text style={styles.registerText}>Don't have an account? </Text>
-                  <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
-                    Create One
-                  </Text>
-                </View>
+              <View style={styles.registerContainer}>
+                <Text style={styles.registerText}>Don't have an account? </Text>
+                <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
+                  Create One
+                </Text>
               </View>
-            )}
-          </Formik>
-          </AnimatedFadeIn>
+            </Animated.View>
 
-          <SocialLoginButtons />
+            <Animated.View style={{ opacity: fadeAnims[2], transform: [{ translateY: fadeAnims[2].interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }] }}>
+              <SocialLoginButtons />
+            </Animated.View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#F9FAFB',
   },
   maxContainer: {
     maxWidth: 500,
@@ -172,17 +201,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 32,
+    padding: 24,
     justifyContent: 'center',
     flex: 1,
   },
+  glassCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 32,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    shadowColor: '#1E3A8A', // Deep Royal Shadow
+    shadowOffset: { width: 0, height: 25 },
+    shadowOpacity: 0.45,
+    shadowRadius: 35,
+    elevation: 12,
+  },
   sectionLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#374151',
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 16,
     marginLeft: 4,
-    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
   roleGrid: {
     flexDirection: 'row',
@@ -191,81 +233,57 @@ const styles = StyleSheet.create({
   },
   roleCard: {
     flex: 0.31,
-    backgroundColor: '#FFF',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#F3F4F6',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   activeRoleCard: {
-    borderColor: colors.primary,
-    backgroundColor: '#FFF',
-    shadowColor: colors.primary,
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
+    borderColor: colors.secondary,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
   },
   roleIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
   activeRoleIconCircle: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.secondary,
   },
   roleCardLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#4B5563',
+    color: 'rgba(255,255,255,0.7)',
   },
   activeRoleCardLabel: {
-    color: colors.primary,
-  },
-  roleDescription: {
-    fontSize: 9,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#374151',
-    marginBottom: 10,
+    color: colors.secondary,
   },
   passwordHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 8,
+    marginBottom: -8,
+    zIndex: 10,
   },
   forgotLink: {
     fontSize: 13,
-    color: colors.primary,
+    color: colors.secondary,
     fontWeight: '700',
   },
   loginBtn: {
     marginTop: 24,
-    borderRadius: 16,
-    height: 56,
-    shadowColor: colors.primary,
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
   },
   errorText: {
-    color: '#EF4444',
+    color: '#F87171',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     marginTop: 4,
   },
   registerContainer: {
@@ -274,12 +292,12 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   registerText: {
-    color: '#6B7280',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: 15,
     fontWeight: '500',
   },
   registerLink: {
-    color: colors.primary,
+    color: colors.secondary,
     fontWeight: '800',
     fontSize: 15,
   }

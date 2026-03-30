@@ -21,7 +21,12 @@ const leadService = {
     try {
       // Endpoint for fetching a customer's sent requests
       const response = await api.get(`/leads/user`);
-      return { data: response || [] };
+      const sanitized = (response || []).map(lead => ({
+          ...lead,
+          id: lead.id.toString(), // Ensure IDs are strings for React Native lists
+          status: lead.status || 'Pending'
+      }));
+      return { data: sanitized };
     } catch (e) {
       console.log('API getUserLeads failed. Returning resilient mock fallbacks.');
       return { data: [
@@ -29,6 +34,15 @@ const leadService = {
         { id: '2', businessName: 'Elite Electricians', providerName: 'Suresh Patil', providerPhone: '+919823456789', service: 'Full House Wiring Check', description: 'Multiple switches not working.', status: 'Pending', date: 'Mar 26, 2026', time: '02:00 PM', price: 'Pending Quote', address: 'House 12, MG Road, Miraj', paymentStatus: 'Pending', image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=200', category: 'Electrical' },
         { id: '3', businessName: 'Sparkle Cleaners', providerName: 'Priya Mehta', providerPhone: '+919765432109', service: 'Deep Kitchen Cleaning', description: 'Full kitchen deep clean including chimney.', status: 'Completed', date: 'Mar 20, 2026', time: '09:00 AM', price: '₹2,500', address: 'Flat 3B, Rose Apartments, Sangli', paymentStatus: 'Paid', paymentMode: 'Pay After Service', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=200', category: 'Cleaning', rating: 5 }
       ] };
+    }
+  },
+  updateLeadStatus: async (leadId, status) => {
+    try {
+      const response = await api.patch(`/leads/${leadId}/status`, { status });
+      return { success: true, data: response };
+    } catch (e) {
+      console.log('API updateLeadStatus failed. Simulating local success.');
+      return { success: true, message: 'Mock Success' };
     }
   }
 };

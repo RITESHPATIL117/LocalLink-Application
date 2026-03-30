@@ -1,22 +1,48 @@
 const db = require('../config/db');
 
 class Business {
-    static async getAll() {
-        const [rows] = await db.query(`
-            SELECT b.*, c.name as category_name 
-            FROM businesses b
-            LEFT JOIN categories c ON b.category_id = c.id
-        `);
-        return rows;
-    }
-
-    static async getByCategory(categoryId) {
-        const [rows] = await db.query(`
+    static async getByCategory(categoryId, subcategory) {
+        let query = `
             SELECT b.*, c.name as category_name 
             FROM businesses b
             LEFT JOIN categories c ON b.category_id = c.id
             WHERE b.category_id = ?
-        `, [categoryId]);
+        `;
+        const params = [categoryId];
+
+        if (subcategory) {
+            query += ' AND b.subcategory = ?';
+            params.push(subcategory);
+        }
+
+        const [rows] = await db.query(query, params);
+        return rows;
+    }
+
+    static async getAll(params) {
+        let query = `
+            SELECT b.*, c.name as category_name 
+            FROM businesses b
+            LEFT JOIN categories c ON b.category_id = c.id
+            WHERE 1=1
+        `;
+        const queryParams = [];
+
+        if (params?.categoryId) {
+            query += ' AND b.category_id = ?';
+            queryParams.push(params.categoryId);
+        }
+
+        if (params?.subcategory) {
+            query += ' AND b.subcategory = ?';
+            queryParams.push(params.subcategory);
+        }
+        
+        if (params?.featured) {
+            query += ' AND b.rating >= 4.5'; // Simulate featured
+        }
+
+        const [rows] = await db.query(query, queryParams);
         return rows;
     }
 

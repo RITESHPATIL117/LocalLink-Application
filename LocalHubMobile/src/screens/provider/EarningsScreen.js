@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useIsFocused } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import businessOwnerService from '../../services/businessOwnerService';
 import leadService from '../../services/leadService';
 
-const { width } = Dimensions.get('window');
-
 const EarningsScreen = () => {
-  const [withdrawRequest, setWithdrawRequest] = useState(false);
+  const { width } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
-  const [earningsHistory, setEarningsHistory] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [totalBalance, setTotalBalance] = useState(0);
   const isFocused = useIsFocused();
 
@@ -40,12 +40,10 @@ const EarningsScreen = () => {
             const leadsRes = await leadService.getLeadsByBusiness(biz.id);
             const leads = leadsRes.data || [];
             
-            // Filter only closed leads to act as "Completed Earnings"
             const closedLeads = leads.filter(l => l.status?.toLowerCase() === 'closed');
             
             const mappedEarnings = closedLeads.map(l => {
-              // Extract number from budget, e.g., "₹500 - ₹1,500" -> 500
-              let amountStr = '800'; // fallback
+              let amountStr = '800';
               if (l.budget) {
                 const match = l.budget.replace(/[^0-9-]/g, '').split('-');
                 if (match.length > 0 && match[0]) amountStr = match[0];
@@ -55,23 +53,21 @@ const EarningsScreen = () => {
 
               return {
                 id: l.id || Math.random().toString(),
-                service: `${biz.name} - ${l.customerName || 'Client'}`,
+                title: `${biz.name} - ${l.customerName || 'Client'}`,
                 date: l.createdAt ? new Date(l.createdAt).toLocaleDateString() : 'Recently',
                 rawDate: l.createdAt ? new Date(l.createdAt) : new Date(),
-                amount: `₹${amount.toLocaleString()}`,
+                amount: amount,
                 status: 'Completed'
               };
             });
             
             allClosedLeads = [...allClosedLeads, ...mappedEarnings];
-          } catch (e) {
-            // ignore
-          }
+          } catch (e) {}
         })
       );
       
       allClosedLeads.sort((a, b) => b.rawDate - a.rawDate);
-      setEarningsHistory(allClosedLeads);
+      setTransactions(allClosedLeads);
       setTotalBalance(totalEarned);
     } catch (e) {
       console.log('Error fetching earnings:', e);
@@ -81,164 +77,184 @@ const EarningsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top', 'left', 'right']}>
+      <LinearGradient colors={['#F8FAFC', '#F1F5F9']} style={StyleSheet.absoluteFill} />
+      
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Earnings</Text>
+        <View>
+          <Text style={styles.headerTitle}>Financial Overview</Text>
+          <Text style={styles.headerSubtitle}>Manage your payouts & revenue</Text>
+        </View>
+        <TouchableOpacity 
+            style={styles.payoutBtn} 
+            onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)}
+        >
+          <Text style={styles.payoutBtnText}>Request Payout</Text>
+        </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.statsContainer}>
+          <LinearGradient colors={[colors.primary, '#1E40AF']} style={styles.primaryStatCard}>
+             <Text style={styles.statLabel}>Total Balance</Text>
+             <Text style={styles.statValue}>₹{totalBalance.toLocaleString()}.00</Text>
+             <View style={styles.statFooter}>
+                <Ionicons name="trending-up" size={16} color="#4ADE80" />
+                <Text style={styles.statTrend}>+12% from last month</Text>
+             </View>
+          </LinearGradient>
+
+          <View style={styles.secondaryStats}>
+             <View style={styles.smallStatCard}>
+                <Text style={styles.smallStatLabel}>Pending</Text>
+                <Text style={styles.smallStatValue}>₹0</Text>
+             </View>
+             <View style={styles.smallStatCard}>
+                <Text style={styles.smallStatLabel}>This Month</Text>
+                <Text style={[styles.smallStatValue, { color: colors.primary }]}>₹{totalBalance.toLocaleString()}</Text>
+             </View>
+          </View>
         </View>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          
-          {/* Total Balance Card */}
-          <AnimatedFadeIn duration={600}>
-            <LinearGradient
-              colors={totalBalance > 0 ? [colors.primary, '#E65C00'] : ['#9CA3AF', '#6B7280']}
-              style={styles.balanceCard}
-            >
-              <Text style={styles.balanceLabel}>Available Balance</Text>
-              <Text style={styles.balanceAmount}>₹{totalBalance.toLocaleString()}.00</Text>
-              
-              <View style={styles.balanceStatsArea}>
-                <View style={styles.balanceStatItem}>
-                  <Text style={styles.statLabel}>This Month</Text>
-                  <Text style={styles.statVal}>+₹{totalBalance > 0 ? (totalBalance * 0.8).toLocaleString() : '0'}</Text>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <View style={{ paddingHorizontal: 20 }}>
+            <SkeletonLoader width="100%" height={80} borderRadius={20} style={{ marginBottom: 12 }} />
+            <SkeletonLoader width="100%" height={80} borderRadius={20} style={{ marginBottom: 12 }} />
+            <SkeletonLoader width="100%" height={80} borderRadius={20} style={{ marginBottom: 12 }} />
+          </View>
+        ) : (
+          transactions.map((tx, index) => (
+            <AnimatedFadeIn key={tx.id} delay={index * 100}>
+              <View style={styles.transactionCard}>
+                <View style={[styles.iconContainer, { backgroundColor: '#F0FDF4' }]}>
+                  <Ionicons name="arrow-down-outline" size={20} color="#10B981" />
                 </View>
-                <View style={styles.divider} />
-                <View style={styles.balanceStatItem}>
-                  <Text style={styles.statLabel}>Last Month</Text>
-                  <Text style={styles.statVal}>₹{totalBalance > 0 ? (totalBalance * 0.2).toLocaleString() : '0'}</Text>
+                <View style={styles.txInfo}>
+                  <Text style={styles.txTitle}>{tx.title}</Text>
+                  <Text style={styles.txDate}>{tx.date}</Text>
+                </View>
+                <View style={styles.txAmountContainer}>
+                  <Text style={[styles.txAmount, { color: '#10B981' }]}>
+                    +₹{tx.amount.toLocaleString()}
+                  </Text>
+                  <View style={[styles.statusTag, { backgroundColor: '#F0FDF4' }]}>
+                    <Text style={[styles.statusTagText, { color: '#10B981' }]}>
+                      {tx.status}
+                    </Text>
+                  </View>
                 </View>
               </View>
-
-              <TouchableOpacity 
-                style={[styles.withdrawBtn, totalBalance === 0 && { opacity: 0.5 }]}
-                onPress={() => totalBalance > 0 && setWithdrawRequest(true)}
-                disabled={totalBalance === 0}
-              >
-                <Ionicons name="wallet-outline" size={20} color={totalBalance > 0 ? colors.primary : '#6B7280'} />
-                <Text style={[styles.withdrawBtnText, totalBalance === 0 && { color: '#6B7280' }]}>Withdraw Money</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </AnimatedFadeIn>
-
-          {/* History Section */}
-          <AnimatedFadeIn delay={200} duration={600}>
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Earnings History</Text>
-                {earningsHistory.length > 0 && (
-                  <TouchableOpacity>
-                    <Text style={styles.filterLink}>Filter</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {earningsHistory.length > 0 ? (
-                <View style={styles.historyList}>
-                  {earningsHistory.map((item, idx) => (
-                    <View key={item.id} style={[styles.historyItem, idx === earningsHistory.length -1 && { borderBottomWidth: 0 }]}>
-                      <View style={styles.historyIconBg}>
-                        <Ionicons name="receipt-outline" size={20} color={colors.primary} />
-                      </View>
-                      <View style={styles.historyInfo}>
-                        <Text style={styles.historyService} numberOfLines={1}>{item.service}</Text>
-                        <Text style={styles.historyDate}>{item.date}</Text>
-                      </View>
-                      <View style={styles.historyAmountArea}>
-                        <Text style={styles.historyAmount}>{item.amount}</Text>
-                        <Text style={[
-                          styles.historyStatus, 
-                          { color: item.status === 'Completed' ? '#10B981' : '#F59E0B' }
-                        ]}>{item.status}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyHistoryCard}>
-                   <View style={styles.emptyHistoryIcon}>
-                     <Ionicons name="document-text-outline" size={32} color={colors.primary} />
-                   </View>
-                   <Text style={styles.emptyHistoryTitle}>No Earnings Yet</Text>
-                   <Text style={styles.emptyHistoryDesc}>When you mark leads as "Closed", the service payments will appear here.</Text>
-                </View>
-              )}
-            </View>
-          </AnimatedFadeIn>
-
-          {/* Payment Methods */}
-          <AnimatedFadeIn delay={400} duration={600}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Withdrawal Method</Text>
-              <TouchableOpacity style={styles.methodCard}>
-                <View style={styles.methodIcon}>
-                  <Ionicons name="card" size={24} color="#000" />
-                </View>
-                <View style={styles.methodInfo}>
-                  <Text style={styles.methodName}>Bank Transfer (HDFC)</Text>
-                  <Text style={styles.methodDetail}>**** **** 8829</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-            </View>
-          </AnimatedFadeIn>
-
-        </ScrollView>
-      )}
+            </AnimatedFadeIn>
+          ))
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#F9FAFB' },
-  header: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  headerTitle: { fontSize: 24, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  balanceCard: {
-    margin: 20, borderRadius: 32, padding: 24, alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 8,
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 24, 
+    paddingVertical: 20, 
+    backgroundColor: '#FFF', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#F1F5F9',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 4,
+    zIndex: 10,
   },
-  balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  balanceAmount: { color: '#FFF', fontSize: 44, fontWeight: '900', letterSpacing: -1, marginBottom: 24 },
-  balanceStatsArea: {
-    flexDirection: 'row', width: '100%', paddingVertical: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)', marginBottom: 20,
+  headerTitle: { fontSize: 26, fontWeight: '900', color: '#1E293B', letterSpacing: -1 },
+  headerSubtitle: { fontSize: 13, color: '#64748B', fontWeight: '600', marginTop: 4 },
+  payoutBtn: { 
+    backgroundColor: '#1E293B', 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4
   },
-  balanceStatItem: { flex: 1, alignItems: 'center' },
-  statLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 6, fontWeight: '600' },
-  statVal: { color: '#FFF', fontSize: 16, fontWeight: '800' },
-  divider: { width: 1, height: '100%', backgroundColor: 'rgba(255,255,255,0.15)' },
-  withdrawBtn: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16, width: '100%', justifyContent: 'center',
-  },
-  withdrawBtnText: { color: colors.primary, fontWeight: '800', marginLeft: 8, fontSize: 16 },
-  section: { paddingHorizontal: 20, marginBottom: 30 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
-  filterLink: { color: colors.primary, fontWeight: '700' },
-  historyList: { backgroundColor: '#FFF', borderRadius: 24, padding: 8, borderWidth: 1, borderColor: '#F3F4F6' },
-  historyItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  historyIconBg: { width: 44, height: 44, borderRadius: 12, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  historyInfo: { flex: 1, paddingRight: 10 },
-  historyService: { fontSize: 15, fontWeight: '800', color: '#111827', marginBottom: 4, letterSpacing: -0.3 },
-  historyDate: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
-  historyAmountArea: { alignItems: 'flex-end' },
-  historyAmount: { fontSize: 16, fontWeight: '900', color: '#111827', marginBottom: 4 },
-  historyStatus: { fontSize: 11, fontWeight: '800' },
+  payoutBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
   
-  emptyHistoryCard: { backgroundColor: '#FFF', borderRadius: 24, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' },
-  emptyHistoryIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  emptyHistoryTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 8 },
-  emptyHistoryDesc: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 22 },
-
-  methodCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 16, borderRadius: 20, borderWidth: 1, borderColor: '#F3F4F6' },
-  methodIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  methodInfo: { flex: 1 },
-  methodName: { fontSize: 15, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  methodDetail: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
+  scrollContent: { padding: 24, paddingBottom: 100 },
+  statsContainer: { marginBottom: 32 },
+  primaryStatCard: { 
+    padding: 28, 
+    borderRadius: 32, 
+    marginBottom: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+    elevation: 8,
+  },
+  statLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  statValue: { color: '#FFF', fontSize: 42, fontWeight: '900', marginVertical: 8, letterSpacing: -1 },
+  statFooter: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  statTrend: { color: '#FFF', fontSize: 12, fontWeight: '700', marginLeft: 6 },
+  
+  secondaryStats: { flexDirection: 'row', gap: 16 },
+  smallStatCard: { 
+    flex: 1, 
+    backgroundColor: '#FFF', 
+    padding: 20, 
+    borderRadius: 24, 
+    borderWidth: 1, 
+    borderColor: '#F1F5F9',
+    shadowColor: '#1E293B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 2,
+  },
+  smallStatLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  smallStatValue: { fontSize: 20, fontWeight: '900', color: '#1E293B' },
+  
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  sectionTitle: { fontSize: 19, fontWeight: '900', color: '#1E293B', letterSpacing: -0.5 },
+  viewAllText: { fontSize: 14, fontWeight: '800', color: colors.primary },
+  
+  transactionCard: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#FFF', 
+    padding: 16, 
+    borderRadius: 24, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#1E293B',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 1,
+  },
+  iconContainer: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  txInfo: { flex: 1 },
+  txTitle: { fontSize: 15, fontWeight: '800', color: '#1E293B', marginBottom: 4, letterSpacing: -0.3 },
+  txDate: { fontSize: 13, color: '#94A3B8', fontWeight: '600' },
+  txAmountContainer: { alignItems: 'flex-end' },
+  txAmount: { fontSize: 16, fontWeight: '900', marginBottom: 6 },
+  statusTag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  statusTagText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
 });
 
 export default EarningsScreen;

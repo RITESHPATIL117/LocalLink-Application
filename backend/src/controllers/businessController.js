@@ -2,7 +2,7 @@ const Business = require('../models/businessModel');
 
 const getAllBusinesses = async (req, res, next) => {
     try {
-        const businesses = await Business.getAll();
+        const businesses = await Business.getAll(req.query);
         res.json(businesses);
     } catch (err) {
         next(err);

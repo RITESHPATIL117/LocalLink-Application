@@ -1,75 +1,84 @@
 import React, { useState } from 'react';
-import { Pressable, Text, StyleSheet, Platform } from 'react-native';
+import { Pressable, Text, StyleSheet, Platform, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../styles/colors';
 import typography from '../styles/typography';
 
 const Button = ({ title, onPress, style, textStyle, variant = 'primary', disabled }) => {
   const [isHovered, setIsHovered] = useState(false);
-  let buttonVariantStyle = styles.primary;
-  let textVariantStyle = styles.textPrimary;
+  const scaleAnim = new Animated.Value(1);
 
-  if (variant === 'secondary') {
-    buttonVariantStyle = styles.secondary;
-    textVariantStyle = styles.textSecondary;
-  } else if (variant === 'outline') {
-    buttonVariantStyle = styles.outline;
-    textVariantStyle = styles.textOutline;
-  }
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
 
-  const buttonStyle = ({ pressed }) => [
-    styles.button,
-    buttonVariantStyle,
-    isHovered && styles.buttonHovered,
-    disabled && styles.disabled,
-    pressed && { opacity: 0.7, transform: [{ scale: 0.98 }] },
-    style,
-  ];
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
 
-  const labelStyle = [
-    styles.text,
-    textVariantStyle,
-    textStyle,
-  ];
-
+  const getGradient = () => {
+    if (disabled) return ['#9CA3AF', '#6B7280'];
+    if (variant === 'secondary') return [colors.secondary, '#B45309'];
+    if (variant === 'outline') return ['transparent', 'transparent'];
+    return colors.gradient || ['#0F172A', '#1E3A8A'];
+  };
 
   return (
-    <Pressable 
-      style={buttonStyle} 
-      onPress={onPress} 
-      disabled={disabled}
-      onHoverIn={() => Platform.OS === 'web' && setIsHovered(true)}
-      onHoverOut={() => Platform.OS === 'web' && setIsHovered(false)}
-    >
-      <Text style={labelStyle}>{title}</Text>
-    </Pressable>
+    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
+      <Pressable 
+        onPress={onPress} 
+        disabled={disabled}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onHoverIn={() => Platform.OS === 'web' && setIsHovered(true)}
+        onHoverOut={() => Platform.OS === 'web' && setIsHovered(false)}
+      >
+        <LinearGradient
+          colors={getGradient()}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[
+            styles.button,
+            variant === 'outline' && styles.outline,
+            isHovered && styles.buttonHovered,
+            disabled && styles.disabled,
+          ]}
+        >
+          <Text style={[
+            styles.text,
+            variant === 'outline' && { color: colors.primary },
+            textStyle
+          ]}>
+            {title}
+          </Text>
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 28,
-    borderRadius: 16,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 4,
-  },
-  primary: {
-    backgroundColor: colors.primary,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 8,
   },
   buttonHovered: {
     opacity: 0.9,
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    transform: [{ scale: 1.02 }],
-  },
-  secondary: {
-    backgroundColor: colors.secondary,
   },
   outline: {
     backgroundColor: 'transparent',
@@ -79,26 +88,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
   },
   disabled: {
-    opacity: 0.4,
+    opacity: 0.6,
   },
   text: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-  textPrimary: {
-    color: '#FFFFFF',
-  },
-  textSecondary: {
-    color: '#FFFFFF',
-  },
-  textOutline: {
-    color: colors.primary,
-  },
-
-
 });
 
 export default Button;

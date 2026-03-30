@@ -49,7 +49,11 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
         customer_phone: phone,
         message: `Inquiry for category: ${category?.name || 'Unknown'}`
       };
-      await leadService.sendLead(payload);
+      const result = await leadService.sendLead(payload);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       dispatch(setLeadCaptured({ name, phone }));
       onSuccess();
@@ -63,6 +67,7 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
       setLoading(false);
     }
   };
+
 
   return (
     <Modal

@@ -22,6 +22,11 @@ const getPendingBusinesses = async (req, res) => {
 const verifyBusiness = async (req, res) => {
     try {
         await Business.verify(req.params.id);
+        
+        // Emit stats update to admin room
+        const io = req.app.get('io');
+        io.to('admin_room').emit('stats_update', { type: 'business_verified', id: req.params.id });
+        
         res.json({ message: 'Business verified successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });

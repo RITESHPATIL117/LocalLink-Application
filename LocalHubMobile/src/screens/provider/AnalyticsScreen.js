@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
@@ -8,8 +8,13 @@ import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import businessOwnerService from '../../services/businessOwnerService';
 import leadService from '../../services/leadService';
+import SkeletonLoader from '../../components/SkeletonLoader';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
 
 const AnalyticsScreen = () => {
+  const { width } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ conversionRate: 0, views: 0, leads: 0 });
   const [locations, setLocations] = useState([]);
@@ -71,6 +76,7 @@ const AnalyticsScreen = () => {
 
     } catch (e) {
       console.log('Error fetching analytics:', e);
+      Toast.show({ type: 'error', text1: 'Sync Error', text2: 'Could not fetch real-time analytics.' });
     } finally {
       setLoading(false);
     }
@@ -89,45 +95,71 @@ const AnalyticsScreen = () => {
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <ScrollView style={styles.scrollArea}>
+          <SkeletonLoader width="100%" height={160} borderRadius={24} style={{ marginBottom: 16 }} />
+          <SkeletonLoader width="100%" height={140} borderRadius={24} style={{ marginBottom: 16 }} />
+          <SkeletonLoader width="100%" height={180} borderRadius={24} />
+        </ScrollView>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollArea}>
           
-          <AnimatedFadeIn duration={500}>
-            {/* KPI Summary */}
-            <View style={styles.card}>
-               <Text style={styles.sectionTitle}>Conversion Rate</Text>
+          <AnimatedFadeIn duration={600}>
+            {/* KPI Summary Card */}
+            <TouchableOpacity 
+                activeOpacity={0.9} 
+                style={styles.card}
+                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+            >
+               <View style={styles.cardHeaderSmall}>
+                  <Text style={styles.sectionTitle}>Conversion Rate</Text>
+                  <View style={styles.infoIcon}>
+                    <Ionicons name="information-circle-outline" size={18} color="#94A3B8" />
+                  </View>
+               </View>
+               
                <View style={styles.bigNumberRow}>
                  <Text style={styles.bigNumber}>{stats.conversionRate}%</Text>
                  <View style={[styles.trendBadge, parseFloat(stats.conversionRate) > 5 ? styles.badgeGood : styles.badgeNeutral]}>
                    <Ionicons 
                      name={parseFloat(stats.conversionRate) > 5 ? "trending-up" : "remove"} 
                      size={16} 
-                     color={parseFloat(stats.conversionRate) > 5 ? "#10B981" : "#6B7280"} 
+                     color={parseFloat(stats.conversionRate) > 5 ? "#10B981" : "#64748B"} 
                    />
                    <Text style={[styles.trendText, parseFloat(stats.conversionRate) > 5 ? styles.textGood : styles.textNeutral]}>
-                     {parseFloat(stats.conversionRate) > 5 ? 'Excellent' : 'Average'}
+                     {parseFloat(stats.conversionRate) > 5 ? 'Elite' : 'Stable'}
                    </Text>
                  </View>
                </View>
-               <Text style={styles.subtitleText}>Based on {stats.views} profile views and {stats.leads} quotes.</Text>
-            </View>
+               <View style={styles.metricDivider} />
+               <View style={styles.metricSummaryRow}>
+                 <View style={styles.subMetric}>
+                    <Text style={styles.subMetricVal}>{stats.views}</Text>
+                    <Text style={styles.subMetricLabel}>PROFILE VIEWS</Text>
+                 </View>
+                 <View style={styles.subMetric}>
+                    <Text style={styles.subMetricVal}>{stats.leads}</Text>
+                    <Text style={styles.subMetricLabel}>TOTAL LEADS</Text>
+                 </View>
+               </View>
+            </TouchableOpacity>
 
-            {/* Demographics Area */}
+            {/* Geographic Distribution Area */}
             {locations.length > 0 ? (
               <View style={styles.card}>
-                 <Text style={styles.sectionTitle}>Lead Locations</Text>
+                 <Text style={[styles.sectionTitle, { marginBottom: 20 }]}>Lead Origins (Top 3)</Text>
                  {locations.map((loc, idx) => (
-                   <View key={idx}>
+                   <View key={idx} style={{ marginBottom: 20 }}>
                      <View style={styles.rowItem}>
                        <Text style={styles.rowLabel}>{loc.name}</Text>
                        <Text style={styles.rowValue}>{loc.percentage}%</Text>
                      </View>
                      <View style={styles.progressBarBg}>
                        <AnimatedFadeIn duration={1000} delay={400 + (idx * 150)}>
-                         <View style={[styles.progressBarFill, { width: `${loc.percentage}%`, backgroundColor: getBarColor(idx) }]} />
+                         <LinearGradient
+                            colors={idx === 0 ? [colors.primary, '#E65C00'] : idx === 1 ? ['#F59E0B', '#D97706'] : ['#10B981', '#059669']}
+                            start={{x:0, y:0}} end={{x:1, y:1}}
+                            style={[styles.progressBarFill, { width: `${loc.percentage}%` }]} 
+                         />
                        </AnimatedFadeIn>
                      </View>
                    </View>
@@ -138,24 +170,32 @@ const AnalyticsScreen = () => {
                 <View style={styles.emptyIconCircle}>
                   <Ionicons name="map-outline" size={32} color={colors.primary} />
                 </View>
-                <Text style={styles.emptyCardTitle}>No Location Data Yet</Text>
-                <Text style={styles.emptyCardDesc}>Once leads start messaging you, their locations will be tracked here automatically.</Text>
+                <Text style={styles.emptyCardTitle}>Gathering Intelligence...</Text>
+                <Text style={styles.emptyCardDesc}>Once you start receiving leads, your prime market locations will appear here in real-time.</Text>
               </View>
             )}
 
-            {/* Empty State warning for extra features */}
-            <View style={styles.upgradeCard}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="lock-closed" size={24} color="#F59E0B" />
+            {/* Upsell / Pro Card */}
+            <TouchableOpacity 
+                activeOpacity={0.9} 
+                style={styles.upgradeCard}
+                onPress={() => Haptics.selectionAsync()}
+            >
+              <LinearGradient colors={['#FEF3C7', '#FFFBEB']} style={StyleSheet.absoluteFill} borderRadius={24} />
+              <View style={styles.upgradeHeader}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="diamond-outline" size={24} color="#F59E0B" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.upgradeTitle}>Unlock Advanced Insights</Text>
+                  <Text style={styles.upgradeDesc}>See which keywords users used to find you and track your rank against competitors.</Text>
+                </View>
               </View>
-              <Text style={styles.upgradeTitle}>Unlock Pro Insights</Text>
-              <Text style={styles.upgradeDesc}>See exactly which competitors your leads are also messaging and what search terms they used to find you.</Text>
               <View style={styles.upgradeBtn}>
-                <Text style={styles.upgradeBtnText}>Upgrade to Gold</Text>
+                <Text style={styles.upgradeBtnText}>Explore Diamond Membership</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           </AnimatedFadeIn>
-
         </ScrollView>
       )}
     </SafeAreaView>
@@ -163,40 +203,48 @@ const AnalyticsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#F3F4F6' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#111827' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollArea: { padding: 20, paddingBottom: 40 },
-  card: { backgroundColor: '#FFF', borderRadius: 20, padding: 24, marginBottom: 16, shadowColor: '#64748B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 16, elevation: 3 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 16 },
-  bigNumberRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
-  bigNumber: { fontSize: 42, fontWeight: '800', color: colors.primary, lineHeight: 48 },
-  trendBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, marginLeft: 16, marginBottom: 6 },
-  badgeGood: { backgroundColor: '#ECFDF5' },
-  badgeNeutral: { backgroundColor: '#F3F4F6' },
-  trendText: { fontWeight: '700', marginLeft: 6 },
+  container: { backgroundColor: '#F8FAFC' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 10, elevation: 4, zIndex: 10 },
+  headerTitle: { fontSize: 26, fontWeight: '900', color: '#1E293B', letterSpacing: -1 },
+  scrollArea: { padding: 24, paddingBottom: 100 },
+  
+  card: { backgroundColor: '#FFF', borderRadius: 28, padding: 24, marginBottom: 20, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 3, borderWidth: 1, borderColor: '#F1F5F9' },
+  cardHeaderSmall: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 13, fontWeight: '900', color: '#94A3B8', letterSpacing: 1, textTransform: 'uppercase' },
+  infoIcon: { padding: 4 },
+  
+  bigNumberRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  bigNumber: { fontSize: 48, fontWeight: '900', color: colors.primary, letterSpacing: -2 },
+  trendBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, marginLeft: 16 },
+  badgeGood: { backgroundColor: '#F0FDF4' },
+  badgeNeutral: { backgroundColor: '#F8FAFC' },
+  trendText: { fontWeight: '900', marginLeft: 6, fontSize: 13, textTransform: 'uppercase' },
   textGood: { color: '#10B981' },
-  textNeutral: { color: '#6B7280' },
-  subtitleText: { fontSize: 14, color: '#6B7280' },
-  rowItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  rowLabel: { fontSize: 14, fontWeight: '600', color: '#4B5563' },
-  rowValue: { fontSize: 14, fontWeight: '800', color: '#111827' },
-  progressBarBg: { height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, overflow: 'hidden', marginBottom: 20 },
-  progressBarFill: { height: '100%', borderRadius: 4 },
+  textNeutral: { color: '#64748B' },
   
-  emptyIconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
-  emptyCardTitle: { fontSize: 18, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: 8 },
-  emptyCardDesc: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 22 },
+  metricDivider: { height: 1.5, backgroundColor: '#F8FAFC', marginBottom: 20 },
+  metricSummaryRow: { flexDirection: 'row', gap: 32 },
+  subMetric: { gap: 4 },
+  subMetricVal: { fontSize: 20, fontWeight: '900', color: '#1E293B' },
+  subMetricLabel: { fontSize: 10, color: '#94A3B8', fontWeight: '900', letterSpacing: 1 },
   
-  upgradeCard: { backgroundColor: '#FFFBEB', borderRadius: 20, padding: 24, marginTop: 8, borderWidth: 1, borderColor: '#FEF3C7', alignItems: 'center', textAlign: 'center' },
-  iconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  upgradeTitle: { fontSize: 18, fontWeight: '800', color: '#D97706', marginBottom: 12 },
-  upgradeDesc: { fontSize: 14, color: '#92400E', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
-  upgradeBtn: { backgroundColor: '#F59E0B', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  upgradeBtnText: { color: '#FFF', fontWeight: '800' }
+  rowItem: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  rowLabel: { fontSize: 15, fontWeight: '800', color: '#475569' },
+  rowValue: { fontSize: 15, fontWeight: '900', color: '#1E293B' },
+  progressBarBg: { height: 10, backgroundColor: '#F1F5F9', borderRadius: 5, overflow: 'hidden' },
+  progressBarFill: { height: '100%', borderRadius: 5 },
+  
+  emptyIconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 },
+  emptyCardTitle: { fontSize: 20, fontWeight: '900', color: '#1E293B', textAlign: 'center', marginBottom: 8 },
+  emptyCardDesc: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 22, fontWeight: '600' },
+  
+  upgradeCard: { borderRadius: 24, padding: 24, position: 'relative', overflow: 'hidden', shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5 },
+  upgradeHeader: { flexDirection: 'row', gap: 16, marginBottom: 24 },
+  iconCircle: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' },
+  upgradeTitle: { fontSize: 17, fontWeight: '900', color: '#92400E', letterSpacing: -0.3 },
+  upgradeDesc: { fontSize: 13, color: '#92400E', lineHeight: 18, fontWeight: '600', marginTop: 4 },
+  upgradeBtn: { backgroundColor: '#F59E0B', paddingVertical: 14, borderRadius: 16, alignItems: 'center', alignSelf: 'stretch' },
+  upgradeBtnText: { color: '#FFF', fontWeight: '900', fontSize: 15, textTransform: 'uppercase', letterSpacing: 0.5 }
 });
 
 export default AnalyticsScreen;

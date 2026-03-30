@@ -1,23 +1,23 @@
 export default {
-  primary: '#1E3A8A',    // Royal Blue (Elite Trust)
-  secondary: '#F59E0B',  // Soft Gold (Elite Accent)
-  accent: '#1E3A8A',     // Consistently Elite
-  background: '#F9FAFB', // Off White / Cream
+  primary: '#1E40AF',    // Imperial Royal Blue (Elite)
+  secondary: '#F59E0B',  // Soft Gold (Royal Accent)
+  accent: '#3B82F6',     // Sapphire Blue
+  background: '#F3F4F6', // Off-white for floating shadows
   surface: '#FFFFFF',    // Pure White
-  surfaceSecondary: '#F3F4F6', // Lighter Gray
-  glassEffect: 'rgba(255,255,255,0.8)',
-  text: '#111827',       // Rich Dark
-  textSecondary: '#6B7280', // Subtle Grey
-  border: '#E5E7EB',     // Light Grey
+  surfaceSecondary: '#F8FAFC', // Slate-tinted whisper gray
+  glassEffect: 'rgba(255,255,255,0.1)',
+  text: '#1E3A8A',       // Deep Royal Dark
+  textSecondary: '#64748B', // Slate Blue
+  border: 'transparent',
   error: '#EF4444', 
   success: '#10B981',
-  warning: '#F59E0B',
+  warning: '#F87171',
   star: '#F59E0B',
   
   // Gradients
-  gradient: ['#1E3A8A', '#3B82F6'],
-  promoGradient: ['#1E3A8A', '#6366F1'],
-  softGradient: ['#F9FAFB', '#F3F4F6'],
+  gradient: ['#1E3A8A', '#3B82F6'], // Deep Royal to Sapphire
+  promoGradient: ['#1E40AF', '#60A5FA'],
+  softGradient: ['#F8FAFC', '#F1F5F9'],
 };
 
 

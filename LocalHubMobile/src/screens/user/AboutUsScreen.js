@@ -7,8 +7,6 @@ import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
-const { width } = Dimensions.get('window');
-
 const AboutUsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>

@@ -1,17 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Haptics from 'expo-haptics';
 import { logout } from '../../store/authSlice';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import Button from '../../components/Button';
 import { useFavorites } from '../../hooks/useFavorites';
-
-const { width } = Dimensions.get('window');
 
 const menuGroups = [
   {
@@ -92,19 +91,17 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.maxContainer}>
           {/* Profile Header Card */}
           <AnimatedFadeIn duration={500}>
-            <LinearGradient
-              colors={[colors.primary, '#E65C00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.profileHeader}
-            >
+            <View style={styles.profileHeader}>
               <View style={styles.profileTop}>
                 <View style={styles.avatarWrapper}>
                   <Image 
-                    source={{ uri: user?.profilePic || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random&size=200` }}
+                    source={{ uri: user?.profilePic || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=0F172A&color=fff&size=200` }}
                     style={styles.avatar}
                   />
-                  <TouchableOpacity style={styles.editBadge}>
+                  <TouchableOpacity 
+                    style={styles.editBadge}
+                    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                  >
                     <Ionicons name="camera" size={16} color="#FFF" />
                   </TouchableOpacity>
                 </View>
@@ -118,22 +115,22 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.statsRow}>
-                <View style={styles.statItem}>
+                <TouchableOpacity style={styles.statItem} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                   <Text style={styles.statVal}>12</Text>
                   <Text style={styles.statLabel}>Reviews</Text>
-                </View>
+                </TouchableOpacity>
                 <View style={styles.statDivider} />
-                <View style={styles.statItem}>
+                <TouchableOpacity style={styles.statItem} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                   <Text style={styles.statVal}>{favorites.length}</Text>
                   <Text style={styles.statLabel}>Saved</Text>
-                </View>
+                </TouchableOpacity>
                 <View style={styles.statDivider} />
-                <View style={styles.statItem}>
+                <TouchableOpacity style={styles.statItem} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
                   <Text style={styles.statVal}>8</Text>
                   <Text style={styles.statLabel}>Requests</Text>
-                </View>
+                </TouchableOpacity>
               </View>
-            </LinearGradient>
+            </View>
           </AnimatedFadeIn>
 
           {/* Menu Groups */}
@@ -219,32 +216,51 @@ const styles = StyleSheet.create({
   guestDesc: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 26, marginBottom: 40 },
   guestLoginBtn: { backgroundColor: colors.primary, width: '100%', height: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: colors.primary, shadowOpacity: 0.3, shadowRadius: 12 },
   guestLoginText: { color: '#FFF', fontSize: 18, fontWeight: '800' },
-  profileHeader: { margin: 20, borderRadius: 24, padding: 24, shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
+  profileHeader: { 
+    margin: 20, 
+    borderRadius: 28, 
+    padding: 24, 
+    backgroundColor: '#0F172A',
+    shadowColor: '#0F172A', 
+    shadowOffset: { width: 0, height: 12 }, 
+    shadowOpacity: 0.15, 
+    shadowRadius: 24, 
+    elevation: 8 
+  },
   profileTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   avatarWrapper: { position: 'relative' },
-  avatar: { width: 80, height: 80, borderRadius: 24, borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)' },
-  editBadge: { position: 'absolute', bottom: -4, right: -4, width: 32, height: 32, borderRadius: 12, backgroundColor: '#1F2937', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFF' },
-  headerText: { marginLeft: 16, flex: 1 },
-  userName: { fontSize: 26, fontWeight: '900', color: '#FFF' },
-  userEmail: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 8 },
-  roleBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  roleText: { color: '#FFF', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
-  statsRow: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 20, paddingVertical: 16 },
+  avatar: { width: 84, height: 84, borderRadius: 28, borderWidth: 3, borderColor: 'rgba(255,255,255,0.1)' },
+  editBadge: { position: 'absolute', bottom: -2, right: -2, width: 34, height: 34, borderRadius: 12, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#0F172A' },
+  headerText: { marginLeft: 18, flex: 1 },
+  userName: { fontSize: 24, fontWeight: '900', color: '#FFF' },
+  userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 8, fontWeight: '500' },
+  roleBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10 },
+  roleText: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  statsRow: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, paddingVertical: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   statItem: { flex: 1, alignItems: 'center' },
   statVal: { color: '#FFF', fontSize: 22, fontWeight: '900' },
-  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '600' },
-  statDivider: { width: 1, height: '60%', backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'center' },
+  statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
+  statDivider: { width: 1, height: '50%', backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center' },
   menuWrapper: { paddingHorizontal: 20 },
-  groupSection: { marginBottom: 24 },
-  groupTitle: { fontSize: 12, fontWeight: '800', color: '#9CA3AF', letterSpacing: 1.5, marginBottom: 12, marginLeft: 4 },
-  cardGroup: { backgroundColor: '#FFF', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#F3F4F6' },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  iconContainer: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  menuText: { flex: 1, fontSize: 16, fontWeight: '700', color: '#374151' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 18, borderRadius: 24, marginBottom: 20, borderWidth: 1, borderColor: '#FEE2E2', shadowColor: '#EF4444', shadowOpacity: 0.05, shadowRadius: 10 },
-  logoutIconBg: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  groupSection: { marginBottom: 28 },
+  groupTitle: { fontSize: 11, fontWeight: '800', color: '#9CA3AF', letterSpacing: 1.5, marginBottom: 14, marginLeft: 6 },
+  cardGroup: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 24, 
+    overflow: 'hidden', 
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 2,
+    borderWidth: 0,
+  },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
+  iconContainer: { width: 42, height: 42, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  menuText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1F2937' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 20, borderRadius: 24, marginBottom: 24, shadowColor: '#EF4444', shadowOpacity: 0.08, shadowRadius: 20, elevation: 2 },
+  logoutIconBg: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   logoutText: { fontSize: 16, fontWeight: '800', color: '#EF4444' },
-  versionText: { textAlign: 'center', fontSize: 12, color: '#9CA3AF', fontWeight: '600', marginBottom: 20 }
+  versionText: { textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 30 }
 });
 
 export default ProfileScreen;
