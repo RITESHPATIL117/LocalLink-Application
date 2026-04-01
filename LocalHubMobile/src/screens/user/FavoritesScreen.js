@@ -44,58 +44,73 @@ const FavoritesScreen = ({ navigation }) => {
       
       {/* ─── Premium Header ─── */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <View style={styles.menuIconBg}>
-              <Ionicons name="menu" size={24} color={colors.primary} />
+        <LinearGradient 
+          colors={['#FFF', '#F9FAFB']} 
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuBtn}>
+              <Ionicons name="menu" size={26} color={colors.primary} />
+            </TouchableOpacity>
+            <View style={styles.titleContainer}>
+              <Text style={styles.headerTitle}>My Favorites</Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{favorites.length} Saved</Text>
+              </View>
             </View>
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.headerTitle}>Saved Items</Text>
-            <Text style={styles.headerSubTitle}>{favorites.length} places favored</Text>
+            <TouchableOpacity style={styles.notifBtn}>
+              <Ionicons name="heart-half-outline" size={22} color="#64748B" />
+            </TouchableOpacity>
           </View>
-          <View style={{ width: 44 }} />
-        </View>
 
-        {favorites.length > 0 && (
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#9CA3AF" />
-            <TextInput 
-              placeholder="Search your favorites..." 
-              style={styles.searchInput}
-              value={search}
-              onChangeText={setSearch}
-              placeholderTextColor="#9CA3AF"
-            />
-            {search.length > 0 && (
-               <TouchableOpacity onPress={() => setSearch('')}>
-                 <Ionicons name="close-circle" size={20} color="#E5E7EB" />
-               </TouchableOpacity>
-            )}
-          </View>
-        )}
+          {favorites.length > 0 && (
+            <View style={styles.searchSection}>
+              <View style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color="#94A3B8" />
+                <TextInput 
+                  placeholder="Search your saved places..." 
+                  style={styles.searchInput}
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholderTextColor="#94A3B8"
+                />
+                {search.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearch('')}>
+                    <Ionicons name="close-circle" size={20} color="#CBD5E1" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
 
-        {favorites.length > 0 && (
-          <View style={styles.tabsWrapper}>
-            <FlatList 
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={CATEGORIES}
-              keyExtractor={item => item}
-              contentContainerStyle={styles.tabsContent}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={[styles.tabButton, activeTab === item && styles.activeTabButton]}
-                  onPress={() => setActiveTab(item)}
-                >
-                  <Text style={[styles.tabText, activeTab === item && styles.activeTabText]}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        )}
+          {favorites.length > 0 && (
+            <View style={styles.tabsWrapper}>
+              <FlatList 
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={CATEGORIES}
+                keyExtractor={item => item}
+                contentContainerStyle={styles.tabsContent}
+                renderItem={({ item }) => {
+                  const active = activeTab === item;
+                  return (
+                    <TouchableOpacity 
+                      style={[styles.tabButton, active && styles.activeTabButton]}
+                      onPress={() => {
+                         Haptics.selectionAsync();
+                         setActiveTab(item);
+                      }}
+                    >
+                      <Text style={[styles.tabText, active && styles.activeTabText]}>
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            </View>
+          )}
+        </LinearGradient>
       </View>
       
       {/* ─── Content Area ─── */}
@@ -164,41 +179,48 @@ const styles = StyleSheet.create({
   header: { 
     backgroundColor: '#FFF', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#F3F4F6',
-    paddingBottom: 8,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerGradient: {
+    paddingBottom: 12,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
-  menuIconBg: {
+  menuBtn: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#F1F5F9',
   },
-  headerTitle: { fontSize: 24, fontWeight: '900', color: '#111827', textAlign: 'center', letterSpacing: -0.5 },
-  headerSubTitle: { fontSize: 13, color: '#6B7280', textAlign: 'center', fontWeight: '600', marginTop: 2 },
+  titleContainer: { alignItems: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0F172A', letterSpacing: -0.5 },
+  countBadge: { backgroundColor: `${colors.primary}10`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
+  countText: { fontSize: 10, fontWeight: '800', color: colors.primary, textTransform: 'uppercase' },
+  notifBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
   
+  searchSection: { paddingHorizontal: 20, marginBottom: 16 },
   searchContainer: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    marginHorizontal: 20, marginBottom: 16,
-    paddingHorizontal: 16, height: 48,
-    borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: '#F8FAFC', paddingHorizontal: 16, height: 50,
+    borderRadius: 16, borderWidth: 1, borderColor: '#F1F5F9',
   },
-  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '600', color: '#111827' },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '600', color: '#1E293B' },
   
   tabsWrapper: { marginBottom: 4 },
-  tabsContent: { paddingHorizontal: 16, gap: 10 },
+  tabsContent: { paddingHorizontal: 20, gap: 8 },
   tabButton: {
-    paddingHorizontal: 18, paddingVertical: 8,
-    borderRadius: 20, backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 14, backgroundColor: '#F8FAFC',
+    borderWidth: 1, borderColor: '#F1F5F9',
   },
-  activeTabButton: { backgroundColor: '#111827' },
-  tabText: { fontSize: 13, fontWeight: '700', color: '#6B7280' },
+  activeTabButton: { backgroundColor: '#0F172A', borderColor: '#0F172A' },
+  tabText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
   activeTabText: { color: '#FFF' },
 
   listContent: {

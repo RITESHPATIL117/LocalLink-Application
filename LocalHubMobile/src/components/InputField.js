@@ -16,11 +16,13 @@ const InputField = React.forwardRef(({
   returnKeyType = 'done',
   onSubmitEditing,
   autoCapitalize = 'sentences',
+  variant = 'dark',
   ...props 
 }, ref) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const focusAnim = useRef(new Animated.Value(0)).current;
+  const isLight = variant === 'light';
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -42,12 +44,12 @@ const InputField = React.forwardRef(({
 
   const borderColor = focusAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255,255,255,0.1)', colors.secondary], // Slate to Gold accent
+    outputRange: [isLight ? '#E5E7EB' : 'rgba(255,255,255,0.1)', colors.primary],
   });
 
   const backgroundColor = focusAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.12)'],
+    outputRange: [isLight ? '#F9FAFB' : 'rgba(255,255,255,0.05)', isLight ? '#FFFFFF' : 'rgba(255,255,255,0.12)'],
   });
 
   const scale = focusAnim.interpolate({
@@ -57,7 +59,7 @@ const InputField = React.forwardRef(({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, isLight && { color: '#4B5563' }]}>{label}</Text>}
       <Animated.View style={[
         styles.inputContainer, 
         { borderColor, backgroundColor, transform: [{ scale }] },
@@ -65,11 +67,11 @@ const InputField = React.forwardRef(({
       ]}>
         <TextInput
           ref={ref}
-          style={styles.input}
+          style={[styles.input, isLight && { color: '#111827' }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="rgba(255,255,255,0.4)"
+          placeholderTextColor={isLight ? '#9CA3AF' : 'rgba(255,255,255,0.4)'}
           secureTextEntry={secureTextEntry && !showPassword}
           keyboardType={keyboardType}
           returnKeyType={returnKeyType}
@@ -88,7 +90,7 @@ const InputField = React.forwardRef(({
             <Ionicons 
               name={showPassword ? "eye-off-outline" : "eye-outline"} 
               size={20} 
-              color={isFocused ? colors.secondary : "rgba(255,255,255,0.5)"} 
+              color={isFocused ? colors.primary : (isLight ? '#9CA3AF' : "rgba(255,255,255,0.5)")} 
             />
           </TouchableOpacity>
         )}
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     height: 60,
-    // Add a very subtle inner shadow effect via background color
   },
   input: {
     flex: 1,
@@ -129,13 +130,12 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: '#EF4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   iconContainer: {
     padding: 4,
   },
   errorText: {
-    color: '#F87171',
+    color: '#EF4444',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 6,

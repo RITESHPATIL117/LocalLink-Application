@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, Platform, ActivityIndicator, RefreshControl, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import socketService from '../../services/socketService';
 import Toast from 'react-native-toast-message';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import WelcomeModal from '../../components/WelcomeModal';
 import * as Haptics from 'expo-haptics';
 
 const sidebarMenu = [
@@ -57,6 +58,7 @@ const DashboardScreen = ({ navigation }) => {
   const { user } = useSelector(state => state.auth);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [adminStats, setAdminStats] = useState(defaultAdminStats);
 
   useEffect(() => {
@@ -97,7 +99,14 @@ const DashboardScreen = ({ navigation }) => {
       console.log('Admin dashboard err:', e);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await fetchAdminData();
   };
 
   const adminName = user?.name || "Admin Lead";
@@ -152,7 +161,10 @@ const DashboardScreen = ({ navigation }) => {
 
   const renderMainContent = () => (
     <View style={styles.mainWrapper}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}
+      >
         
         {/* Absolute Header Background */}
         <LinearGradient
@@ -298,6 +310,7 @@ const DashboardScreen = ({ navigation }) => {
 
         </View>
       </ScrollView>
+      <WelcomeModal isProvider={true} />
     </View>
   );
 
@@ -461,30 +474,30 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   mainWrapper: { flex: 1 },
-  headerBackground: { position: 'absolute', top: 0, left: 0, right: 0, height: 260, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' },
-  topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 20 },
-  greetingTitle: { fontSize: 32, fontWeight: '900', color: '#FFF', letterSpacing: -1 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, backgroundColor: 'rgba(16, 185, 129, 0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
+  headerBackground: { position: 'absolute', top: 0, left: 0, right: 0, height: 280, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' },
+  topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 30 },
+  greetingTitle: { fontSize: 34, fontWeight: '900', color: '#FFF', letterSpacing: -1.2 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
   statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: 8, shadowColor: '#10B981', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4 },
   statusText: { fontSize: 11, color: '#10B981', fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
   topActions: { flexDirection: 'row', alignItems: 'center' },
-  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   badge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', borderWidth: 2, borderColor: '#FFF', zIndex: 2 },
-  profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
   
   contentPadding: { paddingHorizontal: 24, paddingBottom: 40 },
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 24, marginHorizontal: -6 },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 28, marginHorizontal: -6 },
   statCard: {
     flex: 1, 
-    backgroundColor: '#FFF', borderRadius: 28, padding: 20, margin: 6,
-    shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 24, elevation: 4, borderWidth: 1, borderColor: '#F1F5F9',
+    backgroundColor: '#FFF', borderRadius: 28, padding: 22, margin: 6,
+    shadowColor: '#1E293B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.08, shadowRadius: 30, elevation: 5, borderWidth: 1, borderColor: '#F8FAFC',
   },
-  statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  iconBox: { width: 52, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   trendBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   trendText: { fontSize: 10, fontWeight: '900', marginLeft: 4 },
-  statValue: { fontSize: 28, fontWeight: '900', color: '#1E293B', marginBottom: 4, letterSpacing: -1 },
-  statTitle: { fontSize: 13, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statValue: { fontSize: 32, fontWeight: '900', color: '#0F172A', marginBottom: 6, letterSpacing: -1.5 },
+  statTitle: { fontSize: 13, fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
   
   dashboardSplit: { justifyContent: 'space-between' },
   chartSection: { backgroundColor: '#FFF', borderRadius: 32, padding: 24, marginBottom: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },

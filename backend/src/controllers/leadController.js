@@ -4,11 +4,12 @@ const Business = require('../models/businessModel');
 
 const sendLead = async (req, res, next) => {
     try {
-        const { business_id, customer_name, customer_email, customer_phone, message } = req.body;
+        const { business_id, category_id, customer_name, customer_email, customer_phone, message } = req.body;
         const user_id = req.user ? req.user.id : null;
         
         const leadId = await Lead.create({ 
             business_id, 
+            category_id,
             user_id,
             customer_name, 
             customer_email: customer_email || null, 

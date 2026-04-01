@@ -24,33 +24,48 @@ const InfoScreen = ({ route, navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.lastUpdated}>Last updated: March 2026</Text>
+          <Text style={styles.lastUpdated}>Version 1.0.4 • Last updated March 28, 2026</Text>
           
           <Text style={styles.paragraph}>
-            Welcome to LocalHub. By accessing or using our platform, you agree to be bound by these {title.toLowerCase()}.
+            By utilizing the LocalHub Mobile Application ("the Service"), you signify your irrevocable acceptance of these {title}. If you do not agree, please discontinue use immediately.
           </Text>
 
-          <Text style={styles.subTitle}>1. Acceptance of Terms</Text>
-          <Text style={styles.paragraph}>
-            LocalHub provides a platform for service discovery and connection. These terms govern your access to and use of our mobile application and related services.
-          </Text>
+          <View style={styles.legalSection}>
+            <Text style={styles.subTitle}>1. Scope of Service</Text>
+            <Text style={styles.paragraph}>
+              LocalHub serves as an intermediary platform connecting users with local service professionals ("Providers"). While we verify professional credentials, LocalHub does not guarantee the quality, safety, or legality of the services performed.
+            </Text>
+          </View>
 
-          <Text style={styles.subTitle}>2. User Responsibilities</Text>
-          <Text style={styles.paragraph}>
-            Users are responsible for maintaining the confidentiality of their account information. You agree to provide accurate and complete information when registering.
-          </Text>
+          <View style={styles.legalSection}>
+            <Text style={styles.subTitle}>2. User Obligations</Text>
+            <Text style={styles.paragraph}>
+              You must provide accurate information durante registration. You are solely responsible for all activity that occurs under your account. Fraudulent activity will result in immediate termination.
+            </Text>
+          </View>
 
-          <Text style={styles.subTitle}>3. Privacy Policy</Text>
-          <Text style={styles.paragraph}>
-            Your privacy is important to us. Our Privacy Policy explains how we collect, use, and protect your personal data.
-          </Text>
+          <View style={styles.legalSection}>
+            <Text style={styles.subTitle}>3. Lead Generation & Booking</Text>
+            <Text style={styles.paragraph}>
+              Sending a "Request" creates a lead for the Provider. A booking is only confirmed once both parties agree on terms. LocalHub is not a party to any contract between you and the Provider.
+            </Text>
+          </View>
 
-          <Text style={styles.subTitle}>4. Limitation of Liability</Text>
-          <Text style={styles.paragraph}>
-            LocalHub is a marketplace connecting users and providers. We are not responsible for the quality of services provided by third-party professionals.
-          </Text>
+          <View style={styles.legalSection}>
+            <Text style={styles.subTitle}>4. Payments & Refunds</Text>
+            <Text style={styles.paragraph}>
+              Payment terms are negotiated between the User and the Provider. For "Pay After Service" options, users are legally bound to fulfill payment once the agreed-upon work is completed to specified standards.
+            </Text>
+          </View>
 
-          <Text style={styles.paragraph}>
+          <View style={styles.legalSection}>
+            <Text style={styles.subTitle}>5. Data Protection</Text>
+            <Text style={styles.paragraph}>
+              We collect data to improve your experience. Our use of your personal information is governed by our Global Privacy Standard. We never sell your data to third-party advertisers.
+            </Text>
+          </View>
+
+          <Text style={styles.customContent}>
             {content}
           </Text>
         </View>
@@ -78,11 +93,23 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
   backBtn: { padding: 4 },
   scrollContent: { padding: 20 },
-  card: { backgroundColor: '#FFF', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  title: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 8 },
-  lastUpdated: { fontSize: 13, color: '#9CA3AF', marginBottom: 24, fontWeight: '600' },
-  subTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginTop: 24, marginBottom: 12 },
-  paragraph: { fontSize: 15, color: '#4B5563', lineHeight: 24, marginBottom: 16 },
+  card: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 32, 
+    padding: 28, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.04, 
+    shadowRadius: 20, 
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  title: { fontSize: 28, fontWeight: '900', color: '#0F172A', marginBottom: 10, letterSpacing: -0.5 },
+  lastUpdated: { fontSize: 13, color: '#94A3B8', marginBottom: 30, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  legalSection: { marginBottom: 24, paddingLeft: 0 },
+  subTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B', marginBottom: 10 },
+  paragraph: { fontSize: 15, color: '#475569', lineHeight: 26, fontWeight: '500' },
+  customContent: { fontSize: 14, color: '#64748B', fontStyle: 'italic', marginTop: 20 },
   footer: { marginTop: 32, alignItems: 'center', paddingBottom: 20 },
   footerText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
 });

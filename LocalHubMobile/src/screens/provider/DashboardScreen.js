@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator, useWindowDimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +14,7 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import WelcomeModal from '../../components/WelcomeModal';
 
 const sidebarMenu = [
   { id: 'dashboard', title: 'Home Screen', icon: 'home-outline' },
@@ -37,6 +38,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [monthlyChartData, setMonthlyChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileStrength, setProfileStrength] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
@@ -67,24 +69,23 @@ const ProviderDashboardScreen = ({ navigation }) => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // 1. Fetch Aggregated Stats from new specialized endpoint
+      const statsRes = await businessOwnerService.getDashboardStats();
+      const apiStats = statsRes.data || {};
+      
+      // 2. Fetch Businesses for Activity Feed & Detailed Context
       const businessesRes = await businessOwnerService.getBusinesses().catch(() => ({ data: [] }));
       const businesses = businessesRes.data || [];
       
-      let totalLeadsCount = 0;
-      let activeLeadsCount = 0;
-      let totalViews = 0;
       let allLeads = [];
 
+      // Fetch recent leads for the activity feed
       await Promise.all(
-        businesses.map(async (biz) => {
-          totalViews += biz.views || 0;
+        businesses.slice(0, 3).map(async (biz) => {
           try {
             const leadsRes = await leadService.getLeadsByBusiness(biz.id);
             const leads = leadsRes.data || [];
-            totalLeadsCount += leads.length;
-            activeLeadsCount += leads.filter(l => l.status === 'new' || l.status === 'contacted').length;
             
-            // Format lead into an activity
             const mappedLeads = leads.map(l => ({
               id: l.id || Math.random().toString(),
               user: l.customerName || 'Customer',
@@ -96,49 +97,50 @@ const ProviderDashboardScreen = ({ navigation }) => {
             }));
             
             allLeads = [...allLeads, ...mappedLeads];
-          } catch (e) {
-            // ignore lead fetch error per business
-          }
+          } catch (e) {}
         })
       );
 
-      setStats({ totalLeads: totalLeadsCount, activeLeads: activeLeadsCount, views: totalViews });
+      setStats({ 
+        totalLeads: apiStats.totalLeads || 0, 
+        activeLeads: apiStats.pendingListings || 0, // Using pending as "action needed"
+        views: apiStats.totalViews || 0 
+      });
 
-      // Sort recent activity
       allLeads.sort((a, b) => b.rawDate - a.rawDate);
       
-      // If no real leads, supply highly realistic fallback data so the dashboard doesn't look dead on launch
+      // Calculate Profile Strength (Interactive)
+      let strength = 20; // Basic registration
+      if (user?.profilePic) strength += 20;
+      if (businesses.length > 0) {
+        strength += 20; // At least one listing
+        const mainBiz = businesses[0];
+        if (mainBiz.description && mainBiz.description.length > 50) strength += 20;
+        if (mainBiz.image_url) strength += 20;
+      }
+      setProfileStrength(strength);
+
       if (allLeads.length === 0) {
         setRecentActivities([
-          { id: 'a1', user: 'Amit Sharma', action: 'Requested a quote for Plumbing Services', time: '2 mins ago', icon: 'chatbubble-ellipses', color: colors.primary },
-          { id: 'a2', user: 'Neha Gupta', action: 'Left a 5-star review', time: '1 hour ago', icon: 'star', color: '#F59E0B' },
-          { id: 'a3', user: 'System', action: 'Your listing "SuperFast Plumbing" was approved', time: '1 day ago', icon: 'checkmark-circle', color: '#3B82F6' },
+          { id: 'a1', user: 'System', action: 'Welcome to LocalHub! Start by adding your first listing.', time: 'Just now', icon: 'sparkles', color: colors.secondary },
+          { id: 'a2', user: 'Tips', action: 'Complete your profile to increase visibility by 40%', time: 'Today', icon: 'bulb', color: '#10B981' },
+          { id: 'a3', user: 'Notice', action: 'Your dashboard is now live with real-time tracking.', time: 'Today', icon: 'shield-checkmark', color: colors.primary },
         ]);
         
-        // Mock chart
         setMonthlyChartData([
-          { label: 'Jan', value: 20 }, { label: 'Feb', value: 45 }, { label: 'Mar', value: 38 },
-          { label: 'Apr', value: 80 }, { label: 'May', value: 99 }, { label: 'Jun', value: 55 },
-          { label: 'Jul', value: 65 }, { label: 'Aug', value: 70 }, { label: 'Sep', value: 85 },
-          { label: 'Oct', value: 95 }, { label: 'Nov', value: 110 }, { label: 'Dec', value: 105 },
+          { label: 'Mon', value: 5 }, { label: 'Tue', value: 8 }, { label: 'Wed', value: 3 },
+          { label: 'Thu', value: 12 }, { label: 'Fri', value: 15 }, { label: 'Sat', value: 7 },
+          { label: 'Sun', value: 9 },
         ]);
-        
-        setStats({ totalLeads: 1248, activeLeads: 45, views: 8392 });
       } else {
         setRecentActivities(allLeads.slice(0, 4));
-        
-        // Generate real chart data from lead dates
+        // Chart logic remains based on lead dates
         const monthCounts = new Array(12).fill(0);
         allLeads.forEach(l => {
            const m = l.rawDate.getMonth();
            monthCounts[m] += 1;
         });
-        
-        const chart = MONTHS.map((m, i) => ({
-          label: m,
-          value: monthCounts[i]
-        }));
-        setMonthlyChartData(chart);
+        setMonthlyChartData(MONTHS.map((m, i) => ({ label: m, value: monthCounts[i] })));
       }
     } catch (error) {
       console.log('Error fetching provider stats:', error);
@@ -220,7 +222,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
         {/* Top Navigation / Header Area */}
         <View style={styles.topHeader}>
           <View>
-            <Text style={styles.greetingGreeting}>Good Morning,</Text>
+            <Text style={styles.greetingGreeting}>Partner Dashboard</Text>
             <Text style={styles.greetingTitle}>{businessName}</Text>
           </View>
           <View style={styles.topActions}>
@@ -231,13 +233,53 @@ const ProviderDashboardScreen = ({ navigation }) => {
               <View style={styles.badge} />
               <Ionicons name="notifications" size={20} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
               <Image source={{ uri: profilePic }} style={styles.profilePic} />
+              <View style={styles.onlineIndicator} />
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.contentPadding}>
+          
+          {/* Profile Strength Meter - NEW */}
+          <AnimatedFadeIn delay={50} duration={600}>
+            <View style={styles.strengthCard}>
+                <View style={styles.strengthHeader}>
+                    <Text style={styles.strengthTitle}>Profile Strength</Text>
+                    <Text style={[styles.strengthValue, { color: profileStrength > 80 ? '#10B981' : colors.primary }]}>
+                        {profileStrength}%
+                    </Text>
+                </View>
+                <View style={styles.progressBarBg}>
+                    <Animated.View style={[styles.progressBarFill, { width: `${profileStrength}%`, backgroundColor: profileStrength > 80 ? '#10B981' : colors.primary }]} />
+                </View>
+                <Text style={styles.strengthTip}>
+                    {profileStrength < 100 
+                        ? `💡 Pro Tip: ${profileStrength < 60 ? "Add a business photo" : "Write a detailed description"} to get more leads.`
+                        : "✅ Your profile is optimized and ready for growth!"}
+                </Text>
+            </View>
+          </AnimatedFadeIn>
+
+          {/* Quick Actions Grid - NEW */}
+          <AnimatedFadeIn delay={100} duration={600}>
+            <View style={styles.quickGrid}>
+              {[
+                { label: 'Add Listing', icon: 'add-circle', color: '#10B981', route: 'AddBusiness' },
+                { label: 'All Leads', icon: 'people', color: '#3B82F6', route: 'LeadsTab' },
+                { label: 'Analytics', icon: 'stats-chart', color: '#F59E0B', route: 'MoreTab' },
+                { label: 'Reviews', icon: 'star', color: '#8B5CF6', route: 'Reviews' },
+              ].map(q => (
+                <TouchableOpacity key={q.label} style={styles.quickItem} onPress={() => navigation.navigate(q.route)}>
+                  <View style={[styles.quickIcon, { backgroundColor: `${q.color}15` }]}>
+                    <Ionicons name={q.icon} size={24} color={q.color} />
+                  </View>
+                  <Text style={styles.quickLabel}>{q.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </AnimatedFadeIn>
           
           {/* Stats Cards */}
           {loading ? (
@@ -334,7 +376,19 @@ const ProviderDashboardScreen = ({ navigation }) => {
                         key={act.id} 
                         style={[styles.activityItem, index === recentActivities.length - 1 && { borderBottomWidth: 0 }]}
                         activeOpacity={0.7}
-                        onPress={() => Haptics.selectionAsync()}
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          if (act.icon === 'people') { // It's a lead
+                             navigation.navigate('LeadDetails', { lead: { 
+                               id: act.id, 
+                               customer: act.user, 
+                               action: act.action, 
+                               time: act.time,
+                               service: 'Personal Inquiry', // Fallback for activity leads
+                               status: 'New'
+                             } });
+                          }
+                        }}
                     >
                       <View style={[styles.activityIconBg, { backgroundColor: `${act.color}15` }]}>
                         {renderDynamicIcon(act.icon, 18, act.color)}
@@ -356,6 +410,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
 
         </View>
       </ScrollView>
+      <WelcomeModal isProvider={true} />
     </View>
   );
 
@@ -427,51 +482,106 @@ const styles = StyleSheet.create({
   activeMobileMenuText: { color: '#FFFFFF' },
   
   mainWrapper: { flex: 1 },
-  headerBackground: { position: 'absolute', top: 0, left: 0, right: 0, height: 260, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' },
-  topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 20 },
-  greetingGreeting: { fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
-  greetingTitle: { fontSize: 32, fontWeight: '900', color: '#FFFFFF', letterSpacing: -1 },
+  headerBackground: { position: 'absolute', top: 0, left: 0, right: 0, height: 280, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' },
+  topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 30 },
+  greetingGreeting: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 },
+  greetingTitle: { fontSize: 34, fontWeight: '900', color: '#FFFFFF', letterSpacing: -1.2 },
   topActions: { flexDirection: 'row', alignItems: 'center' },
-  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   badge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', borderWidth: 2, borderColor: '#FFF', zIndex: 2 },
-  profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  profileBtn: { position: 'relative' },
+  profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)' },
+  onlineIndicator: { position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: 6, backgroundColor: '#10B981', borderWidth: 2, borderColor: '#FFF' },
   
-  contentPadding: { paddingHorizontal: 24, paddingBottom: 40 },
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 24, marginHorizontal: -6 },
+  contentPadding: { paddingHorizontal: 20, paddingBottom: 40 },
+  
+  // NEW Quick Grid Styles
+  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28 },
+  quickItem: { flex: 1, backgroundColor: '#FFF', padding: 16, borderRadius: 24, alignItems: 'center', marginHorizontal: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  quickIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  quickLabel: { fontSize: 11, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.2 },
+
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 28, marginHorizontal: -6 },
   statCard: {
     flex: 1, 
-    backgroundColor: '#FFFFFF', borderRadius: 28, padding: 20, margin: 6,
-    shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 24, elevation: 4, borderWidth: 1, borderColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF', borderRadius: 28, padding: 22, margin: 6,
+    shadowColor: '#1E293B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.08, shadowRadius: 30, elevation: 5, borderWidth: 1, borderColor: '#F8FAFC',
   },
-  statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   trendBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   trendText: { fontSize: 10, fontWeight: '900', marginLeft: 4 },
-  statValue: { fontSize: 28, fontWeight: '900', color: '#1E293B', marginBottom: 4, letterSpacing: -1 },
-  statTitle: { fontSize: 13, fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statValue: { fontSize: 30, fontWeight: '900', color: '#0F172A', marginBottom: 4, letterSpacing: -1 },
+  statTitle: { fontSize: 12, fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
   
   dashboardSplit: { justifyContent: 'space-between' },
   chartSection: { backgroundColor: '#FFFFFF', borderRadius: 32, padding: 24, marginBottom: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  sectionTitle: { fontSize: 19, fontWeight: '900', color: '#1E293B', letterSpacing: -0.5 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B', letterSpacing: -0.5 },
   dropdownMini: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: '#F1F5F9' },
   dropdownMiniText: { fontSize: 12, fontWeight: '800', color: '#64748B', marginRight: 4 },
   seeAllText: { fontSize: 14, fontWeight: '800', color: colors.primary },
   
-  customChartContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 220, borderBottomWidth: 1, borderBottomColor: '#F8FAFC', paddingBottom: 10 },
+  customChartContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 180, borderBottomWidth: 1, borderBottomColor: '#F8FAFC', paddingBottom: 10 },
   barItem: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%', position: 'relative' },
   barValueBadge: { position: 'absolute', top: -30, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, zIndex: 5 },
   barValueText: { color: '#FFF', fontSize: 10, fontWeight: '900' },
-  barFill: { width: 14, borderRadius: 7, opacity: 0.6 },
-  barLabel: { fontSize: 11, fontWeight: '600', color: '#94A3B8', marginTop: 14 },
+  barFill: { width: 12, borderRadius: 6, opacity: 0.6 },
+  barLabel: { fontSize: 10, fontWeight: '600', color: '#94A3B8', marginTop: 14 },
   
   activitySection: { flex: 1, backgroundColor: '#FFF', borderRadius: 32, padding: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.06, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
   activityList: { marginTop: 4 },
-  activityItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' },
+  activityItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' },
   activityIconBg: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   activityContent: { flex: 1 },
   activityText: { fontSize: 14, lineHeight: 22, color: '#475569', fontWeight: '500' },
   activityTime: { fontSize: 12, fontWeight: '700', color: '#94A3B8', marginTop: 4 },
+
+  // Profile Strength Styles
+  strengthCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  strengthTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  strengthValue: {
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  strengthTip: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
+    fontStyle: 'italic',
+  },
 });
 
 export default ProviderDashboardScreen;

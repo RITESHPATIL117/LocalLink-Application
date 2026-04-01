@@ -18,6 +18,8 @@ export default {
   gradient: ['#1E3A8A', '#3B82F6'], // Deep Royal to Sapphire
   promoGradient: ['#1E40AF', '#60A5FA'],
   softGradient: ['#F8FAFC', '#F1F5F9'],
+  authGradient: ['#FFFFFF', '#EEF2FF', '#E0E7FF'], // Pure White to Indigo 50
+  primaryDark: '#0F172A',
 };
 
 

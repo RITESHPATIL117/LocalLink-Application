@@ -93,6 +93,27 @@ class Business {
             revenue: 0 // Placeholder for now
         };
     }
+
+    static async create(data) {
+        const { provider_id, name, description, category_id, address, city, image_url, subcategory } = data;
+        const [result] = await db.query(
+            `INSERT INTO businesses (provider_id, name, description, category_id, address, city, image_url, is_verified, subcategory) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+            [provider_id, name, description, category_id, address, city, image_url, subcategory || null]
+        );
+        return result.insertId;
+    }
+
+    static async addImages(businessId, images) {
+        if (!images || images.length === 0) return;
+        const values = images.map(url => [businessId, url]);
+        await db.query('INSERT INTO business_images (business_id, image_url) VALUES ?', [values]);
+    }
+
+    static async getImages(businessId) {
+        const [rows] = await db.query('SELECT image_url FROM business_images WHERE business_id = ?', [businessId]);
+        return rows.map(r => r.image_url);
+    }
 }
 
 module.exports = Business;

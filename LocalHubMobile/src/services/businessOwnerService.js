@@ -38,11 +38,26 @@ const businessOwnerService = {
   },
   addBusiness: async (data) => {
     try {
-      const response = await api.post('/businesses', data);
-      const newBiz = response || { id: `biz_${Date.now()}`, ...data, status: 'Pending' };
+      // Find category ID if needed (for real DB mapping)
+      // Since CATEGORIES in screen are names, we might need a mapping or the backend to handle it by name
+      // For now, assume backend might handle name or we send a dummy ID if name matches.
+      // Better: The backend should look up category by name if ID is missing.
+      
+      const payload = {
+        ...data,
+        // If we have a category name, the backend should ideally resolve it.
+        // For simplicity, we'll try to guess an ID or just send name
+        categoryName: data.category 
+      };
+
+      const response = await api.post('/businesses', payload);
+      const newBiz = response?.data || response || { id: `biz_${Date.now()}`, ...data, status: 'Pending' };
+      
+      // Update session cache for immediate feedback
       sessionBusinesses.unshift(newBiz);
       return { data: newBiz };
     } catch (e) {
+      console.error('Add business failed, using session fallback:', e);
       const newBiz = { id: `biz_${Date.now()}`, ...data, status: 'Pending' };
       sessionBusinesses.unshift(newBiz);
       return { data: newBiz };
@@ -64,6 +79,12 @@ const businessOwnerService = {
       if (idx !== -1) sessionBusinesses[idx] = updatedBiz;
       return { data: updatedBiz };
     }
+  },
+  getDashboardStats: async () => {
+    return api.get('/businesses/owner/stats');
+  },
+  deleteBusiness: async (id) => {
+    return api.delete(`/businesses/${id}`);
   },
 };
 

@@ -1,8 +1,9 @@
 import { io } from 'socket.io-client';
 import { Platform } from 'react-native';
+import { API_URL } from '../config/env';
 
-// Use the local development URL for the emulator or device
-const SOCKET_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+// Use the API_URL to determine the correct socket server host
+const SOCKET_URL = API_URL.replace('/api', '');
 
 class SocketService {
     constructor() {

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import InteractiveRating from '../../components/InteractiveRating';
 import colors from '../../styles/colors';
 import Badge from '../../components/Badge';
 import reviewService from '../../services/reviewService';
@@ -293,11 +294,12 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             </View>
             <View style={styles.starsRow}>
-              {[1,2,3,4,5].map(i => (
-                <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
-                  <Ionicons name={i <= reviewRating ? "star" : "star-outline"} size={36} color={colors.star} />
-                </TouchableOpacity>
-              ))}
+              <InteractiveRating 
+                initialRating={reviewRating} 
+                onRatingSelect={setReviewRating} 
+                size={36} 
+                color={colors.star} 
+              />
             </View>
             <TextInput
               style={styles.reviewInput}

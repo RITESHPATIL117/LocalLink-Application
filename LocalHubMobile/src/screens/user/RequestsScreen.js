@@ -241,44 +241,47 @@ const RequestCard = ({ item, onPress }) => {
           <View style={styles.cardMain}>
             <View style={styles.cardTitleRow}>
               <Text style={styles.bizName} numberOfLines={1}>{item.businessName}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-                <Ionicons name={cfg.icon} size={10} color={cfg.color} />
+              <View style={[styles.statusBadge, { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}30`, borderWidth: 1 }]}>
+                <View style={[styles.statusDot, { backgroundColor: cfg.color }]} />
                 <Text style={[styles.statusText, { color: cfg.color }]}>{item.status}</Text>
               </View>
             </View>
             <Text style={styles.serviceText} numberOfLines={1}>{item.service}</Text>
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
-                <Ionicons name="calendar-outline" size={13} color="#9CA3AF" />
+                <Ionicons name="calendar-outline" size={13} color="#94A3B8" />
                 <Text style={styles.metaText}>{item.date}</Text>
               </View>
               <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={13} color="#9CA3AF" />
+                <Ionicons name="time-outline" size={13} color="#94A3B8" />
                 <Text style={styles.metaText}>{item.time}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <View style={styles.cardFooter}>
+        <LinearGradient 
+          colors={['transparent', 'rgba(248,250,252,0.5)', '#F8FAFC']} 
+          style={styles.cardFooter}
+        >
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Estimated Price</Text>
+            <Text style={styles.priceLabel}>Estimated Total</Text>
             <Text style={styles.priceValue}>{item.price}</Text>
           </View>
 
           {item.status === 'Accepted' && (
-            <View style={styles.footerBadge}>
-              <Ionicons name="alert-circle" size={14} color="#F59E0B" />
-              <Text style={styles.footerBadgeText}>Action Required</Text>
+            <View style={styles.actionBtn}>
+              <Text style={styles.actionBtnText}>Confirm Now</Text>
+              <Ionicons name="chevron-forward" size={14} color="#FFF" />
             </View>
           )}
-          {item.status === 'Completed' && item.paymentMode && (
-            <View style={[styles.footerBadge, { backgroundColor: '#EFF6FF' }]}>
-              <Ionicons name="card-outline" size={14} color="#3B82F6" />
-              <Text style={[styles.footerBadgeText, { color: '#3B82F6' }]}>{item.paymentMode}</Text>
+          {item.status === 'Completed' && (
+            <View style={[styles.footerBadge, { backgroundColor: '#F0FDF4' }]}>
+              <Ionicons name="checkmark-done-circle" size={14} color="#10B981" />
+              <Text style={[styles.footerBadgeText, { color: '#10B981' }]}>Fulfilled</Text>
             </View>
           )}
-        </View>
+        </LinearGradient>
       </TouchableOpacity>
     </AnimatedFadeIn>
   );
@@ -509,18 +512,42 @@ const styles = StyleSheet.create({
   cardMain: { flex: 1 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   bizName: { fontSize: 16, fontWeight: '800', color: '#111827', flex: 1, marginRight: 8 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, gap: 4 },
-  statusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
-  serviceText: { fontSize: 13, color: '#6B7280', fontWeight: '600', marginBottom: 8 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, gap: 6 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
+  serviceText: { fontSize: 13, color: '#64748B', fontWeight: '600', marginBottom: 10 },
   metaRow: { flexDirection: 'row', gap: 16 },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 14, paddingTop: 4 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaText: { fontSize: 12, color: '#94A3B8', fontWeight: '700' },
+  cardFooter: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingBottom: 16, 
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
   priceRow: {},
-  priceLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
-  priceValue: { fontSize: 16, fontWeight: '900', color: '#111827' },
-  footerBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFBEB', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  footerBadgeText: { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
+  priceLabel: { fontSize: 10, color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  priceValue: { fontSize: 18, fontWeight: '900', color: '#0F172A' },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 4,
+  },
+  actionBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  footerBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  footerBadgeText: { fontSize: 12, fontWeight: '800' },
 
   empty: { alignItems: 'center', marginTop: 80, paddingHorizontal: 40 },
   emptyTitle: { fontSize: 22, fontWeight: '800', color: '#111827', marginTop: 20 },

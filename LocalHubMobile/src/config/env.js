@@ -11,4 +11,4 @@ const getBaseUrl = () => {
 
 export const API_URL = getBaseUrl();
 export const ENV = 'development';
-export const IS_MOCK_ENABLED = true; // Set to false to force real API calls
+export const IS_MOCK_ENABLED = false; // Force real API calls to avoid Network Error in production logic

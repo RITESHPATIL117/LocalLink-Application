@@ -21,14 +21,14 @@ import { useSelector } from 'react-redux';
 // ─── Fallback & Mock Data ──────────────────────────────────────────────────
 
 const FALLBACK_CATEGORIES = [
-  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300' },
-  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
-  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
-  { id: 'c4', name: 'AC Service',      icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300' },
-  { id: 'c5', name: 'Beauty',          icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=300' },
-  { id: 'c6', name: 'Carpentry',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=300' },
-  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF', image: 'https://images.unsplash.com/photo-1562591176-3293099a0bf3?q=80&w=300' },
-  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2', image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=300' },
+  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF', image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800' },
+  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=800' },
+  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800' },
+  { id: 'c4', name: 'AC Service',      icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800' },
+  { id: 'c5', name: 'Salon',           icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800' },
+  { id: 'c6', name: 'Carpentry',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800' },
+  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF', image: 'https://images.unsplash.com/photo-1562591176-3293099a0bf3?q=80&w=800' },
+  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2', image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=800' },
 ];
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -109,7 +109,8 @@ const CategoriesScreen = ({ navigation }) => {
     if (isAuthenticated || leadCaptured) {
       navigation.navigate('SearchResults', { query: subItem.name });
     } else {
-      setPendingSubItem(subItem);
+      // Attach the parent category ID so LeadGatekeeper can send it to the backend
+      setPendingSubItem({ ...subItem, category_id: selectedMainCat });
       setLeadModalVisible(true);
     }
   };
@@ -250,8 +251,8 @@ const CategoriesScreen = ({ navigation }) => {
                       activeSubcategories.map((subItem, index) => (
                         <AnimatedFadeIn 
                           key={`${selectedMainCat}-${index}`} 
-                          delay={index * 50} 
-                          duration={300} 
+                          delay={index * 30} 
+                          duration={500} 
                           style={[styles.gridItem, { width: itemWidth }]}
                         >
                           <SubcategoryCard 
@@ -286,12 +287,12 @@ const CategoriesScreen = ({ navigation }) => {
 // ─── Helper UI Components ────────────────────────────────────────────────────
 
 const SUB_FALLBACKS = [
-  'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300',
-  'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300',
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300',
-  'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300',
-  'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=300',
-  'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=300'
+  'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800',
+  'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=800',
+  'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800',
+  'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800',
+  'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800',
+  'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800'
 ];
 
 const SubcategoryCard = ({ item, parentName, onPress, index = 0 }) => {
@@ -402,20 +403,34 @@ const styles = StyleSheet.create({
   },
 
   // Subcategory Grid
-  subCatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  gridItem: { marginBottom: 10 },
+  subCatGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12,
+    paddingBottom: 20,
+  },
+  gridItem: { 
+    marginBottom: 12,
+  },
   
   subCatCard: {
-    width: '100%', height: 140, borderRadius: 16, overflow: 'hidden',
+    width: '100%', 
+    height: 220, 
+    borderRadius: 28, 
+    overflow: 'hidden',
     backgroundColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 15,
+    elevation: 4,
   },
   subCatImg: { width: '100%', height: '100%' },
-  subCatGradient: { ...StyleSheet.absoluteFillObject, top: '40%' },
+  subCatGradient: { ...StyleSheet.absoluteFillObject, top: '30%' },
   subCatMeta: {
-    position: 'absolute', bottom: 12, left: 12, right: 12,
+    position: 'absolute', bottom: 16, left: 16, right: 16,
   },
-  parentCatText: { fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
-  subCatTitle: { fontSize: 13, fontWeight: '800', color: '#FFF', lineHeight: 18 },
+  parentCatText: { fontSize: 10, color: 'rgba(255,255,255,0.9)', fontWeight: '900', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.5 },
+  subCatTitle: { fontSize: 15, fontWeight: '900', color: '#FFF', lineHeight: 20, letterSpacing: -0.2 },
 
   // Search Results Mode
   searchResultsContainer: { padding: 20 },

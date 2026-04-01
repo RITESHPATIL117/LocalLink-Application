@@ -1,13 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
-  Dimensions, FlatList, ActivityIndicator, RefreshControl, Platform, Animated, useWindowDimensions, Modal, TextInput
+  Dimensions, FlatList, ActivityIndicator, RefreshControl, Platform, Animated, useWindowDimensions, Modal, TextInput, Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import SupportModal from '../../components/SupportModal';
 
 
 import colors from '../../styles/colors';
@@ -21,20 +22,25 @@ import LeadGatekeeper from '../../components/LeadGatekeeper';
 import PremiumLoader from '../../components/PremiumLoader';
 import reviewService from '../../services/reviewService';
 import Toast from 'react-native-toast-message';
+import WelcomeModal from '../../components/WelcomeModal';
+import InteractiveRating from '../../components/InteractiveRating';
+import TrustTicker from '../../components/TrustTicker';
+import { useIsFocused } from '@react-navigation/native';
+import leadService from '../../services/leadService';
 
 const MAX_APP_WIDTH = 800;
 
 // ─── Fallback Data ─────────────────────────────────────────────────────────────
 
 const FALLBACK_CATEGORIES = [
-  { id: '1', name: 'Cleaning',     icon: 'sparkles-outline',   color: '#3B82F6', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' },
-  { id: '2', name: 'Plumbing',     icon: 'water-outline',      color: '#3B82F6', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=300' },
-  { id: '3', name: 'Electrical',   icon: 'flash-outline',      color: '#F59E0B', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=300' },
-  { id: '4', name: 'HVAC',         icon: 'snow-outline',       color: '#06B6D4', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=300' },
-  { id: '5', name: 'Pet Care',     icon: 'paw-outline',        color: '#EC4899', image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=300' },
-  { id: '6', name: 'Automobile',   icon: 'car-sport-outline',  color: '#EF4444', image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=300' },
-  { id: '7', name: 'Events',       icon: 'calendar-outline',   color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=300' },
-  { id: '8', name: 'Health',       icon: 'fitness-outline',    color: '#10B981', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=300' },
+  { id: '1', name: 'Cleaning',     icon: 'sparkles-outline',   color: '#3B82F6', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800' },
+  { id: '2', name: 'Plumbing',     icon: 'water-outline',      color: '#3B82F6', image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800' },
+  { id: '3', name: 'Electrical',   icon: 'flash-outline',      color: '#F59E0B', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=800' },
+  { id: '4', name: 'AC Service',   icon: 'snow-outline',       color: '#06B6D4', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800' },
+  { id: '5', name: 'Salon',        icon: 'cut-outline',        color: '#EC4899', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800' },
+  { id: '6', name: 'Carpentry',    icon: 'hammer-outline',     color: '#EF4444', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800' },
+  { id: '7', name: 'Events',       icon: 'calendar-outline',   color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800' },
+  { id: '8', name: 'Health',       icon: 'fitness-outline',    color: '#10B981', image: 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?q=80&w=800' },
 ];
 
 const FALLBACK_BUSINESSES = [
@@ -66,36 +72,36 @@ const FALLBACK_BUSINESSES = [
 
 const BANNERS = [
   {
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000',
-    tag: '🏠 Home Services',
-    title: 'Expert Cleaning\nAt Your Doorstep',
-    subtitle: 'Book in 60 seconds',
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200',
+    tag: '🏠 Elite Cleaning',
+    title: 'Professional Home\nDeep Cleaning',
+    subtitle: 'Safe, secure, and sparkling clean',
     cta: 'Book Now',
     ctaRoute: { name: 'SearchResults', params: { query: 'Cleaning' } },
   },
   {
-    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=1000',
-    tag: '⚡ Electrical',
-    title: 'Certified Electricians\nAvailable 24/7',
-    subtitle: 'Same-day service guaranteed',
-    cta: 'Find Electrician',
+    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=1200',
+    tag: '⚡ Certified Electrical',
+    title: 'Emergency Electrical\nSupport 24/7',
+    subtitle: 'Verified local technicians',
+    cta: 'Find Specialist',
     ctaRoute: { name: 'SearchResults', params: { query: 'Electrical' } },
   },
   {
-    image: 'https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?q=80&w=1000',
-    tag: '💅 Beauty & Wellness',
-    title: 'Top Salons\nNear You',
-    subtitle: 'Pamper yourself today',
-    cta: 'Explore Salons',
+    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1200',
+    tag: '💅 Premium Salon',
+    title: 'Luxury Grooming\nin Your Living Room',
+    subtitle: 'Top-rated stylists at your service',
+    cta: 'Explore Services',
     ctaRoute: { name: 'SearchResults', params: { query: 'Beauty' } },
   },
   {
-    image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=1000',
-    tag: '❄️ AC & Appliance',
-    title: 'AC not cooling?\nWe fix it fast',
-    subtitle: 'Trained & verified technicians',
-    cta: 'Get Fixed',
-    ctaRoute: { name: 'SearchResults', params: { query: 'AC Repair' } },
+    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=1200',
+    tag: '🪠 Fast Plumbing',
+    title: 'Leak fixed fast,\nGuaranteed.',
+    subtitle: 'Transparent pricing, zero hidden costs',
+    cta: 'Call Plumber',
+    ctaRoute: { name: 'SearchResults', params: { query: 'Plumbing' } },
   },
 ];
 
@@ -175,7 +181,7 @@ const TestimonialCard = ({ item }) => (
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 const HomeScreen = ({ navigation }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, leadCaptured } = useSelector((state) => state.auth);
   const flatListRef = useRef(null);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
@@ -183,15 +189,46 @@ const HomeScreen = ({ navigation }) => {
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Lead Modal State
+  const [platformStats, setPlatformStats] = useState({ totalUsers: 0, totalBusinesses: 0, happyCustomers: 0 });
+  const [activeBookingsCount, setActiveBookingsCount] = useState(0);
+  const isFocused = useIsFocused();
+  const fabFade = useRef(new Animated.Value(1)).current;
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [leadModalVisible, setLeadModalVisible] = useState(false);
   const [pendingCategory, setPendingCategory] = useState(null);
-  
-  const { leadCaptured } = useSelector(state => state.auth);
 
+  useEffect(() => {
+    if (isFocused) {
+      fetchData();
+      fetchStats();
+      fetchActiveBookings();
+    }
+  }, [isFocused]);
+
+  const fetchActiveBookings = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await leadService.getUserLeads();
+      const active = (res.data || []).filter(l => l.status === 'pending' || l.status === 'contacted').length;
+      setActiveBookingsCount(active);
+    } catch (e) {
+      console.log('Error fetching user leads:', e);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await businessService.getPublicStats();
+      if (res?.data) {
+        setPlatformStats(res.data);
+      }
+    } catch (e) {
+      console.log('Error fetching platform stats:', e);
+    }
+  };
   const { width } = useWindowDimensions();
-  const SLIDER_HEIGHT = width * 0.45;
+  const SLIDER_HEIGHT = width * 0.65;
   const isDesktop = width >= 768;
   const bannerWidth = Math.min(width, MAX_APP_WIDTH);
 
@@ -336,19 +373,32 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* ─ Greeting ─ */}
         <AnimatedFadeIn duration={400}>
-          <View style={styles.greetingRow}>
-            <View>
-              <Text style={styles.greetingText}>
-                {greetingText()}{isAuthenticated && user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
-              </Text>
-              <View style={styles.locationRow}>
-                <Ionicons name="location" size={14} color={colors.primary} />
-                <Text style={styles.locationText}>Sangli, Maharashtra</Text>
-                <Ionicons name="chevron-down" size={14} color={colors.primary} />
+          <View style={styles.eliteGreeting}>
+            <View style={styles.greetingHeader}>
+              <View>
+                <Text style={styles.greetingText}>
+                  {greetingText()}{isAuthenticated && user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋
+                </Text>
+                <View style={styles.locationRow}>
+                  <Ionicons name="location" size={14} color={colors.primary} />
+                  <Text style={styles.locationText}>Sangli, Maharashtra</Text>
+                  <Ionicons name="chevron-down" size={14} color={colors.primary} />
+                </View>
               </View>
+              {activeBookingsCount > 0 && (
+                <TouchableOpacity 
+                  style={styles.statusBadge} 
+                  onPress={() => navigation.navigate('RequestsTab')}
+                >
+                  <View style={styles.pulsingDot} />
+                  <Text style={styles.statusBadgeText}>{activeBookingsCount} Active</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </AnimatedFadeIn>
+
+        <TrustTicker />
 
         {/* ─ Search ─ */}
         <AnimatedFadeIn delay={100} duration={500}>
@@ -361,22 +411,28 @@ const HomeScreen = ({ navigation }) => {
         <AnimatedFadeIn delay={150} duration={500}>
           <View style={[styles.heroSection, { height: SLIDER_HEIGHT }]}>
             <FlatList
-              ref={flatListRef}
               data={BANNERS}
               renderItem={renderBanner}
               keyExtractor={(_, i) => i.toString()}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
-              style={StyleSheet.absoluteFillObject}
-              onMomentumScrollEnd={(e) => {
-                setCurrentBannerIndex(Math.round(e.nativeEvent.contentOffset.x / bannerWidth));
+              onScroll={({ nativeEvent }) => {
+                const slide = Math.round(nativeEvent.contentOffset.x / bannerWidth);
+                if (slide !== activeBannerIndex) setActiveBannerIndex(slide);
               }}
+              style={styles.bannerList}
             />
             {/* Pagination */}
             <View style={styles.pagination}>
               {BANNERS.map((_, i) => (
-                <View key={i} style={[styles.paginationDot, currentBannerIndex === i && styles.paginationDotActive]} />
+                <View 
+                  key={i} 
+                  style={[
+                    styles.paginationDot, 
+                    activeBannerIndex === i && styles.paginationDotActive
+                  ]} 
+                />
               ))}
             </View>
           </View>
@@ -406,6 +462,40 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.quickActionText}>{a.label}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </AnimatedFadeIn>
+
+        {/* ─ Emergency QuickFix Grid ─ */}
+        <AnimatedFadeIn delay={220}>
+          <View style={styles.emergencyContainer}>
+            <View style={styles.emergencyHeader}>
+              <Text style={styles.emergencyTitle}>QuickFix Emergencies</Text>
+              <View style={styles.liveBadge}>
+                <Text style={styles.liveBadgeText}>LIVE HELP</Text>
+              </View>
+            </View>
+            <View style={styles.emergencyGrid}>
+              {[
+                { name: 'Plumber', icon: 'water', color: '#EF4444', query: 'Plumbing' },
+                { name: 'Electrician', icon: 'flash', color: '#F59E0B', query: 'Electrical' },
+                { name: 'AC Repair', icon: 'snow', color: '#3B82F6', query: 'AC Repair' },
+                { name: 'Car Help', icon: 'car-sport', color: '#111827', query: 'Car' },
+              ].map(item => (
+                <TouchableOpacity 
+                  key={item.name} 
+                  style={styles.emergencyItem}
+                  onPress={() => {
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                    navigation.navigate('SearchResults', { query: item.query });
+                  }}
+                >
+                  <View style={[styles.emergencyIconBg, { backgroundColor: `${item.color}10` }]}>
+                    <Ionicons name={item.icon} size={24} color={item.color} />
+                  </View>
+                  <Text style={styles.emergencyLabel}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </AnimatedFadeIn>
 
@@ -439,7 +529,11 @@ const HomeScreen = ({ navigation }) => {
             title="Browse by Category"
             onSeeAll={() => navigation.navigate('CategoriesTab')}
           />
-          <View style={styles.categoriesGrid}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.categoriesScroll}
+          >
             {categories.map(cat => (
               <CategoryPill
                 key={cat.id}
@@ -447,7 +541,7 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => handleCategoryPress(cat)}
               />
             ))}
-          </View>
+          </ScrollView>
         </AnimatedFadeIn>
 
         {/* ─ Featured Businesses ─ */}
@@ -514,7 +608,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.trustRow}>
             {[
               { icon: 'shield-checkmark', label: 'Verified\nProviders',   color: '#10B981' },
-              { icon: 'people',           label: '10,000+\nHappy Users',  color: '#3B82F6' },
+              { icon: 'people',           label: `${(platformStats.totalUsers || 10).toLocaleString()}+\nHappy Users`,  color: '#3B82F6' },
               { icon: 'star',             label: '4.8 Avg\nRating',       color: '#F59E0B' },
               { icon: 'flash',            label: 'Same Day\nService',     color: '#EF4444' },
             ].map(b => (
@@ -541,7 +635,7 @@ const HomeScreen = ({ navigation }) => {
               <Ionicons name="business" size={40} color="rgba(255,255,255,0.15)" style={{ marginBottom: 16 }} />
               <Text style={styles.ctaTitle}>Grow Your Business</Text>
               <Text style={styles.ctaDesc}>
-                Join 500+ local businesses on LocalHub. Get discovered, generate leads, and grow faster.
+                Join {(platformStats.totalBusinesses || 5).toLocaleString()}+ local businesses on LocalHub. Get discovered, generate leads, and grow faster.
               </Text>
               <TouchableOpacity
                 style={styles.ctaBtn}
@@ -564,11 +658,35 @@ const HomeScreen = ({ navigation }) => {
         onClose={() => setLeadModalVisible(false)}
         onSuccess={handleLeadSuccess}
       />
+
+      <WelcomeModal isProvider={false} />
+      
+      <SupportModal 
+        visible={supportModalVisible}
+        onClose={() => setSupportModalVisible(false)}
+      />
+
+      <Animated.View style={[styles.fabContainer, { opacity: fabFade }]}>
+        <TouchableOpacity 
+          style={styles.fab} 
+          onPress={() => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            setSupportModalVisible(true);
+          }}
+        >
+          <LinearGradient colors={[colors.primary, '#E65C00']} style={styles.fabGradient}>
+            <Ionicons name="rocket" size={24} color="#FFF" />
+            <Text style={styles.fabText}>Quick Help</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     </SafeAreaView>
   );
 };
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
+
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
@@ -604,25 +722,34 @@ const styles = StyleSheet.create({
   loginBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
 
   // Greeting
-  greetingRow: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8, backgroundColor: '#FFF' },
-  greetingText: { fontSize: 24, fontWeight: '900', color: '#111827' },
+  eliteGreeting: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, backgroundColor: '#FFF' },
+  greetingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  greetingText: { fontSize: 24, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  locationText: { fontSize: 14, color: colors.primary, fontWeight: '700' },
+  locationText: { fontSize: 13, color: colors.primary, fontWeight: '700' },
+  
+  statusBadge: { 
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0FDF4', 
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#DCFCE7' 
+  },
+  statusBadgeText: { color: '#166534', fontSize: 11, fontWeight: '800' },
+  pulsingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22C55E', marginRight: 6 },
 
   // Search
   searchWrapper: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
 
   // Banner
   heroSection: { width: '100%', position: 'relative' },
+  bannerList: { width: '100%' },
   bannerContainer: { height: '100%', position: 'relative', overflow: 'hidden' },
   bannerImage: { width: '100%', height: '100%' },
-  bannerTag: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  bannerTag: { position: 'absolute', top: 20, left: 20, backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   bannerTagText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-  bannerContent: { position: 'absolute', bottom: 40, left: 20 },
-  bannerTitle: { fontSize: 30, fontWeight: '900', color: '#FFF', lineHeight: 36, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6 },
-  bannerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 6, fontWeight: '600' },
-  bannerCta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, alignSelf: 'flex-start' },
-  bannerCtaText: { color: '#111827', fontWeight: '900', fontSize: 14 },
+  bannerContent: { position: 'absolute', bottom: 60, left: 24, right: 24 },
+  bannerTitle: { fontSize: 36, fontWeight: '900', color: '#FFF', lineHeight: 44, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
+  bannerSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 10, fontWeight: '600', maxWidth: '85%' },
+  bannerCta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: '#FFF', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 24, alignSelf: 'flex-start' },
+  bannerCtaText: { color: '#111827', fontWeight: '900', fontSize: 15 },
   pagination: { position: 'absolute', bottom: 16, flexDirection: 'row', alignSelf: 'center', gap: 6, width: '100%', justifyContent: 'center' },
   paginationDot: { width: 18, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
   paginationDotActive: { width: 36, backgroundColor: '#FFF' },
@@ -645,130 +772,114 @@ const styles = StyleSheet.create({
   promoBtnText: { color: colors.primary, fontWeight: '900', fontSize: 14 },
   promoIcon: { position: 'absolute', right: -20, bottom: -20 },
 
+  // Emergency Hub
+  emergencyContainer: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFF', marginTop: 8 },
+  emergencyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  emergencyTitle: { fontSize: 17, fontWeight: '900', color: '#1E293B', letterSpacing: -0.5 },
+  liveBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  liveBadgeText: { color: '#EF4444', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+  emergencyGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  emergencyItem: { flex: 1, alignItems: 'center', padding: 12, backgroundColor: '#F8FAFC', borderRadius: 20, marginHorizontal: 4, borderWidth: 1, borderColor: '#F1F5F9' },
+  emergencyIconBg: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+  emergencyLabel: { fontSize: 11, fontWeight: '800', color: '#475569' },
+
   // Section Header
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: '#111827', letterSpacing: -0.8 },
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  seeAll: { fontSize: 13, fontWeight: '700', color: colors.primary },
+  seeAll: { fontSize: 14, fontWeight: '700', color: colors.primary },
 
   // Categories
-  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 16 },
-  catPill: { 
-    width: (width - 44) / 4 - 12,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  catImageContainer: {
-    width: '100%',
-  },
-
-  // Businesses
-  bizScroll: { paddingHorizontal: 12, paddingBottom: 16, gap: 4 },
-
-  // Trending
-  trendingScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
-  trendingChip: {
-    backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 24, borderWidth: 0,
-    shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 16, elevation: 4,
-  },
-  trendingText: { color: '#374151', fontWeight: '700', fontSize: 14 },
-
-  // How It Works
-  howItWorksSection: { backgroundColor: '#FFF', marginVertical: 8, paddingBottom: 20 },
-  stepsRow: { flexDirection: 'row', paddingHorizontal: 12, gap: 4 },
-  stepCard: { flex: 1, alignItems: 'center', paddingHorizontal: 4, position: 'relative' },
-  stepIconBg: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  stepConnector: { position: 'absolute', top: 26, right: -8, width: 16, height: 2, backgroundColor: '#E5E7EB' },
-  stepTitle: { fontSize: 13, fontWeight: '900', marginBottom: 4, textAlign: 'center' },
-  stepDesc: { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
-
-  // Trust
-  trustRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 20, paddingHorizontal: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F3F4F6', gap: 8 },
-  trustBadge: { flex: 1, alignItems: 'center', gap: 6 },
-  trustLabel: { fontSize: 11, color: '#4B5563', fontWeight: '700', textAlign: 'center', lineHeight: 16 },
-
-  // Testimonials
-  testimonialScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
-  testimonialCard: {
-    backgroundColor: '#FFF', borderRadius: 20, padding: 20, 
-    width: Platform.OS === 'web' && width >= 768 ? (MAX_APP_WIDTH - 60) / 2 : width * 0.75,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
-    borderWidth: 1, borderColor: '#F3F4F6',
-  },
-  testimonialStars: { flexDirection: 'row', gap: 2, marginBottom: 10 },
-  testimonialText: { fontSize: 14, color: '#4B5563', lineHeight: 22, fontStyle: 'italic', marginBottom: 16, fontWeight: '500' },
-  testimonialAuthor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  testimonialAvatar: { width: 40, height: 40, borderRadius: 20 },
-  testimonialName: { fontSize: 14, fontWeight: '800', color: '#111827' },
-  testimonialRole: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
-
-  // Categories
-  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 16 },
-  catPill: { 
-    width: (width - 44) / 4 - 12,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  catImageContainer: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+  categoriesSection: { paddingVertical: 24, backgroundColor: '#FFF' },
+  categoriesScroll: { paddingHorizontal: 16, paddingBottom: 16 },
+  catPill: { width: 100, alignItems: 'center', marginRight: 20 },
+  catImageContainer: { 
+    width: 90, height: 90, borderRadius: 32, overflow: 'hidden', 
+    backgroundColor: '#F3F4F6', marginBottom: 12,
+    shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, 
+    shadowOpacity: 0.12, shadowRadius: 15, elevation: 6 
   },
   catImage: { width: '100%', height: '100%' },
-  catOverlay: { ...StyleSheet.absoluteFillObject, top: '40%' },
-  catPillText: { fontSize: 11, fontWeight: '800', color: '#374151', marginTop: 6, textAlign: 'center' },
+  catOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.02)' },
+  catPillText: { fontSize: 14, fontWeight: '800', color: '#374151', textAlign: 'center' },
 
   // Businesses
-  bizScroll: { paddingHorizontal: 12, paddingBottom: 16, gap: 4 },
+  bizScroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 8 },
 
   // Trending
-  trendingScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
+  trendingScroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 12 },
   trendingChip: {
-    backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 12,
-    borderRadius: 24, borderWidth: 0,
-    shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 16, elevation: 4,
+    backgroundColor: '#FFF', paddingHorizontal: 20, paddingVertical: 14,
+    borderRadius: 28, borderWidth: 0,
+    shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 20, elevation: 4,
   },
-  trendingText: { color: '#374151', fontWeight: '700', fontSize: 14 },
+  trendingText: { color: '#374151', fontWeight: '800', fontSize: 14 },
 
   // How It Works
-  howItWorksSection: { backgroundColor: '#FFF', marginVertical: 8, paddingBottom: 20 },
-  stepsRow: { flexDirection: 'row', paddingHorizontal: 12, gap: 4 },
+  howItWorksSection: { backgroundColor: '#FFF', marginVertical: 12, paddingBottom: 32 },
+  stepsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 6 },
   stepCard: { flex: 1, alignItems: 'center', paddingHorizontal: 4, position: 'relative' },
-  stepIconBg: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  stepConnector: { position: 'absolute', top: 26, right: -8, width: 16, height: 2, backgroundColor: '#E5E7EB' },
-  stepTitle: { fontSize: 13, fontWeight: '900', marginBottom: 4, textAlign: 'center' },
-  stepDesc: { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
+  stepIconBg: { width: 56, height: 56, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  stepConnector: { position: 'absolute', top: 28, right: -12, width: 24, height: 2, backgroundColor: '#F1F5F9' },
+  stepTitle: { fontSize: 14, fontWeight: '900', marginBottom: 6, textAlign: 'center' },
+  stepDesc: { fontSize: 12, color: '#64748B', textAlign: 'center', lineHeight: 18, fontWeight: '600' },
 
   // Trust
-  trustRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 20, paddingHorizontal: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F3F4F6', gap: 8 },
-  trustBadge: { flex: 1, alignItems: 'center', gap: 6 },
-  trustLabel: { fontSize: 11, color: '#4B5563', fontWeight: '700', textAlign: 'center', lineHeight: 16 },
+  trustRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 28, paddingHorizontal: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F1F5F9', gap: 12 },
+  trustBadge: { flex: 1, alignItems: 'center', gap: 8 },
+  trustLabel: { fontSize: 12, color: '#475569', fontWeight: '700', textAlign: 'center', lineHeight: 18 },
 
   // Testimonials
-  testimonialScroll: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
+  testimonialScroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
   testimonialCard: {
-    backgroundColor: '#FFF', borderRadius: 20, padding: 20, 
-    width: Platform.OS === 'web' && width >= 768 ? (MAX_APP_WIDTH - 60) / 2 : width * 0.75,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2,
-    borderWidth: 1, borderColor: '#F3F4F6',
+    backgroundColor: '#FFF', borderRadius: 28, padding: 24, 
+    width: Platform.OS === 'web' && width >= 768 ? (MAX_APP_WIDTH - 60) / 2 : width * 0.8,
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 20, elevation: 4,
+    borderWidth: 1, borderColor: '#F1F5F9',
   },
-  testimonialStars: { flexDirection: 'row', gap: 2, marginBottom: 10 },
-  testimonialText: { fontSize: 14, color: '#4B5563', lineHeight: 22, fontStyle: 'italic', marginBottom: 16, fontWeight: '500' },
-  testimonialAuthor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  testimonialAvatar: { width: 40, height: 40, borderRadius: 20 },
-  testimonialName: { fontSize: 14, fontWeight: '800', color: '#111827' },
-  testimonialRole: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
+  testimonialStars: { flexDirection: 'row', gap: 2, marginBottom: 12 },
+  testimonialText: { fontSize: 15, color: '#475569', lineHeight: 24, fontStyle: 'italic', marginBottom: 20, fontWeight: '600' },
+  testimonialAuthor: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  testimonialAvatar: { width: 44, height: 44, borderRadius: 22 },
+  testimonialName: { fontSize: 15, fontWeight: '900', color: '#111827' },
+  testimonialRole: { fontSize: 13, color: '#64748B', fontWeight: '700' },
 
   // CTA
-  ctaSection: { paddingHorizontal: 16, paddingVertical: 16 },
-  ctaCard: { borderRadius: 24, padding: 28, alignItems: 'center' },
-  ctaTitle: { fontSize: 24, fontWeight: '900', color: '#FFF', marginBottom: 10, textAlign: 'center' },
-  ctaDesc: { fontSize: 14, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 22, marginBottom: 24, fontWeight: '500' },
-  ctaBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFF', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 16 },
-  ctaBtnText: { color: '#111827', fontWeight: '900', fontSize: 16 },
+  ctaSection: { paddingHorizontal: 16, paddingVertical: 24 },
+  ctaCard: { borderRadius: 32, padding: 32, alignItems: 'center' },
+  ctaTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', marginBottom: 12, textAlign: 'center' },
+  ctaDesc: { fontSize: 16, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24, marginBottom: 28, fontWeight: '600' },
+  ctaBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFF', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 20 },
+  ctaBtnText: { color: '#111827', fontSize: 17, fontWeight: '900', marginRight: 8 },
+
+  // FAB Styles
+  fabContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    zIndex: 100,
+  },
+  fab: {
+    borderRadius: 28,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  fabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
+  },
+  fabText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '800',
+    marginLeft: 8,
+  },
 });
 
 export default HomeScreen;

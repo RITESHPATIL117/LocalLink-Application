@@ -42,7 +42,8 @@ const MyListingsScreen = ({ navigation }) => {
         activeOpacity={0.95}
         onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            navigation.navigate('LeadDetail', { leadId: item.id }); // Placeholder for detail view
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            navigation.navigate('LeadDetails', { lead: item }); // Aligned with LeadDetailsScreen
         }}
       >
         <Image 
@@ -98,7 +99,10 @@ const MyListingsScreen = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity 
                 style={styles.analyticsBtn}
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  navigation.navigate('MoreTab'); // Correct path for business analytics
+                }}
             >
               <Ionicons name="stats-chart" size={18} color="#64748B" />
             </TouchableOpacity>

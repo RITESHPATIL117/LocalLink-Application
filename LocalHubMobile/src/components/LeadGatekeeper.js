@@ -43,7 +43,8 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
     try {
       // Send a general lead for this category
       const payload = {
-        business_id: category?.id, 
+        category_id: category?.category_id || category?.id, 
+        business_id: null,
         user_id: user?.id || null,
         customer_name: name,
         customer_phone: phone,

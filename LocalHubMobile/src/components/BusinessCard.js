@@ -28,6 +28,7 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
           horizontal && styles.horizontalCard,
           grid && styles.gridCard,
           compact && styles.compactCard,
+          business.tier === 'Diamond' && styles.diamondCard,
           isHovered && styles.cardHovered,
           pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] }
         ]} 
@@ -47,9 +48,9 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
               compact && styles.compactImage
             ]} 
           />
-          <View style={styles.verifiedBadge}>
-            <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
-            <Text style={styles.verifiedText}>VERIFIED</Text>
+          <View style={[styles.verifiedBadge, business.tier === 'Diamond' && { backgroundColor: '#F59E0B' }]}>
+            <Ionicons name={business.tier === 'Diamond' ? "star" : "shield-checkmark"} size={14} color="#FFFFFF" />
+            <Text style={styles.verifiedText}>{business.tier === 'Diamond' ? 'ELITE PRO' : 'VERIFIED'}</Text>
           </View>
           <BlurView intensity={80} tint="dark" style={styles.ratingBadge}>
             <Text style={styles.ratingText}>{business.rating}</Text>
@@ -84,6 +85,19 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
             <Text style={styles.infoText} numberOfLines={1}>{business.address}</Text>
           </View>
 
+          {!compact && (
+            <View style={styles.trustBadgesRow}>
+              <View style={styles.trustBadgeSmall}>
+                <Ionicons name="time-outline" size={12} color="#10B981" />
+                <Text style={styles.trustBadgeText}>Instant Response</Text>
+              </View>
+              <View style={styles.trustBadgeSmall}>
+                <Ionicons name="repeat" size={12} color="#3B82F6" />
+                <Text style={styles.trustBadgeText}>98% Repeat Rate</Text>
+              </View>
+            </View>
+          )}
+
           <View style={[styles.footer, compact && styles.compactFooter]}>
             <Text style={styles.priceText}>Starting at <Text style={styles.priceValue}>₹499</Text></Text>
             <TouchableOpacity style={styles.viewBtn}>
@@ -108,8 +122,16 @@ const styles = StyleSheet.create({
     shadowRadius: 32,
     elevation: 8,
     overflow: 'hidden',
-    borderWidth: 0,
-    transition: 'all 0.3s ease', // Only works on web
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  diamondCard: {
+    borderColor: '#FDE68A',
+    borderWidth: 1.5,
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
   },
   cardHovered: {
     shadowOpacity: 0.12,
@@ -136,17 +158,17 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 180,
+    height: 220,
     backgroundColor: '#F3F4F6',
   },
   horizontalImage: {
-    height: 130,
+    height: 160,
   },
   gridImage: {
-    height: 140,
+    height: 180,
   },
   compactImage: {
-    height: 110,
+    height: 130,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -249,6 +271,27 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginLeft: 6,
     fontWeight: '600',
+  },
+  trustBadgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  trustBadgeSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDFA',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+  },
+  trustBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0D9488',
   },
   footer: {
     flexDirection: 'row',

@@ -71,7 +71,7 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient colors={colors.gradient} style={styles.flex}>
+    <LinearGradient colors={colors.authGradient} style={styles.flex}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flex}
@@ -87,7 +87,7 @@ const RegisterScreen = ({ navigation }) => {
                 />
               </Animated.View>
 
-              <Animated.View style={[styles.glassCard, { opacity: fadeAnims[1], transform: [{ translateY: fadeAnims[1].interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }]}>
+              <Animated.View style={[styles.whiteCard, { opacity: fadeAnims[1], transform: [{ translateY: fadeAnims[1].interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }]}>
                 <Formik
                   initialValues={{ name: '', email: '', password: '', role: 'user' }}
                   validationSchema={RegisterSchema}
@@ -125,11 +125,13 @@ const RegisterScreen = ({ navigation }) => {
                       </View>
 
                       <InputField 
+                        variant="light"
                         label="Full Name" 
                         value={values.name} 
                         onChangeText={handleChange('name')} 
                         onBlur={handleBlur('name')}
                         placeholder="John Doe" 
+                        autoCapitalize="words"
                         returnKeyType="next"
                         onSubmitEditing={() => emailRef.current?.focus()}
                       />
@@ -138,6 +140,7 @@ const RegisterScreen = ({ navigation }) => {
                       )}
 
                       <InputField 
+                        variant="light"
                         ref={emailRef}
                         label="Email Address" 
                         value={values.email} 
@@ -154,6 +157,7 @@ const RegisterScreen = ({ navigation }) => {
                       )}
 
                       <InputField 
+                        variant="light"
                         ref={passwordRef}
                         label="Password" 
                         value={values.password} 
@@ -215,22 +219,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
-  glassCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  whiteCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 32,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    shadowColor: '#1E3A8A',
-    shadowOffset: { width: 0, height: 25 },
-    shadowOpacity: 0.45,
-    shadowRadius: 35,
-    elevation: 12,
+    borderColor: '#E2E8F0',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.08,
+    shadowRadius: 40,
+    elevation: 8,
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     marginBottom: 16,
     marginLeft: 4,
     textTransform: 'uppercase',
@@ -243,42 +247,47 @@ const styles = StyleSheet.create({
   },
   roleCard: {
     flex: 0.31,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: '#F8FAFC',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: '#F1F5F9',
   },
   activeRoleCard: {
-    borderColor: colors.secondary,
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderColor: colors.primary,
+    backgroundColor: '#EEF2FF',
   },
   roleIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   activeRoleIconCircle: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
   },
   roleCardLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
   },
   activeRoleCardLabel: {
-    color: colors.secondary,
+    color: colors.primary,
   },
   registerBtn: {
     marginTop: 24,
   },
   errorText: {
-    color: '#F87171',
+    color: '#EF4444',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 4,
@@ -289,12 +298,12 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   loginText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '500',
   },
   loginLink: {
-    color: colors.secondary,
+    color: colors.primary,
     fontWeight: '800',
     fontSize: 15,
   },

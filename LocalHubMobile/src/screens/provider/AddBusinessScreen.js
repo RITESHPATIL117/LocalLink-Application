@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, KeyboardAvoidingView, Platform,
   useWindowDimensions, Switch, ActivityIndicator, Animated,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,8 +14,10 @@ import globalStyles from '../../styles/globalStyles';
 import businessOwnerService from '../../services/businessOwnerService';
 import InputField from '../../components/InputField';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
+import categoryService from '../../services/categoryService';
 import * as Haptics from 'expo-haptics';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import * as ImagePicker from 'expo-image-picker';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +52,8 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const TOTAL_STEPS = 4;
 
 const INITIAL_DATA = {
-  name: '', tagline: '', category: '', subCategory: '', description: '',
+  profileImage: null,
+  name: '', tagline: '', category: '', customCategory: '', subCategory: '', description: '',
   yearEstablished: '', employees: '',
   phone: '', phone2: '', email: '', website: '',
   address: '', city: '', state: '', pinCode: '', landmark: '',
@@ -115,6 +119,53 @@ const ProgressBar = ({ step }) => {
 
 // ─── Step Components ─────────────────────────────────────────────────────────
 
+const PhotoPicker = ({ label, value, onPick, isRequired, error }) => {
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'We need camera roll permissions to add photos.' });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images || ImagePicker.MediaType.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      onPick(result.assets[0].uri);
+    }
+  };
+
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label} {isRequired && <Text style={{ color: '#EF4444' }}>*</Text>}</Text>
+      <TouchableOpacity 
+        activeOpacity={0.8} 
+        style={[styles.profilePicker, error && styles.inputError]} 
+        onPress={pickImage}
+      >
+        {value ? (
+          <Image source={{ uri: value }} style={styles.profileImagePreview} />
+        ) : (
+          <View style={styles.profilePickerPlaceholder}>
+            <Ionicons name="camera-outline" size={32} color={colors.primary} />
+            <Text style={styles.profilePickerText}>Tap to upload profile photo</Text>
+          </View>
+        )}
+        {value && (
+          <View style={styles.profilePickerEdit}>
+            <Ionicons name="pencil" size={14} color="#FFF" />
+          </View>
+        )}
+      </TouchableOpacity>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+};
+
 const StepBasicInfo = ({ data, onChange, errors, refs }) => {
   const [showCats, setShowCats] = useState(false);
 
@@ -123,7 +174,15 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
       <SectionTitle step={1} title="Basic Information" subtitle="Tell customers who you are and what you do." />
 
       <AnimatedFadeIn delay={100} duration={500}>
-        <InputField
+        <PhotoPicker 
+          label="Business Profile Photo"
+          value={data.profileImage}
+          onPick={uri => onChange('profileImage', uri)}
+          isRequired
+          error={errors.profileImage}
+        />
+
+        <InputField variant='light'
           label="Business Name"
           placeholder="e.g. SuperFast Plumbing Services"
           value={data.name}
@@ -136,7 +195,7 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
           onSubmitEditing={() => refs.tagline.current?.focus()}
         />
 
-        <InputField
+        <InputField variant='light'
           label="Tagline / Short Description"
           placeholder="e.g. Fast, reliable home services 24/7"
           value={data.tagline}
@@ -172,7 +231,11 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
                 <TouchableOpacity
                   key={cat}
                   style={[styles.dropdownItem, data.category === cat && styles.dropdownItemActive]}
-                  onPress={() => { onChange('category', cat); setShowCats(false); refs.subCategory.current?.focus(); }}
+                  onPress={() => { 
+                    onChange('category', cat); 
+                    setShowCats(false); 
+                    if (cat !== 'Other') refs.subCategory.current?.focus(); 
+                  }}
                 >
                   <Text style={[styles.dropdownItemText, data.category === cat && { color: colors.secondary, fontWeight: '700' }]}>
                     {cat}
@@ -184,7 +247,21 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
           )}
         </View>
 
-        <InputField
+        {data.category === 'Other' && (
+          <InputField variant='light'
+            label="Propose New Category"
+            placeholder="e.g. Pet Grooming, Solar Repair"
+            value={data.customCategory}
+            onChangeText={v => onChange('customCategory', v)}
+            error={errors.customCategory}
+            icon="bulb-outline"
+            ref={refs.customCategory}
+            returnKeyType="next"
+            onSubmitEditing={() => refs.subCategory.current?.focus()}
+          />
+        )}
+
+        <InputField variant='light'
           label="Sub-Category / Service Type"
           placeholder="e.g. Pipe Repair, AC Installation"
           value={data.subCategory}
@@ -196,7 +273,7 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
           onSubmitEditing={() => refs.description.current?.focus()}
         />
 
-        <InputField
+        <InputField variant='light'
           label="About Your Business"
           placeholder="Describe your services..."
           value={data.description}
@@ -211,7 +288,7 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
 
         <View style={styles.rowFields}>
           <View style={{ flex: 1, marginRight: 8 }}>
-            <InputField
+            <InputField variant='light'
               label="Year Est."
               placeholder="2018"
               value={data.yearEstablished}
@@ -224,7 +301,7 @@ const StepBasicInfo = ({ data, onChange, errors, refs }) => {
             />
           </View>
           <View style={{ flex: 1, marginLeft: 8 }}>
-            <InputField
+            <InputField variant='light'
               label="Employees"
               placeholder="e.g. 5-10"
               value={data.employees}
@@ -244,7 +321,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
     <SectionTitle step={2} title="Contact & Location" subtitle="How can customers find and reach you?" />
 
     <AnimatedFadeIn duration={500}>
-      <InputField
+      <InputField variant='light'
         label="Primary Phone"
         placeholder="+91 9876543210"
         value={data.phone}
@@ -258,7 +335,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         onSubmitEditing={() => refs.phone2.current?.focus()}
       />
 
-      <InputField
+      <InputField variant='light'
         label="Alternate Phone"
         placeholder="+91 9876543210 (optional)"
         value={data.phone2}
@@ -270,7 +347,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         onSubmitEditing={() => refs.email.current?.focus()}
       />
 
-      <InputField
+      <InputField variant='light'
         label="Email Address"
         placeholder="business@email.com"
         value={data.email}
@@ -284,7 +361,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         onSubmitEditing={() => refs.website.current?.focus()}
       />
 
-      <InputField
+      <InputField variant='light'
         label="Website"
         placeholder="https://yourwebsite.com"
         value={data.website}
@@ -301,7 +378,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         <Text style={styles.sectionDividerText}>OFFICE / SHOP ADDRESS</Text>
       </View>
 
-      <InputField
+      <InputField variant='light'
         label="Street Address"
         placeholder="House/Flat No., Street Name"
         value={data.address}
@@ -316,7 +393,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
 
       <View style={styles.rowFields}>
         <View style={{ flex: 1, marginRight: 8 }}>
-          <InputField
+          <InputField variant='light'
             label="City"
             placeholder="City"
             value={data.city}
@@ -329,7 +406,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
           />
         </View>
         <View style={{ flex: 1, marginLeft: 8 }}>
-          <InputField
+          <InputField variant='light'
             label="State"
             placeholder="State"
             value={data.state}
@@ -343,7 +420,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
 
       <View style={styles.rowFields}>
         <View style={{ flex: 1, marginRight: 8 }}>
-          <InputField
+          <InputField variant='light'
             label="PIN Code"
             placeholder="e.g. 416001"
             value={data.pinCode}
@@ -357,7 +434,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
           />
         </View>
         <View style={{ flex: 1, marginLeft: 8 }}>
-          <InputField
+          <InputField variant='light'
             label="Landmark"
             placeholder="Landmark"
             value={data.landmark}
@@ -373,7 +450,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         <Text style={styles.sectionDividerText}>SOCIAL PROFILES</Text>
       </View>
 
-      <InputField
+      <InputField variant='light'
         label="Instagram"
         placeholder="@yourhandle"
         value={data.instagram}
@@ -385,7 +462,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
         onSubmitEditing={() => refs.facebook.current?.focus()}
       />
 
-      <InputField
+      <InputField variant='light'
         label="Facebook"
         placeholder="facebook.com/yourpage"
         value={data.facebook}
@@ -399,7 +476,7 @@ const StepContact = ({ data, onChange, errors, refs }) => (
   </View>
 );
 
-const StepOperations = ({ data, onChange, refs }) => {
+const StepOperations = ({ data, onChange, refs, images, setImages }) => {
   const toggleDay = (day) => {
     Haptics.selectionAsync();
     const current = data.workingDays || [];
@@ -409,11 +486,58 @@ const StepOperations = ({ data, onChange, refs }) => {
     onChange('workingDays', updated);
   };
 
+  const pickImages = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'We need camera roll permissions to add photos.' });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images || ImagePicker.MediaType.Images,
+      allowsMultipleSelection: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImages([...images, ...result.assets.map(a => a.uri)]);
+    }
+  };
+
+  const removeImage = (index) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
+  };
+
   return (
     <View>
       <SectionTitle step={3} title="Operations & Details" subtitle="Help customers know when and how you work." />
 
       <AnimatedFadeIn duration={500}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Business Gallery / Portfolio</Text>
+          <Text style={styles.subLabel}>Showcase your shop, previous work, and products</Text>
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoList}>
+            <TouchableOpacity style={styles.addPhotoBtn} onPress={pickImages}>
+              <LinearGradient colors={['#F1F5F9', '#E2E8F0']} style={styles.photoGradient}>
+                <Ionicons name="camera" size={32} color={colors.primary} />
+                <Text style={styles.addPhotoText}>Add Photos</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {images.map((img, idx) => (
+              <View key={idx} style={styles.photoWrapper}>
+                 <Image source={{ uri: img }} style={styles.photoPreview} />
+                 <TouchableOpacity style={styles.removePhotoBtn} onPress={() => removeImage(idx)}>
+                   <Ionicons name="close-circle" size={24} color="#EF4444" />
+                 </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Working Days</Text>
           <View style={styles.daysRow}>
@@ -435,7 +559,7 @@ const StepOperations = ({ data, onChange, refs }) => {
 
         <View style={styles.rowFields}>
           <View style={{ flex: 1, marginRight: 8 }}>
-            <InputField
+            <InputField variant='light'
               label="Opens At"
               placeholder="09:00 AM"
               value={data.openTime}
@@ -447,7 +571,7 @@ const StepOperations = ({ data, onChange, refs }) => {
             />
           </View>
           <View style={{ flex: 1, marginLeft: 8 }}>
-            <InputField
+            <InputField variant='light'
               label="Closes At"
               placeholder="08:00 PM"
               value={data.closeTime}
@@ -460,7 +584,7 @@ const StepOperations = ({ data, onChange, refs }) => {
           </View>
         </View>
 
-        <InputField
+        <InputField variant='light'
           label="Services Offered"
           placeholder="e.g. Pipe Repair, AC Install"
           value={data.services}
@@ -471,7 +595,7 @@ const StepOperations = ({ data, onChange, refs }) => {
           onSubmitEditing={() => refs.serviceAreas.current?.focus()}
         />
 
-        <InputField
+        <InputField variant='light'
           label="Service Areas"
           placeholder="e.g. Sangli, Miraj"
           value={data.serviceAreas}
@@ -502,7 +626,7 @@ const StepOperations = ({ data, onChange, refs }) => {
           <Text style={styles.sectionDividerText}>LEGAL & AMENITIES</Text>
         </View>
 
-        <InputField
+        <InputField variant='light'
           label="GST Number"
           placeholder="GSTIN"
           value={data.gst}
@@ -513,7 +637,7 @@ const StepOperations = ({ data, onChange, refs }) => {
           onSubmitEditing={() => refs.licenseNo.current?.focus()}
         />
 
-        <InputField
+        <InputField variant='light'
           label="License No."
           placeholder="Business License"
           value={data.licenseNo}
@@ -594,6 +718,7 @@ const AddBusinessScreen = ({ navigation, route }) => {
 
   const [step, setStep] = useState(1);
   const [data, setData] = useState(isEdit ? { ...INITIAL_DATA, ...business } : INITIAL_DATA);
+  const [images, setImages] = useState(business?.images || []);
   const [selectedPkg, setSelectedPkg] = useState(business?.package || 'free');
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -615,10 +740,11 @@ const AddBusinessScreen = ({ navigation, route }) => {
 
   const validateStep = () => {
     const newErrors = {};
-    if (step === 1) {
+      if (step === 1) {
       if (!data.name?.trim()) newErrors.name = 'Name is required';
       if (!data.category) newErrors.category = 'Category is required';
       if (!data.description?.trim()) newErrors.description = 'Description is required';
+      if (!data.profileImage) newErrors.profileImage = 'Profile Photo is required for listing';
     }
     if (step === 2) {
       if (!data.phone?.trim()) newErrors.phone = 'Phone is required';
@@ -647,9 +773,26 @@ const AddBusinessScreen = ({ navigation, route }) => {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const payload = { ...data, package: selectedPkg };
+      // If Other category, propose it to admin
+      if (data.category === 'Other' && data.customCategory) {
+        await categoryService.suggestCategory(data.customCategory);
+      }
+
+      // If Other category, use the custom proposed category as subCategory for now
+      // and keep category as 'Other' (or send it to backend as special flag)
+      // Sequential Images: profileImage is main, gallery is additional
+      const payload = { 
+        ...data, 
+        categoryName: data.category, // Backend expects categoryName for resolution
+        package: selectedPkg,
+        image_url: data.profileImage, // Main Profile Photo
+        images: images,               // Gallery / Portfolio
+        subcategory: data.category === 'Other' ? data.customCategory : data.subCategory
+      };
+
       if (isEdit) await businessOwnerService.updateBusiness(business.id, payload);
       else await businessOwnerService.addBusiness(payload);
+
       Toast.show({ type: 'success', text1: isEdit ? 'Business Updated' : 'Business Published!' });
       navigation.goBack();
     } catch (e) {
@@ -663,7 +806,7 @@ const AddBusinessScreen = ({ navigation, route }) => {
     switch (step) {
       case 1: return <StepBasicInfo data={data} onChange={onChange} errors={errors} refs={refs} />;
       case 2: return <StepContact data={data} onChange={onChange} errors={errors} refs={refs} />;
-      case 3: return <StepOperations data={data} onChange={onChange} refs={refs} />;
+      case 3: return <StepOperations data={data} onChange={onChange} refs={refs} images={images} setImages={setImages} />;
       case 4: return <StepPackage selectedPkg={selectedPkg} onSelect={setSelectedPkg} />;
       default: return null;
     }
@@ -790,6 +933,57 @@ const styles = StyleSheet.create({
   nextBtn: { flex: 1, borderRadius: 20, overflow: 'hidden', shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
   gradientBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 60, gap: 10 },
   nextBtnText: { fontSize: 18, fontWeight: '900', color: '#FFF', textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  // Photo Styles
+  subLabel: { fontSize: 13, color: '#94A3B8', marginBottom: 16, marginLeft: 4, fontWeight: '600' },
+  photoList: { flexDirection: 'row', gap: 12, marginBottom: 10 },
+  addPhotoBtn: { width: 120, height: 120, borderRadius: 20, overflow: 'hidden', marginRight: 12 },
+  photoGradient: { flex: 1, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#E2E8F0', borderStyle: 'dashed', borderRadius: 20 },
+  addPhotoText: { fontSize: 11, fontWeight: '800', color: colors.primary, marginTop: 8, textTransform: 'uppercase' },
+  photoWrapper: { position: 'relative', width: 120, height: 120, marginRight: 12 },
+  photoPreview: { width: '100%', height: '100%', borderRadius: 20, borderWidth: 1, borderColor: '#F1F5F9' },
+  removePhotoBtn: { position: 'absolute', top: -10, right: -10, backgroundColor: '#FFF', borderRadius: 12, elevation: 5 },
+
+  // New Profile Picker Styles
+  profilePicker: {
+    height: 200,
+    borderRadius: 24,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#F1F5F9',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  profileImagePreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  profilePickerPlaceholder: {
+    alignItems: 'center',
+  },
+  profilePickerText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#94A3B8',
+    marginTop: 12,
+  },
+  profilePickerEdit: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFF',
+  },
 });
 
 export default AddBusinessScreen;

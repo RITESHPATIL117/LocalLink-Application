@@ -53,6 +53,9 @@ const mockBusinesses = [
 ];
 
 const businessService = {
+  getPublicStats: async () => {
+    return api.get('/businesses/public-stats');
+  },
   getAllBusinesses: async (params) => {
     try {
       logger.info('Fetching all businesses...', params);

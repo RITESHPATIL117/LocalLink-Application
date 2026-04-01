@@ -29,6 +29,7 @@ const SubcategoryScreen = ({ route, navigation }) => {
   const { isAuthenticated, leadCaptured } = useSelector(state => state.auth);
   
   const subcategory = route.params?.subcategory || 'Services';
+  const categoryId = route.params?.categoryId || null;
 
   useEffect(() => {
     // Show lead modal if info not already captured
@@ -123,7 +124,7 @@ const SubcategoryScreen = ({ route, navigation }) => {
       {/* ─── Lead Gating Modal ─── */}
       <LeadGatekeeper
         visible={leadModalVisible}
-        category={{ name: subcategory }}
+        category={{ name: subcategory, id: categoryId }}
         onClose={() => navigation.goBack()}
         onSuccess={handleLeadSuccess}
       />

@@ -1,0 +1,13 @@
+diff --git a/LocalHubMobile/src/screens/user/HomeScreen.js b/LocalHubMobile/src/screens/user/HomeScreen.js
+index 43b6e1e..067d20c 100644
+--- a/LocalHubMobile/src/screens/user/HomeScreen.js
++++ b/LocalHubMobile/src/screens/user/HomeScreen.js
+@@ -570,6 +570,8 @@ const HomeScreen = ({ navigation }) => {
+ 
+ // ─── Styles ────────────────────────────────────────────────────────────────────
+ 
++const { width } = Dimensions.get('window');
++
+ const styles = StyleSheet.create({
+   container: { flex: 1, backgroundColor: '#F3F4F6' },
+   scrollContent: { paddingBottom: 20 },
