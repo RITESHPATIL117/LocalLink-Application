@@ -58,7 +58,7 @@ const BookingModal = ({ item, visible, onClose, onConfirm, onCancel }) => {
   const reset = () => { setStep('detail'); setSelectedPayment(null); onClose(); };
 
   if (!item) return null;
-  const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.Pending;
+  const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.Pending || { color: '#64748B', bg: '#F1F5F9', icon: 'help-circle' };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={reset}>
@@ -235,21 +235,24 @@ const DetailRow = ({ icon, label, value, highlight }) => (
 // ─── Request Card ─────────────────────────────────────────────────────────────
 
 const RequestCard = ({ item, onPress }) => {
-  const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.Pending;
+  const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.Pending || { color: '#64748B', bg: '#F1F5F9', icon: 'help-circle' };
   return (
     <AnimatedFadeIn>
       <TouchableOpacity style={styles.card} onPress={() => onPress(item)} activeOpacity={0.88}>
         <View style={styles.cardTop}>
-          <Image source={{ uri: item.image }} style={styles.bizImg} />
+          <Image 
+            source={{ uri: item.image || item.businessImage || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300' }} 
+            style={styles.bizImg} 
+          />
           <View style={styles.cardMain}>
             <View style={styles.cardTitleRow}>
-              <Text style={styles.bizName} numberOfLines={1}>{item.businessName}</Text>
+              <Text style={styles.bizName} numberOfLines={1}>{item.businessName || 'Local Service'}</Text>
               <View style={[styles.statusBadge, { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}30`, borderWidth: 1 }]}>
                 <View style={[styles.statusDot, { backgroundColor: cfg.color }]} />
                 <Text style={[styles.statusText, { color: cfg.color }]}>{item.status}</Text>
               </View>
             </View>
-            <Text style={styles.serviceText} numberOfLines={1}>{item.service}</Text>
+            <Text style={styles.serviceText} numberOfLines={1}>{item.service || item.categoryName || 'General Support'}</Text>
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
                 <Ionicons name="calendar-outline" size={13} color="#94A3B8" />
@@ -344,8 +347,13 @@ const RequestsScreen = ({ navigation }) => {
   }, [user]);
 
   const filtered = activeFilter === 'All' 
-    ? requests 
-    : requests.filter(r => r.status?.toLowerCase() === activeFilter.toLowerCase());
+    ? (requests || [])
+    : (requests || []).filter(r => r.status?.toLowerCase() === activeFilter.toLowerCase());
+
+  const counts = FILTERS.reduce((acc, f) => {
+    acc[f] = f === 'All' ? (requests?.length || 0) : (requests || []).filter(r => r.status?.toLowerCase() === f.toLowerCase()).length;
+    return acc;
+  }, {});
 
   const handleCardPress = (item) => {
     setSelectedBooking(item);
@@ -466,7 +474,7 @@ const RequestsScreen = ({ navigation }) => {
             <Ionicons name="document-text-outline" size={72} color="#E5E7EB" />
             <Text style={styles.emptyTitle}>No Requests</Text>
             <Text style={styles.emptyDesc}>
-              {filter === 'All' ? 'Book a service to see your requests here.' : `No ${filter} requests found.`}
+              {activeFilter === 'All' ? 'Book a service to see your requests here.' : `No ${activeFilter} requests found.`}
             </Text>
           </View>
         }
@@ -474,7 +482,7 @@ const RequestsScreen = ({ navigation }) => {
 
       {/* Booking Modal */}
       <BookingModal
-        item={selectedItem}
+        item={selectedBooking}
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onConfirm={handleConfirm}

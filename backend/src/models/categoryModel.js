@@ -2,7 +2,12 @@ const db = require('../config/db');
 
 class Category {
     static async getAll() {
-        const [rows] = await db.query('SELECT id, name, icon, is_material as isMaterial, color, slug, image FROM categories');
+        const [rows] = await db.query(`
+            SELECT c.*, COUNT(b.id) as business_count 
+            FROM categories c
+            LEFT JOIN businesses b ON c.id = b.category_id
+            GROUP BY c.id
+        `);
         return rows;
     }
 

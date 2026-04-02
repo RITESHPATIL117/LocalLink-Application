@@ -147,9 +147,11 @@ const CategoriesScreen = ({ navigation, route }) => {
       {/* ─── Header ─── */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
-          </TouchableOpacity>
+          {navigation.canGoBack() && (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={24} color="#111827" />
+            </TouchableOpacity>
+          )}
           <Text style={styles.title}>Explore Services</Text>
           <View style={{ width: 40 }} />
         </View>

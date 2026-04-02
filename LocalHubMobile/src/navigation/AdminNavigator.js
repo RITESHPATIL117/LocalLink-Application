@@ -11,6 +11,7 @@ import ReportsScreen from '../screens/admin/ReportsScreen';
 import BusinessesScreen from '../screens/admin/BusinessesScreen';
 import ApprovalsScreen from '../screens/admin/ApprovalsScreen';
 import CategoriesScreen from '../screens/admin/CategoriesScreen';
+import BusinessDetailsScreen from '../screens/user/BusinessDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,6 +24,7 @@ const AdminDashboardStack = () => (
     <Stack.Screen name="Businesses" component={BusinessesScreen} />
     <Stack.Screen name="Approvals" component={ApprovalsScreen} />
     <Stack.Screen name="Categories" component={CategoriesScreen} />
+    <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} />
   </Stack.Navigator>
 );
 

@@ -25,7 +25,8 @@ const authService = {
       logger.info('Registration successful');
       return { data: response };
     } catch (e) {
-      logger.error('API register failed', { message: e.message, email: userData.email });
+      const serverMessage = e.response?.data?.message || e.message;
+      logger.error('API register failed', { message: serverMessage, email: userData.email });
       if (e.code === 'ERR_NETWORK' || e.message?.includes('timeout')) {
         return { data: { token: 'demo-token', user: { ...userData, id: 'u_new' } } };
       }

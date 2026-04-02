@@ -63,11 +63,22 @@ export const CardSkeleton = () => (
   </View>
 );
 
+export const StatPillSkeleton = ({ width: w = '48%', height = 180 }) => (
+  <View style={[skeletonStyles.statPill, { width: w, height }]}>
+    <SkeletonLoader width={40} height={40} borderRadius={15} />
+    <View style={{ marginTop: 'auto' }}>
+      <SkeletonLoader width="70%" height={24} borderRadius={6} />
+      <SkeletonLoader width="40%" height={12} borderRadius={4} style={{ marginTop: 8 }} />
+    </View>
+  </View>
+);
+
 const skeletonStyles = StyleSheet.create({
   card: { padding: 20, backgroundColor: '#FFF', borderRadius: 24, marginBottom: 16, borderWidth: 1, borderColor: '#F3F4F6' },
   header: { flexDirection: 'row', alignItems: 'center' },
   headerText: { flex: 1, marginLeft: 16 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6' }
+  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  statPill: { width: '48%', height: 180, borderRadius: 32, padding: 20, backgroundColor: '#FFF', justifyContent: 'space-between', marginBottom: 12, borderWidth: 1, borderColor: '#F1F5F9' }
 });
 
 export default SkeletonLoader;

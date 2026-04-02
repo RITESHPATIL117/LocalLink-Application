@@ -130,6 +130,8 @@ const TESTIMONIALS = [
   { id: 't3', name: 'Priya Kumar', role: 'Working Mom, Nashik', text: '"Deep cleaning service was outstanding. The team was courteous and thorough."', rating: 5, avatar: 'https://randomuser.me/api/portraits/women/33.jpg' },
 ];
 
+
+
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 const SectionHeader = ({ title, onSeeAll, style }) => (
@@ -178,6 +180,7 @@ const TestimonialCard = ({ item }) => (
     </View>
   </View>
 );
+
 
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
@@ -262,6 +265,7 @@ const HomeScreen = ({ navigation }) => {
 
       if (apiCats.length > 0) setCategories(apiCats);
       if (apiBiz.length > 0) setFeaturedBusinesses(apiBiz);
+      
       if (apiRevs.length > 0) {
         const processed = apiRevs.map(r => ({
           id: r.id.toString(),
@@ -342,11 +346,6 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ─ Header ─ */}
       <View style={[styles.header, isDesktop && styles.headerDesktop]}>
-        {!isDesktop && (
-          <TouchableOpacity style={styles.menuBtn} onPress={() => navigation.openDrawer()}>
-            <Ionicons name="menu" size={26} color="#111827" />
-          </TouchableOpacity>
-        )}
 
         <View style={styles.logoContainer}>
           <View style={styles.logoIconBg}>
@@ -411,7 +410,6 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </AnimatedFadeIn>
 
-        <TrustTicker />
 
         {/* ─ Search ─ */}
         <AnimatedFadeIn delay={100} duration={500}>
@@ -619,23 +617,6 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </AnimatedFadeIn>
 
-        {/* ─ Trust Badges ─ */}
-        <AnimatedFadeIn delay={500}>
-          <View style={styles.trustRow}>
-            {[
-              { icon: 'shield-checkmark', label: 'Verified\nProviders',   color: '#10B981' },
-              { icon: 'people',           label: `${(platformStats.totalUsers || 10).toLocaleString()}+\nHappy Users`,  color: '#3B82F6' },
-              { icon: 'star',             label: '4.8 Avg\nRating',       color: '#F59E0B' },
-              { icon: 'flash',            label: 'Same Day\nService',     color: '#EF4444' },
-            ].map(b => (
-              <View key={b.label} style={styles.trustBadge}>
-                <Ionicons name={b.icon} size={24} color={b.color} />
-                <Text style={styles.trustLabel}>{b.label}</Text>
-              </View>
-            ))}
-          </View>
-        </AnimatedFadeIn>
-
         {/* ─ Testimonials ─ */}
         <AnimatedFadeIn delay={550}>
           <SectionHeader title="What Customers Say ⭐" style={{ marginTop: 8 }} />
@@ -644,25 +625,9 @@ const HomeScreen = ({ navigation }) => {
           </ScrollView>
         </AnimatedFadeIn>
 
-        {/* ─ List Your Business CTA ─ */}
-        <AnimatedFadeIn delay={600}>
-          <View style={styles.ctaSection}>
-            <LinearGradient colors={['#111827', '#1F2937']} style={styles.ctaCard}>
-              <Ionicons name="business" size={40} color="rgba(255,255,255,0.15)" style={{ marginBottom: 16 }} />
-              <Text style={styles.ctaTitle}>Grow Your Business</Text>
-              <Text style={styles.ctaDesc}>
-                Join {(platformStats.totalBusinesses || 5).toLocaleString()}+ local businesses on LocalHub. Get discovered, generate leads, and grow faster.
-              </Text>
-              <TouchableOpacity
-                style={styles.ctaBtn}
-                onPress={() => navigation.navigate(isAuthenticated ? 'ProviderRoot' : 'Login')}
-              >
-                <Text style={styles.ctaBtnText}>List Your Business Free</Text>
-                <Ionicons name="arrow-forward" size={18} color="#111827" />
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        </AnimatedFadeIn>
+
+
+
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -847,11 +812,6 @@ const styles = StyleSheet.create({
   stepTitle: { fontSize: 14, fontWeight: '900', marginBottom: 6, textAlign: 'center' },
   stepDesc: { fontSize: 12, color: '#64748B', textAlign: 'center', lineHeight: 18, fontWeight: '600' },
 
-  // Trust
-  trustRow: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 28, paddingHorizontal: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F1F5F9', gap: 12 },
-  trustBadge: { flex: 1, alignItems: 'center', gap: 8 },
-  trustLabel: { fontSize: 12, color: '#475569', fontWeight: '700', textAlign: 'center', lineHeight: 18 },
-
   // Testimonials
   testimonialScroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
   testimonialCard: {
@@ -866,19 +826,10 @@ const styles = StyleSheet.create({
   testimonialAvatar: { width: 44, height: 44, borderRadius: 22 },
   testimonialName: { fontSize: 15, fontWeight: '900', color: '#111827' },
   testimonialRole: { fontSize: 13, color: '#64748B', fontWeight: '700' },
-
-  // CTA
-  ctaSection: { paddingHorizontal: 16, paddingVertical: 24 },
-  ctaCard: { borderRadius: 32, padding: 32, alignItems: 'center' },
-  ctaTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', marginBottom: 12, textAlign: 'center' },
-  ctaDesc: { fontSize: 16, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24, marginBottom: 28, fontWeight: '600' },
-  ctaBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFF', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 20 },
-  ctaBtnText: { color: '#111827', fontSize: 17, fontWeight: '900', marginRight: 8 },
-
   // FAB Styles
   fabContainer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: Platform.OS === 'ios' ? 120 : 100,
     right: 20,
     zIndex: 100,
   },

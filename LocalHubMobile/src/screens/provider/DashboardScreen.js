@@ -73,11 +73,11 @@ const ProviderDashboardScreen = ({ navigation }) => {
     try {
       // 1. Fetch Aggregated Stats from new specialized endpoint
       const statsRes = await businessOwnerService.getDashboardStats();
-      const apiStats = statsRes.data || {};
+      const apiStats = statsRes?.data || statsRes || {};
       
       // 2. Fetch Businesses for Activity Feed & Detailed Context
       const businessesRes = await businessOwnerService.getBusinesses().catch(() => ({ data: [] }));
-      const businesses = businessesRes.data || [];
+      const businesses = businessesRes?.data || businessesRes || [];
       
       let allLeads = [];
 
@@ -86,7 +86,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
         businesses.slice(0, 3).map(async (biz) => {
           try {
             const leadsRes = await leadService.getLeadsByBusiness(biz.id);
-            const leads = leadsRes.data || [];
+            const leads = leadsRes?.data || leadsRes || [];
             
             const mappedLeads = leads.map(l => ({
               id: l.id || Math.random().toString(),
@@ -138,8 +138,8 @@ const ProviderDashboardScreen = ({ navigation }) => {
         setRecentActivities(allLeads.slice(0, 4));
         // Chart logic remains based on lead dates
         const monthCounts = new Array(12).fill(0);
-        allLeads.forEach(l => {
-           const m = l.rawDate.getMonth();
+        (allLeads || []).forEach(l => {
+           const m = l.rawDate ? l.rawDate.getMonth() : 0;
            monthCounts[m] += 1;
         });
         setMonthlyChartData(MONTHS.map((m, i) => ({ label: m, value: monthCounts[i] })));
@@ -155,9 +155,9 @@ const ProviderDashboardScreen = ({ navigation }) => {
   const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200";
 
   const currentStatCards = [
-    { id: '1', title: 'Total Leads', value: stats.totalLeads.toLocaleString(), trend: '+12%', isUp: true, icon: 'people-outline', color: '#3B82F6' },
-    { id: '2', title: 'Action Needed', value: stats.activeLeads.toString(), trend: '5 New', isUp: true, icon: 'flash-outline', color: '#F59E0B' },
-    { id: '3', title: 'Profile Views', value: stats.views.toLocaleString(), trend: '+8%', isUp: true, icon: 'eye-outline', color: '#10B981' },
+    { id: '1', title: 'Total Leads', value: (stats?.totalLeads || 0).toLocaleString(), trend: '+12%', isUp: true, icon: 'people-outline', color: '#3B82F6' },
+    { id: '2', title: 'Action Needed', value: (stats?.activeLeads || 0).toString(), trend: '5 New', isUp: true, icon: 'flash-outline', color: '#F59E0B' },
+    { id: '3', title: 'Profile Views', value: (stats?.views || 0).toLocaleString(), trend: '+8%', isUp: true, icon: 'eye-outline', color: '#10B981' },
   ];
 
   // Highest value for chart scaling

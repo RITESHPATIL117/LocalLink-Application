@@ -8,14 +8,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
-import businessService from '../../services/businessService';
 import adminService from '../../services/adminService';
-import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import socketService from '../../services/socketService';
 import Toast from 'react-native-toast-message';
-import SkeletonLoader from '../../components/SkeletonLoader';
 import WelcomeModal from '../../components/WelcomeModal';
 import * as Haptics from 'expo-haptics';
+
+// Elite Components
+import AdminHeader from '../../components/admin/AdminHeader';
+import AdminNavbar from '../../components/admin/AdminNavbar';
+import StatCard from '../../components/admin/StatCard';
+import SkeletonLoader, { StatPillSkeleton } from '../../components/SkeletonLoader';
+import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
 const sidebarMenu = [
   { id: 'dashboard', title: 'Home Screen', icon: 'home-outline' },
@@ -67,12 +71,12 @@ const DashboardScreen = ({ navigation }) => {
     if (!isSilent) setLoading(true);
     try {
       const statsRes = await adminService.getStats();
-      const stats = statsRes.data || {};
+      const stats = statsRes?.data || statsRes || {};
       
       const newStats = [
         { id: '1', title: 'Total Businesses', value: stats.totalBusinesses?.toString() || '0', trend: '+5% This Week', isUp: true, icon: 'business', color: colors.primary },
         { id: '2', title: 'Total Users', value: stats.totalUsers?.toString() || '0', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
-        { id: '3', title: 'Revenue', value: `₹${stats.revenue || 0}`, trend: 'Stable', isUp: true, icon: 'wallet', color: '#F59E0B' },
+        { id: '3', title: 'Revenue', value: stats.revenue ? `₹${stats.revenue}` : '₹0', trend: 'Stable', isUp: true, icon: 'wallet', color: '#F59E0B' },
         { id: '4', title: 'Pending Approval', value: stats.pendingApprovals?.toString() || '0', trend: 'Priority', isUp: false, icon: 'time', color: '#EF4444' },
       ];
       setAdminStats(newStats);
@@ -211,74 +215,58 @@ const DashboardScreen = ({ navigation }) => {
   const renderMainContent = () => (
     <View style={styles.mainWrapper}>
       <ScrollView 
+        stickyHeaderIndices={[1]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
-        
-        {/* Absolute Header Background */}
-        <LinearGradient
-          colors={['#1F2937', '#111827']} // Dark distinct header for Admin
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerBackground}
+        {/* Elite Header */}
+        <AdminHeader 
+          title="Admin Portal"
+          status="System Live • v1.1.0"
+          profilePic={profilePic}
+          onProfilePress={() => setShowSettings(true)}
+          onSettingsPress={() => setShowSettings(true)}
         />
 
-        {/* Top Navigation / Header Area */}
-        <View style={styles.topHeader}>
-          <View>
-            <View style={styles.statusRow}>
-               <View style={styles.statusDot} />
-               <Text style={styles.statusText}>System Live • v1.0.5</Text>
-            </View>
-            <Text style={styles.greetingTitle}>Admin Portal</Text>
-          </View>
-          <View style={styles.topActions}>
-            <TouchableOpacity 
-                style={styles.iconButton} 
-                onPress={() => setShowSettings(true)}
-            >
-              <Ionicons name="settings-outline" size={20} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowSettings(true)}>
-                <Image source={{ uri: profilePic }} style={styles.profilePic} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Modular Sticky Navbar */}
+        {!isLargeScreen && (
+          <AdminNavbar 
+            items={sidebarMenu.filter(i => i.id !== 'settings')}
+            activeId={activeMenu}
+            onSelect={(id) => {
+              setActiveMenu(id);
+              if (id === 'users') navigation.navigate('UsersTab');
+              else if (id === 'businesses') navigation.navigate('Businesses');
+              else if (id === 'approvals') navigation.navigate('ApprovalsTab');
+              else if (id === 'categories') navigation.navigate('CategoriesTab');
+              else if (id === 'reports') navigation.navigate('ReportsTab');
+              else if (id === 'dashboard') navigation.navigate('HomeTab');
+            }}
+          />
+        )}
 
         <View style={styles.contentPadding}>
           
-          {/* Stats Cards */}
-          {loading ? (
-            <View style={styles.statsContainer}>
-              <SkeletonLoader width={(width - 72) / 2} height={140} borderRadius={28} style={{ margin: 6 }} />
-              <SkeletonLoader width={(width - 72) / 2} height={140} borderRadius={28} style={{ margin: 6 }} />
-            </View>
-          ) : (
-            <View style={styles.statsContainer}>
-              {adminStats.map((stat, idx) => (
-                <AnimatedFadeIn key={stat.id} delay={idx * 100} duration={600}>
-                   <TouchableOpacity 
-                      style={styles.statCard}
-                      activeOpacity={0.9}
-                      onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                   >
-                     <View style={styles.statTop}>
-                      <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
-                        <Ionicons name={stat.icon} size={22} color={stat.color} />
-                      </View>
-                      <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#F0FDF4' : '#FEF2F2' }]}>
-                        <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444', marginLeft: 0 }]}>{stat.trend.split(' ')[0]}</Text>
-                      </View>
-                    </View>
-                    <View>
-                        <Text style={styles.statValue}>{stat.value}</Text>
-                        <Text style={styles.statTitle}>{stat.title}</Text>
-                    </View>
-                  </TouchableOpacity>
-                </AnimatedFadeIn>
-              ))}
-            </View>
-          )}
+          {/* Stats Cards - Grid Upgrade */}
+          <View style={styles.statsContainer}>
+            {loading ? (
+              <>
+                <StatPillSkeleton />
+                <StatPillSkeleton />
+                <StatPillSkeleton />
+                <StatPillSkeleton />
+              </>
+            ) : (
+              (adminStats || []).map((stat, idx) => (
+                <StatCard 
+                  key={stat.id}
+                  {...stat}
+                  delay={idx * 150}
+                />
+              ))
+            )}
+          </View>
 
           {/* Graphical & Activity Split Area */}
           <View style={[styles.dashboardSplit, { flexDirection: isLargeScreen ? 'row' : 'column' }]}>
@@ -336,10 +324,10 @@ const DashboardScreen = ({ navigation }) => {
                 {loading ? (
                   <SkeletonLoader width="100%" height={200} borderRadius={16} />
                 ) : (
-                  recentActivity.map((act, index) => (
+                  (recentActivity || []).map((act, index) => (
                     <TouchableOpacity 
                         key={act.id} 
-                        style={[styles.activityItem, index === recentActivity.length - 1 && { borderBottomWidth: 0 }]}
+                        style={[styles.activityItem, index === (recentActivity?.length || 0) - 1 && { borderBottomWidth: 0 }]}
                         onPress={() => Haptics.selectionAsync()}
                     >
                       <View style={[styles.activityIconBg, { backgroundColor: `${act.color}15` }]}>
@@ -401,41 +389,6 @@ const DashboardScreen = ({ navigation }) => {
       {isLargeScreen && renderSidebar()}
       
       <View style={styles.mainContentWrapper}>
-        {/* Mobile top nav fallback for sidebar */}
-        {!isLargeScreen && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mobileNav}>
-             {sidebarMenu.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.mobileMenuItem, activeMenu === item.id && styles.activeMobileMenuItem]}
-                onPress={() => {
-                  setActiveMenu(item.id);
-                  if (item.id === 'users') {
-                    navigation.navigate('UsersTab');
-                  } else if (item.id === 'businesses') {
-                    navigation.navigate('Businesses');
-                  } else if (item.id === 'approvals') {
-                    navigation.navigate('ApprovalsTab');
-                  } else if (item.id === 'categories') {
-                    navigation.navigate('Categories');
-                  } else if (item.id === 'reports') {
-                    navigation.navigate('ReportsTab');
-                  }
-                }}
-              >
-                <Ionicons 
-                  name={activeMenu === item.id ? item.icon.replace('-outline', '') : item.icon} 
-                  size={18} 
-                  color={activeMenu === item.id ? '#FFF' : '#6B7280'} 
-                />
-                <Text style={[styles.mobileMenuText, activeMenu === item.id && styles.activeMobileMenuText]}>
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-
         {renderMainContent()}
       </View>
     </SafeAreaView>
@@ -555,36 +508,14 @@ const styles = StyleSheet.create({
   activeMobileMenuText: {
     color: '#FFF',
   },
-  mainWrapper: { flex: 1 },
-  headerBackground: { position: 'absolute', top: 0, left: 0, right: 0, height: 280, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' },
-  topHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 24, paddingTop: 40, paddingBottom: 30 },
-  greetingTitle: { fontSize: 34, fontWeight: '900', color: '#FFF', letterSpacing: -1.2 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' },
-  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: 8, shadowColor: '#10B981', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 4 },
-  statusText: { fontSize: 11, color: '#10B981', fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
-  topActions: { flexDirection: 'row', alignItems: 'center' },
-  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', marginRight: 12, position: 'relative', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  badge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', borderWidth: 2, borderColor: '#FFF', zIndex: 2 },
-  profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
-  
+  mainWrapper: { flex: 1, backgroundColor: '#F8FAFC' }, // Premium Slate White
   contentPadding: { paddingHorizontal: 20, paddingBottom: 40 },
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 28, marginHorizontal: -4 },
-  statCard: {
-    width: '48%', 
-    minHeight: 140,
-    backgroundColor: '#FFF', borderRadius: 28, padding: 18, marginVertical: 6, marginHorizontal: 4,
-    justifyContent: 'space-between',
-    shadowColor: '#1E293B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.08, shadowRadius: 30, elevation: 5, borderWidth: 1, borderColor: '#F8FAFC',
-  },
-  statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
-  iconBox: { width: 52, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  trendBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  trendText: { fontSize: 10, fontWeight: '900', marginLeft: 4 },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 28 },
   statValue: { fontSize: 32, fontWeight: '900', color: '#0F172A', marginBottom: 6, letterSpacing: -1.5 },
   statTitle: { fontSize: 13, fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
   
   dashboardSplit: { justifyContent: 'space-between' },
-  chartSection: { backgroundColor: '#FFF', borderRadius: 32, padding: 24, marginBottom: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.05, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
+  chartSection: { backgroundColor: '#FFF', borderRadius: 32, padding: 24, marginBottom: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
   sectionTitle: { fontSize: 19, fontWeight: '900', color: '#1E293B', letterSpacing: -0.5 },
   dropdownMini: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: '#F1F5F9' },
@@ -598,7 +529,7 @@ const styles = StyleSheet.create({
   barFill: { width: 14, borderRadius: 7, opacity: 0.6 },
   barLabel: { fontSize: 11, fontWeight: '600', color: '#94A3B8', marginTop: 14 },
   
-  activitySection: { flex: 1, backgroundColor: '#FFF', borderRadius: 32, padding: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.06, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
+  activitySection: { flex: 1, backgroundColor: '#FFF', borderRadius: 32, padding: 24, shadowColor: '#1E293B', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 6, borderWidth: 1, borderColor: '#F1F5F9' },
   activityList: { marginTop: 4 },
   activityItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' },
   activityIconBg: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },

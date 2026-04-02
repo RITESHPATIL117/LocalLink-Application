@@ -1,5 +1,32 @@
 const User = require('../models/userModel');
 const Business = require('../models/businessModel');
+const Report = require('../models/reportModel');
+
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.getAll();
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateUserStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        await User.updateStatus(req.params.id, status);
+        
+        const io = req.app.get('io');
+        io.to('admin_room').emit('log_activity', {
+            action: `User #${req.params.id} account status updated to ${status} by Admin`,
+            timestamp: new Date()
+        });
+
+        res.json({ message: 'User status updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 const getStats = async (req, res) => {
     try {
@@ -62,13 +89,7 @@ const updateBusinessStatus = async (req, res) => {
 
 const getReports = async (req, res) => {
     try {
-        // Return structured reports (Mocked for futuristic UI until DB table is defined)
-        const reports = [
-            { id: '1', type: 'Flagged Review', entity: '"Fake Service" on SuperFast Plumbing', reporter: 'Priya Desai', date: '2 hours ago', status: 'Pending', severity: 'High' },
-            { id: '2', type: 'Suspicious Listing', entity: 'Metro Electricians', reporter: 'Amit Sharma', date: '5 hours ago', status: 'Resolved', severity: 'Low' },
-            { id: '3', type: 'User Conduct', entity: '@vikram.s', reporter: 'System Automod', date: '1 day ago', status: 'Pending', severity: 'Critical' },
-            { id: '4', type: 'Payment Dispute', entity: 'Leads-2026-X', reporter: 'Quick Fix Home', date: 'Just now', status: 'Pending', severity: 'High' }
-        ];
+        const reports = await Report.getAll();
         res.json(reports);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -78,7 +99,7 @@ const getReports = async (req, res) => {
 const updateReportStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        // Logic for updating report status in DB would happen here
+        await Report.updateStatus(req.params.id, status);
         res.json({ message: `Report status updated to ${status}` });
     } catch (error) {
         res.status(500).json({ message: error.message });

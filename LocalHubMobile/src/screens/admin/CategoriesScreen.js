@@ -107,7 +107,7 @@ const CategoriesScreen = ({ navigation }) => {
             {renderDynamicIcon(item.icon, item.isMaterial, 20, '#FFF')}
           </View>
           <Text style={styles.cardTitle}>{item.name}</Text>
-          <Text style={styles.cardSub}>{(item.subcategories && item.subcategories.length) || 0} Subcategories</Text>
+          <Text style={styles.cardSub}>{item.business_count || 0} Businesses</Text>
         </LinearGradient>
         <TouchableOpacity 
             style={styles.optionsBtn}

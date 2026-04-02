@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Image, ActivityIndicator, useWindowDimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
@@ -46,15 +46,30 @@ const BusinessesScreen = ({ navigation, route }) => {
   };
 
   const toggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'suspended' ? 'Active' : 'Suspended';
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await adminService.updateBusinessStatus(id, newStatus);
-      setBusinesses(prev => prev.map(b => b.id === id ? { ...b, status: newStatus.toLowerCase() } : b));
-      Toast.show({ type: 'success', text1: 'Status Updated', text2: `Business is now ${newStatus}.` });
-    } catch (e) {
-      Toast.show({ type: 'error', text1: 'Action Failed', text2: 'Could not update status.' });
-    }
+    const isSuspending = currentStatus !== 'suspended';
+    const newStatus = isSuspending ? 'Suspended' : 'Active';
+    
+    Alert.alert(
+      `${isSuspending ? 'Suspend' : 'Activate'} Business`,
+      `Are you sure you want to mark this business as ${newStatus.toLowerCase()}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: isSuspending ? 'Suspend' : 'Activate', 
+          style: isSuspending ? 'destructive' : 'default',
+          onPress: async () => {
+            try {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              await adminService.updateBusinessStatus(id, newStatus);
+              setBusinesses(prev => prev.map(b => b.id === id ? { ...b, status: newStatus.toLowerCase() } : b));
+              Toast.show({ type: 'success', text1: 'Status Updated', text2: `Business is now ${newStatus}.` });
+            } catch (e) {
+              Toast.show({ type: 'error', text1: 'Action Failed', text2: 'Could not update status.' });
+            }
+          }
+        }
+      ]
+    );
   };
 
   const filteredBusinesses = businesses.filter(biz => {
@@ -75,7 +90,7 @@ const BusinessesScreen = ({ navigation, route }) => {
         activeOpacity={0.9}
         onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.navigate('BusinessDetails', { businessId: item.id });
+            navigation.navigate('BusinessDetails', { business: item });
         }}
       >
         <Image 
@@ -109,8 +124,20 @@ const BusinessesScreen = ({ navigation, route }) => {
             </View>
           </View>
         </View>
-        <View style={styles.chevronWrapper}>
-          <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+        <View style={styles.actionColumn}>
+          <TouchableOpacity 
+            style={[styles.moderateBtn, item.status === 'suspended' && styles.activateBtn]} 
+            onPress={() => toggleStatus(item.id, item.status)}
+          >
+            <Ionicons 
+                name={item.status === 'suspended' ? "checkmark-circle" : "ban"} 
+                size={18} 
+                color="#FFF" 
+            />
+          </TouchableOpacity>
+          <View style={styles.chevronWrapper}>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </View>
         </View>
       </TouchableOpacity>
     </AnimatedFadeIn>
@@ -211,7 +238,10 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', marginTop: 60, padding: 40 },
   emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   emptyText: { fontSize: 20, fontWeight: '900', color: '#1E293B', marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20, fontWeight: '600' }
+  emptyDesc: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20, fontWeight: '600' },
+  actionColumn: { justifyContent: 'center', alignItems: 'center', paddingLeft: 10, gap: 12 },
+  moderateBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EF4444', justifyContent: 'center', alignItems: 'center', shadowColor: '#EF4444', shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  activateBtn: { backgroundColor: '#10B981', shadowColor: '#10B981' },
 });
 
 export default BusinessesScreen;
