@@ -31,7 +31,7 @@ const SearchBar = ({ onSearchPress }) => {
 
       {/* Search Button */}
       <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
-        <Text style={styles.searchButtonText}>Search</Text>
+        <Ionicons name="search" size={24} color="#FFF" />
       </TouchableOpacity>
     </View>
   );

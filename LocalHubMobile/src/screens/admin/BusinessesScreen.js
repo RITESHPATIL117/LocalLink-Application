@@ -4,42 +4,68 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
-import businessService from '../../services/businessService';
+import adminService from '../../services/adminService';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
+import { useFocusEffect } from '@react-navigation/native';
 
-const BusinessesScreen = ({ navigation }) => {
+const BusinessesScreen = ({ navigation, route }) => {
   const { width } = useWindowDimensions();
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('All');
 
+  // Deep-link from Categories
   useEffect(() => {
-    fetchBusinesses();
-  }, []);
+    if (route.params?.categoryId) {
+        setFilter(route.params.categoryId.toString());
+    }
+  }, [route.params?.categoryId]);
 
-  const fetchBusinesses = async () => {
-    setLoading(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBusinesses(true);
+    }, [])
+  );
+
+  const fetchBusinesses = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
-      const res = await businessService.getAllBusinesses();
+      const res = await adminService.getAllBusinesses();
       setBusinesses(res.data || []);
     } catch (error) {
       console.error('Error fetching businesses:', error);
-      Toast.show({ type: 'error', text1: 'Sync Failed', text2: 'Could not fetch platform data.' });
+      if (!isSilent) Toast.show({ type: 'error', text1: 'Sync Failed', text2: 'Could not fetch platform data.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'suspended' ? 'Active' : 'Suspended';
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await adminService.updateBusinessStatus(id, newStatus);
+      setBusinesses(prev => prev.map(b => b.id === id ? { ...b, status: newStatus.toLowerCase() } : b));
+      Toast.show({ type: 'success', text1: 'Status Updated', text2: `Business is now ${newStatus}.` });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Action Failed', text2: 'Could not update status.' });
     }
   };
 
   const filteredBusinesses = businesses.filter(biz => {
     const matchesSearch = biz.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           biz.category_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === 'All' ? true : biz.status === filter.toLowerCase();
-    return matchesSearch && matchesFilter;
+    
+    if (filter === 'All') return matchesSearch;
+    if (filter === 'Active' || filter === 'Pending') return matchesSearch && (biz.status === filter.toLowerCase() || (filter === 'Active' && biz.is_verified === 1));
+    
+    // Check if filter is a category ID
+    return matchesSearch && (biz.category_id?.toString() === filter || biz.status === filter.toLowerCase());
   });
 
   const renderBusiness = ({ item, index }) => (
@@ -59,12 +85,15 @@ const BusinessesScreen = ({ navigation }) => {
         <View style={styles.bizContent}>
           <View style={styles.bizHeader}>
             <Text style={styles.bizName} numberOfLines={1}>{item.name}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: item.status === 'active' ? '#ECFDF5' : '#FFFBEB' }]}>
-              <View style={[styles.statusDot, { backgroundColor: item.status === 'active' ? '#10B981' : '#F59E0B' }]} />
-              <Text style={[styles.statusText, { color: item.status === 'active' ? '#10B981' : '#F59E0B' }]}>
+            <TouchableOpacity 
+                onPress={() => toggleStatus(item.id, item.status)}
+                style={[styles.statusBadge, { backgroundColor: item.status === 'suspended' ? '#FEF2F2' : '#ECFDF5' }]}
+            >
+              <View style={[styles.statusDot, { backgroundColor: item.status === 'suspended' ? '#EF4444' : '#10B981' }]} />
+              <Text style={[styles.statusText, { color: item.status === 'suspended' ? '#EF4444' : '#10B981' }]}>
                 {item.status?.toUpperCase()}
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
           
           <Text style={styles.bizCategory}>{item.category_name || 'General Service'}</Text>

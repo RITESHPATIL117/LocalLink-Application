@@ -28,18 +28,14 @@ class Business {
         `;
         const queryParams = [];
 
-        if (params?.categoryId) {
-            query += ' AND b.category_id = ?';
-            queryParams.push(params.categoryId);
-        }
-
-        if (params?.subcategory) {
-            query += ' AND b.subcategory = ?';
-            queryParams.push(params.subcategory);
+        if (params?.q) {
+            query += ` AND (b.name LIKE ? OR b.description LIKE ? OR b.subcategory LIKE ? OR c.name LIKE ?)`;
+            const searchVal = `%${params.q}%`;
+            queryParams.push(searchVal, searchVal, searchVal, searchVal);
         }
         
         if (params?.featured) {
-            query += ' AND b.rating >= 4.5'; // Simulate featured
+            query += ' AND b.rating >= 4.0'; // Simulate featured
         }
 
         const [rows] = await db.query(query, queryParams);
@@ -113,6 +109,11 @@ class Business {
     static async getImages(businessId) {
         const [rows] = await db.query('SELECT image_url FROM business_images WHERE business_id = ?', [businessId]);
         return rows.map(r => r.image_url);
+    }
+    static async updateStatus(id, is_verified) {
+        // is_verified: 0 (Pending), 1 (Verified/Active), 2 (Suspended)
+        await db.query('UPDATE businesses SET is_verified = ? WHERE id = ?', [is_verified, id]);
+        return true;
     }
 }
 

@@ -19,6 +19,7 @@ import { renderDynamicIcon } from '../../utils/iconHelper';
 import categoryService from '../../services/categoryService';
 import businessService from '../../services/businessService';
 import LeadGatekeeper from '../../components/LeadGatekeeper';
+import BookingWizard from '../../components/BookingWizard';
 import PremiumLoader from '../../components/PremiumLoader';
 import reviewService from '../../services/reviewService';
 import Toast from 'react-native-toast-message';
@@ -197,6 +198,22 @@ const HomeScreen = ({ navigation }) => {
   const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [leadModalVisible, setLeadModalVisible] = useState(false);
   const [pendingCategory, setPendingCategory] = useState(null);
+  const [bookingModalVisible, setBookingModalVisible] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
+
+  const handleInquirePress = (biz) => {
+    setSelectedBusiness(biz);
+    setBookingModalVisible(true);
+  };
+
+  const handleBookingSuccess = () => {
+    fetchActiveBookings();
+    Toast.show({
+      type: 'success',
+      text1: 'Booking Confirmed!',
+      text2: `Your request for ${selectedBusiness?.name} has been sent.`
+    });
+  };
 
   useEffect(() => {
     if (isFocused) {
@@ -270,17 +287,13 @@ const HomeScreen = ({ navigation }) => {
 
   const handleCategoryPress = (cat) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (isAuthenticated || leadCaptured) {
-      navigation.navigate('SearchResults', { query: cat.name });
-    } else {
-      setPendingCategory(cat);
-      setLeadModalVisible(true);
-    }
+    // Navigate to Categories screen with the selected category ID
+    navigation.navigate('CategoriesTab', { categoryId: cat.id });
   };
 
   const handleLeadSuccess = () => {
     setLeadModalVisible(false);
-    navigation.navigate('SearchResults', { query: pendingCategory?.name });
+    navigation.navigate('CategoriesTab', { categoryId: pendingCategory?.id });
   };
 
   // Auto-scroll banner
@@ -555,7 +568,10 @@ const HomeScreen = ({ navigation }) => {
             {featuredBusinesses.map((biz, i) => (
               <BusinessCard
                 key={biz.id || i}
-                business={biz}
+                business={{
+                  ...biz,
+                  onInquirePress: handleInquirePress
+                }}
                 compact
                 index={i}
                 onPress={() => navigation.navigate('BusinessDetails', { business: biz })}
@@ -659,6 +675,13 @@ const HomeScreen = ({ navigation }) => {
         onSuccess={handleLeadSuccess}
       />
 
+      <BookingWizard
+        visible={bookingModalVisible}
+        onClose={() => setBookingModalVisible(false)}
+        business={selectedBusiness}
+        onSuccess={handleBookingSuccess}
+      />
+
       <WelcomeModal isProvider={false} />
       
       <SupportModal 
@@ -724,9 +747,9 @@ const styles = StyleSheet.create({
   // Greeting
   eliteGreeting: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, backgroundColor: '#FFF' },
   greetingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  greetingText: { fontSize: 24, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  locationText: { fontSize: 13, color: colors.primary, fontWeight: '700' },
+  greetingText: { fontSize: 20, fontWeight: '900', color: '#111827', letterSpacing: -0.5 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  locationText: { fontSize: 12, color: colors.primary, fontWeight: '700' },
   
   statusBadge: { 
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0FDF4', 
@@ -745,11 +768,11 @@ const styles = StyleSheet.create({
   bannerImage: { width: '100%', height: '100%' },
   bannerTag: { position: 'absolute', top: 20, left: 20, backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   bannerTagText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-  bannerContent: { position: 'absolute', bottom: 60, left: 24, right: 24 },
-  bannerTitle: { fontSize: 36, fontWeight: '900', color: '#FFF', lineHeight: 44, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
-  bannerSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 10, fontWeight: '600', maxWidth: '85%' },
-  bannerCta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: '#FFF', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 24, alignSelf: 'flex-start' },
-  bannerCtaText: { color: '#111827', fontWeight: '900', fontSize: 15 },
+  bannerContent: { position: 'absolute', bottom: 45, left: 24, right: 24 },
+  bannerTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', lineHeight: 34, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 },
+  bannerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 8, fontWeight: '600', maxWidth: '85%' },
+  bannerCta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, backgroundColor: '#FFF', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, alignSelf: 'flex-start' },
+  bannerCtaText: { color: '#111827', fontWeight: '900', fontSize: 14 },
   pagination: { position: 'absolute', bottom: 16, flexDirection: 'row', alignSelf: 'center', gap: 6, width: '100%', justifyContent: 'center' },
   paginationDot: { width: 18, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
   paginationDotActive: { width: 36, backgroundColor: '#FFF' },

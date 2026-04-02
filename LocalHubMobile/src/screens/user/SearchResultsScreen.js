@@ -9,6 +9,8 @@ import globalStyles from '../../styles/globalStyles';
 import BusinessCard from '../../components/BusinessCard';
 import businessService from '../../services/businessService';
 import Skeleton from '../../components/Skeleton';
+import BookingWizard from '../../components/BookingWizard';
+import Toast from 'react-native-toast-message';
 
 const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price', 'Newest'];
 
@@ -21,6 +23,13 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(route?.params?.query || '');
+  const [bookingModalVisible, setBookingModalVisible] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
+
+  const handleInquirePress = (biz) => {
+    setSelectedBusiness(biz);
+    setBookingModalVisible(true);
+  };
   
   const query = route?.params?.query || ''; 
 
@@ -103,7 +112,10 @@ const SearchResultsScreen = ({ route, navigation }) => {
           contentContainerStyle={styles.listContainer}
           renderItem={({ item, index }) => (
             <BusinessCard 
-              business={item} 
+              business={{
+                ...item,
+                onInquirePress: handleInquirePress
+              }} 
               grid={numColumns > 1}
               index={index}
               onPress={() => navigation.navigate('BusinessDetails', { business: item })} 
@@ -117,6 +129,18 @@ const SearchResultsScreen = ({ route, navigation }) => {
           }
         />
       )}
+      <BookingWizard
+        visible={bookingModalVisible}
+        onClose={() => setBookingModalVisible(false)}
+        business={selectedBusiness}
+        onSuccess={() => {
+          Toast.show({
+            type: 'success',
+            text1: 'Booking Confirmed!',
+            text2: `Your request for ${selectedBusiness?.name} has been sent.`
+          });
+        }}
+      />
     </SafeAreaView>
   );
 };

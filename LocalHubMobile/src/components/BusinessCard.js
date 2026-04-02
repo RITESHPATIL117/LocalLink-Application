@@ -39,7 +39,7 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
         <View style={styles.imageContainer}>
           <Image 
             source={{ 
-              uri: business.image_url || business.image || `https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=400&sig=${business.id || index || Math.random()}` 
+              uri: (business.image_url && business.image_url.length > 10) ? business.image_url : (business.image && business.image.length > 10) ? business.image : `https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=400&sig=${business.name || 'service'}` 
             }} 
             style={[
               styles.image,
@@ -99,10 +99,27 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
           )}
 
           <View style={[styles.footer, compact && styles.compactFooter]}>
-            <Text style={styles.priceText}>Starting at <Text style={styles.priceValue}>₹499</Text></Text>
-            <TouchableOpacity style={styles.viewBtn}>
-              <Text style={styles.viewBtnText}>VIEW</Text>
-            </TouchableOpacity>
+            <View>
+              <Text style={styles.priceLabel}>Service Start</Text>
+              <Text style={styles.priceValue}>₹499</Text>
+            </View>
+            <View style={styles.actions}>
+              {!compact && (
+                <TouchableOpacity style={styles.detailsBtn} onPress={handlePress}>
+                  <Text style={styles.detailsBtnText}>DETAILS</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity 
+                style={styles.bookBtn} 
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  if (business.onInquirePress) business.onInquirePress(business);
+                }}
+              >
+                <Text style={styles.bookBtnText}>{compact ? 'BOOK' : 'BOOK NOW'}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Pressable>
@@ -304,28 +321,52 @@ const styles = StyleSheet.create({
   compactFooter: {
     paddingTop: 8,
   },
-  priceText: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '600',
+  priceLabel: {
+    fontSize: 9,
+    color: '#94A3B8',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   priceValue: {
     fontSize: 16,
     fontWeight: '900',
     color: '#111827',
   },
-  viewBtn: {
-    backgroundColor: 'rgba(15, 23, 42, 0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  viewBtnText: {
+  detailsBtn: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  detailsBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.5,
+  },
+  bookBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  bookBtnText: {
     fontSize: 11,
     fontWeight: '900',
-    color: colors.primary,
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
 

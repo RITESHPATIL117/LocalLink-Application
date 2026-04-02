@@ -16,6 +16,8 @@ import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import leadService from '../../services/leadService';
+import socketService from '../../services/socketService';
+import { useFocusEffect } from '@react-navigation/native';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
@@ -82,12 +84,13 @@ const BookingModal = ({ item, visible, onClose, onConfirm, onCancel }) => {
                 {/* Service Details */}
                 <Text style={styles.modalSectionTitle}>Service Details</Text>
                 <View style={styles.detailGrid}>
-                  <DetailRow icon="briefcase-outline" label="Service" value={item.service} />
-                  <DetailRow icon="person-outline"   label="Provider" value={item.providerName} />
-                  <DetailRow icon="calendar-outline" label="Date"     value={item.date} />
-                  <DetailRow icon="time-outline"     label="Time"     value={item.time} />
-                  <DetailRow icon="location-outline" label="Address"  value={item.address} />
-                  <DetailRow icon="pricetag-outline" label="Price"    value={item.price} highlight />
+                  <DetailRow icon="briefcase-outline" label="Service" value={item.service || 'General Service'} />
+                  <DetailRow icon="person-outline"   label="Provider" value={item.providerName || 'Local Expert'} />
+                  <DetailRow icon="calendar-outline" label="Date"     value={item.booking_date || item.date} />
+                  <DetailRow icon="time-outline"     label="Slot"     value={item.booking_time || item.time} />
+                  <DetailRow icon="card-outline"     label="Payment"  value={item.payment_method || 'Not Specified'} />
+                  <DetailRow icon="location-outline" label="Address"  value={item.address || 'User Address'} />
+                  <DetailRow icon="pricetag-outline" label="Price"    value={item.price || (item.amount ? `₹${item.amount}` : '₹499')} highlight />
                 </View>
 
                 {/* Request Description */}
@@ -250,23 +253,20 @@ const RequestCard = ({ item, onPress }) => {
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
                 <Ionicons name="calendar-outline" size={13} color="#94A3B8" />
-                <Text style={styles.metaText}>{item.date}</Text>
+                <Text style={styles.metaText}>{item.booking_date || item.date}</Text>
               </View>
               <View style={styles.metaItem}>
                 <Ionicons name="time-outline" size={13} color="#94A3B8" />
-                <Text style={styles.metaText}>{item.time}</Text>
+                <Text style={styles.metaText}>{item.booking_time || item.time}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <LinearGradient 
-          colors={['transparent', 'rgba(248,250,252,0.5)', '#F8FAFC']} 
-          style={styles.cardFooter}
-        >
+        <View style={styles.cardFooter}>
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Estimated Total</Text>
-            <Text style={styles.priceValue}>{item.price}</Text>
+            <Text style={styles.priceValue}>{item.price || (item.amount ? `₹${item.amount}` : '₹499')}</Text>
           </View>
 
           {item.status === 'Accepted' && (
@@ -281,7 +281,7 @@ const RequestCard = ({ item, onPress }) => {
               <Text style={[styles.footerBadgeText, { color: '#10B981' }]}>Fulfilled</Text>
             </View>
           )}
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     </AnimatedFadeIn>
   );
@@ -291,39 +291,64 @@ const RequestCard = ({ item, onPress }) => {
 
 const RequestsScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
-  const [filter, setFilter] = useState('All');
+  const { user, isAuthenticated } = useSelector(state => state.auth);
+  
+  const [activeFilter, setActiveFilter] = useState('All');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  
-  const { isAuthenticated } = useSelector(state => state.auth);
 
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      fetchRequests();
-    } else {
-      setLoading(false);
-      setRequests([]);
-    }
-  }, [isAuthenticated]);
-
-  const fetchRequests = async () => {
-    setLoading(true);
+  const fetchRequests = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
-      const res = await leadService.getUserLeads();
+      if (!user) return;
+      const res = await leadService.getLeadsByUser();
       setRequests(res.data || []);
     } catch (e) {
-      console.log('Error fetching user requests', e);
+      console.log('Fetch requests err:', e);
+      if (!isSilent) Toast.show({ type: 'error', text1: 'Network Error', text2: 'Could not sync your requests.' });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const filtered = filter === 'All' ? requests : requests.filter(r => r.status === filter);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isAuthenticated) {
+        fetchRequests();
+      } else {
+        setLoading(false);
+        setRequests([]);
+      }
+    }, [isAuthenticated, user])
+  );
+
+  React.useEffect(() => {
+    if (user?.id) {
+        socketService.connect();
+        socketService.joinRoom(user.id.toString());
+
+        socketService.socket?.on('booking_status_updated', (data) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Toast.show({
+                type: 'info',
+                text1: 'Booking Update',
+                text2: `A booking status has been updated to ${data.newStatus}.`
+            });
+            fetchRequests(true); // Silent refresh
+        });
+    }
+  }, [user]);
+
+  const filtered = activeFilter === 'All' 
+    ? requests 
+    : requests.filter(r => r.status?.toLowerCase() === activeFilter.toLowerCase());
 
   const handleCardPress = (item) => {
-    setSelectedItem(item);
+    setSelectedBooking(item);
     setModalVisible(true);
   };
 
@@ -332,12 +357,12 @@ const RequestsScreen = ({ navigation }) => {
     try {
       await leadService.updateLeadStatus(id, 'Completed');
       setRequests(prev =>
-        prev.map(r => r.id === id
+        prev.map(r => r.id === id 
           ? { 
               ...r, 
               status: 'Completed', 
               paymentStatus: paymentMode === 'later' ? 'Pay After Service' : 'Paid', 
-              paymentMode: PAYMENT_METHODS.find(m => m.id === paymentMode)?.label 
+              payment_method: PAYMENT_METHODS.find(m => m.id === paymentMode)?.label 
             }
           : r)
       );
@@ -357,11 +382,6 @@ const RequestsScreen = ({ navigation }) => {
       Toast.show({ type: 'error', text1: 'Cancel Failed', text2: 'Could not sync with server.' });
     }
   };
-
-  const counts = FILTERS.reduce((acc, f) => {
-    acc[f] = f === 'All' ? requests.length : requests.filter(r => r.status === f).length;
-    return acc;
-  }, {});
 
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
@@ -413,14 +433,14 @@ const RequestsScreen = ({ navigation }) => {
         contentContainerStyle={styles.filterContent}
       >
         {FILTERS.map(f => {
-          const active = filter === f;
+          const active = activeFilter === f;
           return (
             <TouchableOpacity
               key={f}
               style={[styles.filterChip, active && styles.filterChipActive]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setFilter(f);
+                setActiveFilter(f);
               }}
             >
               <Text style={[styles.filterText, active && styles.filterTextActive]}>{f}</Text>

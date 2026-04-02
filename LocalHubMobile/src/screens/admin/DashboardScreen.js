@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, Platform, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, Platform, ActivityIndicator, RefreshControl, Animated, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,7 @@ const defaultAdminStats = [
   { id: '4', title: 'Pending Approval', value: '24', trend: 'Needs Review', isUp: true, icon: 'time', color: '#EF4444' },
 ];
 
-const recentActivity = [
+const recentActivityData = [
   { id: 'a1', action: 'New Business Registered: "Metro Electricians"', time: '10 mins ago', icon: 'business', color: colors.primary },
   { id: 'a2', action: 'Subscription Upgraded: "SuperFast Plumbing" to Gold', time: '1 hour ago', icon: 'star', color: '#F59E0B' },
   { id: 'a3', action: 'User "Rahul Kumar" reported a listing.', time: '2 hours ago', icon: 'warning', color: '#EF4444' },
@@ -60,41 +60,22 @@ const DashboardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [adminStats, setAdminStats] = useState(defaultAdminStats);
+  const [recentActivity, setRecentActivity] = useState(recentActivityData);
+  const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
-    fetchAdminData();
-    
-    // Admin socket integration
-    socketService.connect();
-    socketService.joinRoom('admin_room'); // Admin room for general system updates
-    
-    socketService.onStatsUpdate((data) => {
-        console.log('Admin real-time stats update:', data);
-        fetchAdminData();
-        Toast.show({
-          type: 'info',
-          text1: 'System Live Update',
-          text2: 'Global platform metrics have been updated.'
-        });
-    });
-
-    return () => {
-      // socketService.disconnect();
-    };
-  }, []);
-
-  const fetchAdminData = async () => {
-    setLoading(true);
+  const fetchAdminData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const statsRes = await adminService.getStats();
       const stats = statsRes.data || {};
       
-      setAdminStats([
+      const newStats = [
         { id: '1', title: 'Total Businesses', value: stats.totalBusinesses?.toString() || '0', trend: '+5% This Week', isUp: true, icon: 'business', color: colors.primary },
         { id: '2', title: 'Total Users', value: stats.totalUsers?.toString() || '0', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
         { id: '3', title: 'Revenue', value: `₹${stats.revenue || 0}`, trend: 'Stable', isUp: true, icon: 'wallet', color: '#F59E0B' },
         { id: '4', title: 'Pending Approval', value: stats.pendingApprovals?.toString() || '0', trend: 'Priority', isUp: false, icon: 'time', color: '#EF4444' },
-      ]);
+      ];
+      setAdminStats(newStats);
     } catch (e) {
       console.log('Admin dashboard err:', e);
     } finally {
@@ -102,6 +83,74 @@ const DashboardScreen = ({ navigation }) => {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    fetchAdminData();
+    
+    // Admin socket integration
+    socketService.connect();
+    socketService.joinRoom('admin_room'); // Admin room for platform updates
+    
+    // 1. Listen for new leads
+    socketService.socket?.on('new_lead_received', (data) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+            type: 'success',
+            text1: '🔔 New Booking Alert',
+            text2: `${data.customerName} booked ${data.businessName}`,
+        });
+        
+        // Update stats silently
+        fetchAdminData(true);
+        
+        // Add to local activity feed
+        const newLog = {
+            id: `new-${Date.now()}`,
+            action: `New Booking: ${data.customerName} -> ${data.businessName}`,
+            time: 'Just now',
+            icon: 'cart',
+            color: colors.primary
+        };
+        setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
+    });
+
+    // 2. Listen for new business registration
+    socketService.socket?.on('new_business_registered', (data) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+            type: 'info',
+            text1: '🚀 New Business Partner!',
+            text2: `${data.name} just joined LocalHub.`,
+        });
+        
+        fetchAdminData(true);
+        
+        const newLog = {
+            id: `biz-${Date.now()}`,
+            action: `Business Registered: "${data.name}"`,
+            time: 'Just now',
+            icon: 'business',
+            color: '#10B981'
+        };
+        setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
+    });
+
+    // 3. Listen for general platform activity
+    socketService.socket?.on('log_activity', (data) => {
+        const newLog = {
+            id: `log-${Date.now()}`,
+            action: data.action,
+            time: 'Just now',
+            icon: 'pulse',
+            color: '#6B7280'
+        };
+        setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
+    });
+
+    return () => {
+      // socketService.disconnect();
+    };
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -179,19 +228,20 @@ const DashboardScreen = ({ navigation }) => {
           <View>
             <View style={styles.statusRow}>
                <View style={styles.statusDot} />
-               <Text style={styles.statusText}>System Live • v1.0.4</Text>
+               <Text style={styles.statusText}>System Live • v1.0.5</Text>
             </View>
-            <Text style={styles.greetingTitle}>{adminName}</Text>
+            <Text style={styles.greetingTitle}>Admin Portal</Text>
           </View>
           <View style={styles.topActions}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => Toast.show({ type: 'info', text1: 'System Alert', text2: 'No critical system issues found.' })}>
-              <View style={styles.badge} />
-              <Ionicons name="notifications" size={20} color="#FFF" />
+            <TouchableOpacity 
+                style={styles.iconButton} 
+                onPress={() => setShowSettings(true)}
+            >
+              <Ionicons name="settings-outline" size={20} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={logout}>
-              <Ionicons name="log-out" size={20} color="#FFF" />
+            <TouchableOpacity onPress={() => setShowSettings(true)}>
+                <Image source={{ uri: profilePic }} style={styles.profilePic} />
             </TouchableOpacity>
-            <Image source={{ uri: profilePic }} style={styles.profilePic} />
           </View>
         </View>
 
@@ -214,15 +264,16 @@ const DashboardScreen = ({ navigation }) => {
                    >
                      <View style={styles.statTop}>
                       <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
-                        <Ionicons name={stat.icon} size={24} color={stat.color} />
+                        <Ionicons name={stat.icon} size={22} color={stat.color} />
                       </View>
                       <View style={[styles.trendBadge, { backgroundColor: stat.isUp ? '#F0FDF4' : '#FEF2F2' }]}>
-                        <Ionicons name={stat.isUp ? 'trending-up' : 'alert-circle'} size={12} color={stat.isUp ? '#10B981' : '#EF4444'} />
-                        <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444' }]}>{stat.trend}</Text>
+                        <Text style={[styles.trendText, { color: stat.isUp ? '#10B981' : '#EF4444', marginLeft: 0 }]}>{stat.trend.split(' ')[0]}</Text>
                       </View>
                     </View>
-                    <Text style={styles.statValue}>{stat.value}</Text>
-                    <Text style={styles.statTitle}>{stat.title}</Text>
+                    <View>
+                        <Text style={styles.statValue}>{stat.value}</Text>
+                        <Text style={styles.statTitle}>{stat.title}</Text>
+                    </View>
                   </TouchableOpacity>
                 </AnimatedFadeIn>
               ))}
@@ -311,6 +362,37 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       <WelcomeModal isProvider={true} />
+      
+      {/* Admin Settings / Profile Modal */}
+      <Modal visible={showSettings} transparent animationType="fade">
+        <Pressable style={styles.modalOverlay} onPress={() => setShowSettings(false)}>
+            <View style={styles.settingsSheet}>
+                <View style={styles.sheetHandle} />
+                <Text style={styles.sheetTitle}>System Administration</Text>
+                
+                <TouchableOpacity style={styles.sheetAction} onPress={() => { setShowSettings(false); navigation.navigate('ReportsTab'); }}>
+                    <View style={[styles.sheetIconBg, { backgroundColor: '#F1F5F9' }]}>
+                        <Ionicons name="shield-outline" size={20} color="#64748B" />
+                    </View>
+                    <Text style={styles.sheetActionText}>Platform Health</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.sheetAction, { marginTop: 12 }]} onPress={logout}>
+                    <View style={[styles.sheetIconBg, { backgroundColor: '#FEF2F2' }]}>
+                        <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+                    </View>
+                    <Text style={[styles.sheetActionText, { color: '#EF4444' }]}>Terminate Session</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={styles.sheetCloseBtn} 
+                    onPress={() => setShowSettings(false)}
+                >
+                    <Text style={styles.sheetCloseText}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 
@@ -485,11 +567,13 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', borderWidth: 2, borderColor: '#FFF', zIndex: 2 },
   profilePic: { width: 44, height: 44, borderRadius: 12, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
   
-  contentPadding: { paddingHorizontal: 24, paddingBottom: 40 },
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 28, marginHorizontal: -6 },
+  contentPadding: { paddingHorizontal: 20, paddingBottom: 40 },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 10, marginBottom: 28, marginHorizontal: -4 },
   statCard: {
-    flex: 1, 
-    backgroundColor: '#FFF', borderRadius: 28, padding: 22, margin: 6,
+    width: '48%', 
+    minHeight: 140,
+    backgroundColor: '#FFF', borderRadius: 28, padding: 18, marginVertical: 6, marginHorizontal: 4,
+    justifyContent: 'space-between',
     shadowColor: '#1E293B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.08, shadowRadius: 30, elevation: 5, borderWidth: 1, borderColor: '#F8FAFC',
   },
   statTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
@@ -521,6 +605,17 @@ const styles = StyleSheet.create({
   activityContent: { flex: 1 },
   activityText: { fontSize: 14, lineHeight: 22, color: '#475569', fontWeight: '500' },
   activityTime: { fontSize: 12, fontWeight: '700', color: '#94A3B8', marginTop: 4 },
+  
+  // Settings Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
+  settingsSheet: { backgroundColor: '#FFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: 20 },
+  sheetTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B', marginBottom: 24, textAlign: 'center' },
+  sheetAction: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 16, borderRadius: 20 },
+  sheetIconBg: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  sheetActionText: { fontSize: 15, fontWeight: '700', color: '#1E293B' },
+  sheetCloseBtn: { marginTop: 24, alignItems: 'center' },
+  sheetCloseText: { fontSize: 14, fontWeight: '800', color: '#94A3B8' }
 });
 
 export default DashboardScreen;

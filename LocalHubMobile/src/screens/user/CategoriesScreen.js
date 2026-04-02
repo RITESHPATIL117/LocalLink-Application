@@ -15,6 +15,7 @@ import LeadGatekeeper from '../../components/LeadGatekeeper';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import { renderDynamicIcon } from '../../utils/iconHelper';
 import { useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 
@@ -35,7 +36,7 @@ const FALLBACK_CATEGORIES = [
 
 const MAX_APP_WIDTH = 1200;
 
-const CategoriesScreen = ({ navigation }) => {
+const CategoriesScreen = ({ navigation, route }) => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const contentWidth = Math.min(width, MAX_APP_WIDTH);
@@ -56,11 +57,22 @@ const CategoriesScreen = ({ navigation }) => {
   // Responsive Grid
   // Left nav takes ~90px. Remaining is right pane.
   const numColumns = rightPaneWidth > 800 ? 4 : (rightPaneWidth > 500 ? 3 : 2);
-  const itemWidth = (rightPaneWidth - 40 - (10 * (numColumns - 1))) / numColumns;
+  const itemWidth = (rightPaneWidth - 48 - (16 * (numColumns - 1))) / numColumns;
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const categoryId = route.params?.categoryId;
+      if (categoryId && categories.length > 0) {
+        handleSelectNav(categoryId);
+        // Reset the param so it doesn't re-select if we navigate back
+        navigation.setParams({ categoryId: null });
+      }
+    }, [route.params?.categoryId, categories])
+  );
 
   const fetchCategories = async () => {
     try {
@@ -240,6 +252,22 @@ const CategoriesScreen = ({ navigation }) => {
                     </View>
                   </View>
 
+                  {/* Popular Chips (Justdial Style) */}
+                  <View style={styles.popularSection}>
+                    <Text style={styles.sectionLabel}>Popular in {activeCategoryData.name}</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.popularScroll}>
+                      {activeSubcategories.slice(0, 5).map((sub, idx) => (
+                        <TouchableOpacity 
+                          key={`pop-${idx}`} 
+                          style={styles.popChip}
+                          onPress={() => handleSubcategoryPress(sub)}
+                        >
+                          <Text style={styles.popChipText}>{sub.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+
                   {/* Subcategory Grid */}
                   <View style={styles.subCatGrid}>
                     {subLoading ? (
@@ -300,14 +328,11 @@ const SubcategoryCard = ({ item, parentName, onPress, index = 0 }) => {
   const imgUri = isValidImage ? item.image : SUB_FALLBACKS[index % SUB_FALLBACKS.length];
   
   return (
-    <TouchableOpacity style={styles.subCatCard} onPress={onPress} activeOpacity={0.85}>
-      <Image source={{ uri: imgUri }} style={styles.subCatImg} resizeMode="cover" />
-      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.subCatGradient} />
-      
-      <View style={styles.subCatMeta}>
-        {parentName && <Text style={styles.parentCatText}>{parentName}</Text>}
-        <Text style={styles.subCatTitle} numberOfLines={2}>{item.name}</Text>
+    <TouchableOpacity style={styles.jdCard} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.jdIconBox}>
+        <Image source={{ uri: imgUri }} style={styles.jdImg} />
       </View>
+      <Text style={styles.jdTitle} numberOfLines={2}>{item.name}</Text>
     </TouchableOpacity>
   );
 };
@@ -406,31 +431,54 @@ const styles = StyleSheet.create({
   subCatGrid: { 
     flexDirection: 'row', 
     flexWrap: 'wrap', 
-    gap: 12,
+    gap: 16,
     paddingBottom: 20,
+    justifyContent: 'flex-start',
   },
   gridItem: { 
-    marginBottom: 12,
+    marginBottom: 8,
   },
   
-  subCatCard: {
-    width: '100%', 
-    height: 220, 
-    borderRadius: 28, 
-    overflow: 'hidden',
+  // Justdial Style Card
+  jdCard: {
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  jdIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
     backgroundColor: '#F3F4F6',
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 15,
-    elevation: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  subCatImg: { width: '100%', height: '100%' },
-  subCatGradient: { ...StyleSheet.absoluteFillObject, top: '30%' },
-  subCatMeta: {
-    position: 'absolute', bottom: 16, left: 16, right: 16,
+  jdImg: { width: '100%', height: '100%' },
+  jdTitle: { 
+    fontSize: 12, 
+    fontWeight: '800', 
+    color: '#374151', 
+    textAlign: 'center', 
+    paddingHorizontal: 4,
+    lineHeight: 14,
   },
-  parentCatText: { fontSize: 10, color: 'rgba(255,255,255,0.9)', fontWeight: '900', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.5 },
-  subCatTitle: { fontSize: 15, fontWeight: '900', color: '#FFF', lineHeight: 20, letterSpacing: -0.2 },
+
+  // Popular Section
+  popularSection: { marginBottom: 20 },
+  sectionLabel: { fontSize: 13, fontWeight: '900', color: '#111827', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
+  popularScroll: { gap: 10, paddingRight: 20 },
+  popChip: { 
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  popChipText: { fontSize: 13, fontWeight: '700', color: '#4B5563' },
 
   // Search Results Mode
   searchResultsContainer: { padding: 20 },

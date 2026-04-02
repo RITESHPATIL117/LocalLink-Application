@@ -54,6 +54,16 @@ const createBusiness = async (req, res, next) => {
             await Business.addImages(businessId, req.body.images);
         }
 
+        // Real-time Admin Notification
+        const io = req.app.get('io');
+        io.to('admin_room').emit('new_business_registered', {
+            id: businessId,
+            name: businessData.name,
+            providerName: req.user.name,
+            category: categoryName || 'General Service',
+            timestamp: new Date()
+        });
+
         res.json({
             success: true,
             message: 'Business created successfully and pending verification',

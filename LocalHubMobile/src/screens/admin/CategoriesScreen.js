@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
@@ -86,7 +87,13 @@ const CategoriesScreen = ({ navigation }) => {
       <TouchableOpacity 
         activeOpacity={0.9} 
         style={StyleSheet.absoluteFill}
-        onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            navigation.navigate('HomeTab', { 
+                screen: 'Businesses', 
+                params: { categoryId: item.id } 
+            });
+        }}
       >
         <Image 
           source={{ uri: item.image || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?q=80&w=600' }} 

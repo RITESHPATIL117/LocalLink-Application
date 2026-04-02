@@ -74,6 +74,28 @@ const adminService = {
       console.log('API updateReportStatus failed, simulating success');
       return { data: { success: true, status, id } };
     }
+  },
+  getAllBusinesses: async () => {
+    try {
+      const response = await api.get('/admin/businesses');
+      return { data: response };
+    } catch (e) {
+      console.log('API getAllBusinesses failed, returning mock businesses');
+      return { data: [
+        { id: '1', name: 'Elite Electricians', category_name: 'Electrician', category_id: '1', status: 'active', rating: 4.8, address: 'Kharadi, Pune', image_url: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=400' },
+        { id: '2', name: 'Sparkle Cleaners', category_name: 'Cleaning', category_id: '2', status: 'active', rating: 4.5, address: 'Viman Nagar, Pune', image_url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400' },
+        { id: '3', name: 'Healthy Hydrides', category_name: 'Plumbing', category_id: '3', status: 'suspended', rating: 3.9, address: 'Hadapsar, Pune', image_url: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=400' }
+      ] };
+    }
+  },
+  updateBusinessStatus: async (id, status) => {
+    try {
+      const response = await api.patch(`/admin/business/${id}/status`, { status });
+      return { data: response };
+    } catch (e) {
+      console.log('API updateBusinessStatus failed, simulating success');
+      return { data: { success: true, id, status } };
+    }
   }
 };
 

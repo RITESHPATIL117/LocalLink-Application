@@ -11,6 +11,7 @@ import Badge from '../../components/Badge';
 import reviewService from '../../services/reviewService';
 import leadService from '../../services/leadService';
 import PremiumLoader from '../../components/PremiumLoader';
+import BookingWizard from '../../components/BookingWizard';
 import { useFavorites } from '../../hooks/useFavorites';
 import Toast from 'react-native-toast-message';
 
@@ -124,6 +125,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  const businessImage = business.image_url || business.image || 'https://images.unsplash.com/photo-1621905252507-eb6368d5ba18';
 
   return (
     <View style={styles.container}>
@@ -131,7 +133,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
         {/* Cover Section */}
         <View style={[styles.coverSection, isLargeScreen && styles.coverSectionWeb]}>
           <View style={styles.headerImageContainer}>
-            <Image source={{ uri: business.image }} style={styles.headerImage} />
+            <Image source={{ uri: businessImage }} style={styles.headerImage} />
             {!isLargeScreen && (
               <TouchableOpacity 
                 style={styles.backButtonOverlay} 
@@ -158,7 +160,7 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
 
           <View style={[styles.mainInfoContainer, isLargeScreen && styles.mainInfoWeb]}>
             <View style={styles.avatarRow}>
-              <Image source={{ uri: business.avatar || business.image }} style={styles.avatarPill} />
+              <Image source={{ uri: business.avatar || businessImage }} style={styles.avatarPill} />
               <View style={styles.titleArea}>
                 <Text style={styles.businessName}>{business.name}</Text>
                 {business.tier && (
@@ -182,12 +184,18 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
 
             <View style={styles.actionButtonsRow}>
               <TouchableOpacity style={styles.primaryBtn} onPress={() => setLeadModalVisible(true)}>
-                <Ionicons name="call" size={20} color="#FFF" />
-                <Text style={styles.primaryBtnText}>Inquire Now</Text>
+                <Ionicons name="calendar-outline" size={20} color="#FFF" />
+                <Text style={styles.primaryBtnText}>Book Now</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setLeadModalVisible(true)}>
-                <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
-                <Text style={styles.secondaryBtnText}>Message</Text>
+              <TouchableOpacity 
+                style={styles.secondaryBtn} 
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  Linking.openURL(`tel:+919876543210`);
+                }}
+              >
+                <Ionicons name="call-outline" size={20} color={colors.primary} />
+                <Text style={styles.secondaryBtnText}>Call</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -320,49 +328,19 @@ const BusinessDetailsScreen = ({ route, navigation }) => {
         </View>
       </Modal>
 
-      {/* ─── Lead Modal ─── */}
-      <Modal visible={leadModalVisible} animationType="fade" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { paddingBottom: 30 }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Quick Inquiry</Text>
-              <TouchableOpacity onPress={() => setLeadModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#111827" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalSub}>The professional will get back to you shortly.</Text>
-            
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Your Name"
-              value={leadInfo.name}
-              onChangeText={val => setLeadInfo({...leadInfo, name: val})}
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Phone Number"
-              keyboardType="phone-pad"
-              value={leadInfo.phone}
-              onChangeText={val => setLeadInfo({...leadInfo, phone: val})}
-            />
-            <TextInput
-              style={[styles.modalInput, { height: 100 }]}
-              placeholder="Your requirement (Optional)"
-              multiline
-              value={leadInfo.message}
-              onChangeText={val => setLeadInfo({...leadInfo, message: val})}
-            />
-
-            <TouchableOpacity 
-              style={[styles.primaryBtn, submittingLead && { opacity: 0.7 }]} 
-              onPress={handleSubmitLead}
-              disabled={submittingLead}
-            >
-              {submittingLead ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>Send Inquiry</Text>}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* ─── Booking Modal ─── */}
+      <BookingWizard
+        visible={leadModalVisible}
+        onClose={() => setLeadModalVisible(false)}
+        business={business}
+        onSuccess={() => {
+          Toast.show({
+            type: 'success',
+            text1: 'Booking Sent!',
+            text2: 'The professional will confirm your slot soon.'
+          });
+        }}
+      />
     </View>
   );
 };

@@ -49,13 +49,15 @@ const ProviderDashboardScreen = ({ navigation }) => {
       socketService.joinRoom(user.id.toString());
       
       socketService.onNewLead((newLead) => {
-        console.log('Real-time lead received:', newLead);
-        // Refresh data or update state locally
-        fetchDashboardData();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        
+        // Update stats and activity silently
+        fetchDashboardData(true);
+        
         Toast.show({
           type: 'success',
-          text1: '🔔 New Lead!',
-          text2: `${newLead.customerName} just reached out.`,
+          text1: '🔔 New Lead Received!',
+          text2: `${newLead.customerName} just requested a quote.`,
           onPress: () => navigation.navigate('LeadsTab')
         });
       });
@@ -66,8 +68,8 @@ const ProviderDashboardScreen = ({ navigation }) => {
     };
   }, [user]);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  const fetchDashboardData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       // 1. Fetch Aggregated Stats from new specialized endpoint
       const statsRes = await businessOwnerService.getDashboardStats();

@@ -1,9 +1,12 @@
 const db = require('../config/db');
 
 const Lead = {
-    create: async ({ business_id, category_id, user_id, customer_name, customer_email, customer_phone, message }) => {
+    create: async ({ business_id, category_id, user_id, customer_name, customer_email, customer_phone, message, address, booking_date, booking_time, payment_method, payment_status, amount }) => {
         const [result] = await db.query(
-            'INSERT INTO leads (business_id, category_id, user_id, customer_name, customer_email, customer_phone, message) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            `INSERT INTO leads 
+            (business_id, category_id, user_id, customer_name, customer_email, customer_phone, message, 
+             address, booking_date, booking_time, payment_method, payment_status, amount) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 business_id || null,
                 category_id || null, 
@@ -11,7 +14,13 @@ const Lead = {
                 customer_name || null, 
                 customer_email || null, 
                 customer_phone || null, 
-                message || null
+                message || null,
+                address || null,
+                booking_date || null,
+                booking_time || null,
+                payment_method || 'Pay After Service',
+                payment_status || 'Pending',
+                amount || null
             ]
         );
         return result.insertId;

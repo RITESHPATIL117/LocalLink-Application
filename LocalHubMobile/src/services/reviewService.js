@@ -10,7 +10,7 @@ const reviewService = {
       return { data: [] };
     }
   },
-  getBusinessReviews: async (businessId) => {
+  getReviewsByBusiness: async (businessId) => {
     try {
       const response = await api.get(`/reviews/business/${businessId}`);
       return { data: response || [] };
