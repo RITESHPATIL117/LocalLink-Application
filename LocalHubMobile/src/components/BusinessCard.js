@@ -48,10 +48,12 @@ const BusinessCard = ({ business, onPress, horizontal, grid, compact, index = 0 
               compact && styles.compactImage
             ]} 
           />
-          <View style={[styles.verifiedBadge, business.tier === 'Diamond' && { backgroundColor: '#F59E0B' }]}>
-            <Ionicons name={business.tier === 'Diamond' ? "star" : "shield-checkmark"} size={14} color="#FFFFFF" />
-            <Text style={styles.verifiedText}>{business.tier === 'Diamond' ? 'ELITE PRO' : 'VERIFIED'}</Text>
-          </View>
+          {(business.is_verified || business.tier === 'Diamond') && (
+            <View style={[styles.verifiedBadge, business.tier === 'Diamond' && { backgroundColor: '#F59E0B' }]}>
+              <Ionicons name={business.tier === 'Diamond' ? "star" : "shield-checkmark"} size={14} color="#FFFFFF" />
+              <Text style={styles.verifiedText}>{business.tier === 'Diamond' ? 'ELITE PRO' : 'VERIFIED'}</Text>
+            </View>
+          )}
           <BlurView intensity={80} tint="dark" style={styles.ratingBadge}>
             <Text style={styles.ratingText}>{business.rating}</Text>
             <Ionicons name="star" size={12} color={colors.secondary} />

@@ -20,13 +20,21 @@ class Business {
     }
 
     static async getAll(params) {
+        let selectFields = 'b.*, c.name as category_name';
+        let queryParams = [];
+        
+        // Distance calculation logic (Haversine formula placeholder)
+        if (params?.lat && params?.lng) {
+            selectFields += `, (6371 * acos(cos(radians(?)) * cos(radians(b.latitude)) * cos(radians(b.longitude) - radians(?)) + sin(radians(?)) * sin(radians(b.latitude)))) AS distance`;
+            queryParams.push(params.lat, params.lng, params.lat);
+        }
+
         let query = `
-            SELECT b.*, c.name as category_name 
+            SELECT ${selectFields} 
             FROM businesses b
             LEFT JOIN categories c ON b.category_id = c.id
             WHERE 1=1
         `;
-        const queryParams = [];
 
         if (params?.q) {
             query += ` AND (b.name LIKE ? OR b.description LIKE ? OR b.subcategory LIKE ? OR c.name LIKE ?)`;
@@ -36,6 +44,10 @@ class Business {
         
         if (params?.featured) {
             query += ' AND b.rating >= 4.0'; // Simulate featured
+        }
+
+        if (params?.lat && params?.lng) {
+            query += ' ORDER BY distance ASC';
         }
 
         const [rows] = await db.query(query, queryParams);
@@ -91,11 +103,11 @@ class Business {
     }
 
     static async create(data) {
-        const { provider_id, name, description, category_id, address, city, image_url, subcategory } = data;
+        const { provider_id, name, description, category_id, address, city, image_url, subcategory, latitude, longitude } = data;
         const [result] = await db.query(
-            `INSERT INTO businesses (provider_id, name, description, category_id, address, city, image_url, is_verified, subcategory) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-            [provider_id, name, description, category_id, address, city, image_url, subcategory || null]
+            `INSERT INTO businesses (provider_id, name, description, category_id, address, city, image_url, is_verified, subcategory, latitude, longitude) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+            [provider_id, name, description, category_id, address, city, image_url, subcategory || null, latitude || null, longitude || null]
         );
         return result.insertId;
     }

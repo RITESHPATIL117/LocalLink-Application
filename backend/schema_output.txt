@@ -1,0 +1,16 @@
+id: int | NO | null
+business_id: int | YES | null
+category_id: int | YES | null
+customer_name: varchar(255) | YES | null
+customer_email: varchar(255) | YES | null
+customer_phone: varchar(20) | YES | null
+message: text | YES | null
+address: text | YES | null
+booking_date: date | YES | null
+booking_time: varchar(50) | YES | null
+payment_method: enum('UPI','Card','Cash on Delivery','Pay After Service') | YES | null
+payment_status: enum('Pending','Paid','Refunded') | YES | Pending
+amount: decimal(10,2) | YES | null
+status: enum('new','contacted','converted','closed') | YES | new
+created_at: timestamp | YES | CURRENT_TIMESTAMP
+user_id: int | YES | null

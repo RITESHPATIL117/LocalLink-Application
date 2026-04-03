@@ -1,6 +1,8 @@
 import { useWindowDimensions, TextInput, ActivityIndicator, View, StyleSheet, TouchableOpacity, Text, FlatList, Platform } from 'react-native';
 import PremiumLoader from '../../components/PremiumLoader';
 import { useState, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
   
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +35,8 @@ const SearchResultsScreen = ({ route, navigation }) => {
   
   const query = route?.params?.query || ''; 
 
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+
   useEffect(() => {
     fetchResults();
   }, [query, activeFilter]);
@@ -53,6 +57,56 @@ const SearchResultsScreen = ({ route, navigation }) => {
     }
   };
 
+  const renderMapView = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={styles.webMapFallback}>
+          <Ionicons name="map-outline" size={48} color={colors.textSecondary} />
+          <Text style={styles.webMapFallbackText}>Map View is optimized for mobile devices.</Text>
+          <TouchableOpacity style={styles.switchBackBtn} onPress={() => setViewMode('list')}>
+             <Text style={styles.switchBackBtnText}>Switch to List View</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const MapView = require('react-native-maps').default;
+    const { Marker, Callout } = require('react-native-maps');
+
+    return (
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: results[0]?.latitude || 17.3850,
+          longitude: results[0]?.longitude || 78.4867,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        {results.map((biz) => (
+          <Marker
+            key={biz.id}
+            coordinate={{
+              latitude: parseFloat(biz.latitude) || 17.3850,
+              longitude: parseFloat(biz.longitude) || 78.4867,
+            }}
+            title={biz.name}
+            description={biz.category}
+            pinColor={colors.primary}
+          >
+             <Callout onPress={() => navigation.navigate('BusinessDetails', { business: biz })}>
+                <View style={styles.calloutContainer}>
+                  <Text style={styles.calloutTitle}>{biz.name}</Text>
+                  <Text style={styles.calloutSub}>{biz.category}</Text>
+                  <Text style={styles.calloutAction}>View Details</Text>
+                </View>
+             </Callout>
+          </Marker>
+        ))}
+      </MapView>
+    );
+  };
+
   return (
     <SafeAreaView style={[globalStyles.container, { backgroundColor: '#F9FAFB' }]} edges={['top']}>
       <View style={[styles.header, isDesktop && styles.headerDesktop]}>
@@ -71,8 +125,11 @@ const SearchResultsScreen = ({ route, navigation }) => {
               style={styles.headerSearchInput}
             />
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
-             <Ionicons name="person-circle" size={32} color={colors.primary} />
+          <TouchableOpacity 
+            style={styles.viewToggleBtn}
+            onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+          >
+            <Ionicons name={viewMode === 'list' ? "map-outline" : "list-outline"} size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -103,6 +160,8 @@ const SearchResultsScreen = ({ route, navigation }) => {
 
       {loading ? (
         <PremiumLoader message="Searching for services..." />
+      ) : viewMode === 'map' ? (
+        renderMapView()
       ) : (
         <FlatList
           key={numColumns} // Force re-render when columns change
@@ -133,19 +192,102 @@ const SearchResultsScreen = ({ route, navigation }) => {
         visible={bookingModalVisible}
         onClose={() => setBookingModalVisible(false)}
         business={selectedBusiness}
-        onSuccess={() => {
-          Toast.show({
-            type: 'success',
-            text1: 'Booking Confirmed!',
-            text2: `Your request for ${selectedBusiness?.name} has been sent.`
-          });
+        isRFQ={!selectedBusiness?.id} // If no specific business id, it's an RFQ
+        onSuccess={(data) => {
+          if (!selectedBusiness?.id) {
+            Toast.show({
+              type: 'success',
+              text1: 'Broadcast Sent!',
+              text2: 'Matching vendors will contact you soon.'
+            });
+          } else {
+            Toast.show({
+              type: 'success',
+              text1: 'Booking Confirmed!',
+              text2: `Your request for ${selectedBusiness?.name} has been sent.`
+            });
+          }
         }}
       />
+      {results.length > 0 && (
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setSelectedBusiness({ 
+              category_id: results[0].category_id, 
+              name: 'Top Vendors',
+              category: results[0].category_name 
+            });
+            setBookingModalVisible(true);
+          }}
+        >
+          <LinearGradient colors={[colors.primary, '#6366F1']} style={styles.fabGradient}>
+            <Ionicons name="flash" size={20} color="#FFF" />
+            <Text style={styles.fabText}>GET BEST PRICE</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  viewToggleBtn: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    marginLeft: 12,
+  },
+  map: {
+    flex: 1,
+    width: '100%',
+  },
+  webMapFallback: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: '#F9FAFB',
+  },
+  webMapFallbackText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  switchBackBtn: {
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+  },
+  switchBackBtnText: {
+    color: '#FFF',
+    fontWeight: '700',
+  },
+  calloutContainer: {
+    padding: 10,
+    minWidth: 150,
+  },
+  calloutTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  calloutSub: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  calloutAction: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    marginTop: 8,
+  },
   header: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -238,7 +380,31 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#9CA3AF',
   },
-
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+    borderRadius: 30,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  fabGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fabText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: 1,
+  },
 });
 
 export default SearchResultsScreen;

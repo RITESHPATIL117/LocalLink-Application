@@ -2,28 +2,39 @@ const db = require('../config/db');
 
 const Lead = {
     create: async ({ business_id, category_id, user_id, customer_name, customer_email, customer_phone, message, address, booking_date, booking_time, payment_method, payment_status, amount }) => {
-        const [result] = await db.query(
-            `INSERT INTO leads 
-            (business_id, category_id, user_id, customer_name, customer_email, customer_phone, message, 
-             address, booking_date, booking_time, payment_method, payment_status, amount) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                business_id || null,
-                category_id || null, 
-                user_id || null, 
-                customer_name || null, 
-                customer_email || null, 
-                customer_phone || null, 
-                message || null,
-                address || null,
-                booking_date || null,
-                booking_time || null,
-                payment_method || 'Pay After Service',
-                payment_status || 'Pending',
-                amount || null
-            ]
-        );
-        return result.insertId;
+        try {
+            // Normalize Date to YYYY-MM-DD
+            let formattedDate = booking_date;
+            if (booking_date && booking_date.includes('T')) {
+                formattedDate = booking_date.split('T')[0];
+            }
+
+            const [result] = await db.query(
+                `INSERT INTO leads 
+                (business_id, category_id, user_id, customer_name, customer_email, customer_phone, message, 
+                 address, booking_date, booking_time, payment_method, payment_status, amount, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+                [
+                    business_id || null,
+                    category_id || null, 
+                    user_id || null, 
+                    customer_name || null, 
+                    customer_email || null, 
+                    customer_phone || null, 
+                    message || null,
+                    address || null,
+                    formattedDate || null,
+                    booking_time || null,
+                    payment_method || 'Pay After Service',
+                    payment_status || 'Pending',
+                    amount || 0.00
+                ]
+            );
+            return result.insertId;
+        } catch (err) {
+            console.error(`[SQL ERROR] Lead Creation Failed:`, err.message);
+            throw err;
+        }
     },
 
 

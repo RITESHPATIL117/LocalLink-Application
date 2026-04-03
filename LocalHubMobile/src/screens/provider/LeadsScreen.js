@@ -86,47 +86,94 @@ const LeadsScreen = ({ navigation }) => {
     }
   };
 
+  const handleStatusUpdate = async (leadId, currentStatus) => {
+    let nextStatus;
+    switch(currentStatus) {
+      case 'New': nextStatus = 'Contacted'; break;
+      case 'Contacted': nextStatus = 'Closed'; break;
+      case 'Closed': nextStatus = 'New'; break; // Cycle back for demo/correction
+      default: nextStatus = 'New';
+    }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    // Optimistic UI update
+    setAllLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: nextStatus } : l));
+    
+    try {
+      await leadService.updateLeadStatus(leadId, nextStatus.toLowerCase());
+      Toast.show({
+        type: 'success',
+        text1: 'Status Updated',
+        text2: `Lead marked as ${nextStatus}`
+      });
+    } catch (e) {
+      console.log('Error updating lead status:', e);
+    }
+  };
+
   const renderLeadItem = ({ item, index }) => (
     <AnimatedFadeIn delay={index * 100} duration={600}>
-      <TouchableOpacity 
-        style={styles.leadCard} 
-        activeOpacity={0.9}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          navigation.navigate('LeadDetails', { lead: item });
-        }}
-      >
-        <View style={styles.cardHighlight} />
-        <View style={styles.leadHeader}>
-          <View style={[styles.avatarContainer, { borderColor: `${getStatusColor(item.status)}40` }]}>
-            <Image source={{ uri: item.avatar }} style={styles.leadAvatar} />
-            <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]} />
+      <View style={styles.leadCard}>
+        <View style={[styles.cardHighlight, { backgroundColor: getStatusColor(item.status) }]} />
+        <TouchableOpacity 
+          style={styles.leadCardContent}
+          activeOpacity={0.7}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            navigation.navigate('LeadDetails', { lead: item });
+          }}
+        >
+          <View style={styles.leadHeader}>
+            <View style={[styles.avatarContainer, { borderColor: `${getStatusColor(item.status)}40` }]}>
+              <Image source={{ uri: item.avatar }} style={styles.leadAvatar} />
+              <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]} />
+            </View>
+            <View style={styles.leadMainInfo}>
+              <Text style={styles.customerName}>{item.customer}</Text>
+              <View style={styles.serviceRow}>
+                <Ionicons name="briefcase-outline" size={12} color="#6B7280" />
+                <Text style={styles.serviceName}>{item.service}</Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}
+              onPress={() => handleStatusUpdate(item.id, item.status)}
+            >
+              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status.toUpperCase()}</Text>
+              <Ionicons name="sync" size={10} color={getStatusColor(item.status)} style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
           </View>
-          <View style={styles.leadMainInfo}>
-            <Text style={styles.customerName}>{item.customer}</Text>
-            <View style={styles.serviceRow}>
-              <Ionicons name="briefcase-outline" size={12} color="#6B7280" />
-              <Text style={styles.serviceName}>{item.service}</Text>
+          
+          <Text style={styles.leadPreview} numberOfLines={1}>{item.message || 'I am interested in your services...'}</Text>
+
+          <View style={styles.leadFooter}>
+            <View style={styles.timeArea}>
+              <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+              <Text style={styles.timeText}>{item.time}</Text>
+            </View>
+            <View style={styles.actionRow}>
+              <TouchableOpacity 
+                style={styles.contactBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  // Simulate call/whatsapp
+                  Toast.show({ type: 'info', text1: 'Contacting Customer...' });
+                }}
+              >
+                <Ionicons name="call" size={14} color="#FFF" />
+                <Text style={styles.contactBtnText}>Contact</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.viewBtn}
+                onPress={() => navigation.navigate('LeadDetails', { lead: item })}
+              >
+                <Text style={styles.viewBtnText}>Brief</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status.toUpperCase()}</Text>
-          </View>
-        </View>
-        
-        <Text style={styles.leadPreview} numberOfLines={1}>{item.message || 'I am interested in your services...'}</Text>
-
-        <View style={styles.leadFooter}>
-          <View style={styles.timeArea}>
-            <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
-            <Text style={styles.timeText}>{item.time}</Text>
-          </View>
-          <View style={styles.actionLink}>
-            <Text style={styles.actionText}>View Brief</Text>
-            <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     </AnimatedFadeIn>
   );
 
@@ -246,10 +293,11 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listArea: { paddingHorizontal: 20, paddingBottom: 100 },
   leadCard: {
-    backgroundColor: '#FFF', borderRadius: 28, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#F1F5F9', overflow: 'hidden',
+    backgroundColor: '#FFF', borderRadius: 28, marginBottom: 16, borderWidth: 1, borderColor: '#F1F5F9', overflow: 'hidden',
     shadowColor: '#1E293B', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.06, shadowRadius: 24, elevation: 4, position: 'relative'
   },
-  cardHighlight: { position: 'absolute', top: 0, left: 0, width: 6, height: '100%', backgroundColor: colors.primary, opacity: 0.8 },
+  leadCardContent: { padding: 20 },
+  cardHighlight: { position: 'absolute', top: 0, left: 0, width: 6, height: '100%', opacity: 0.8 },
   leadHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   avatarContainer: { position: 'relative', padding: 3, borderWidth: 2, borderRadius: 30 },
   leadAvatar: { width: 50, height: 50, borderRadius: 25 },
@@ -258,14 +306,36 @@ const styles = StyleSheet.create({
   customerName: { fontSize: 17, fontWeight: '800', color: '#1E293B', letterSpacing: -0.5 },
   serviceRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
   serviceName: { fontSize: 12, color: '#64748B', fontWeight: '600' },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, alignSelf: 'flex-start' },
+  statusBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 10, 
+    paddingVertical: 5, 
+    borderRadius: 10 
+  },
   statusText: { fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  leadPreview: { fontSize: 14, color: '#64748B', paddingHorizontal: 4, marginBottom: 16, lineHeight: 20, fontStyle: 'italic' },
+  leadPreview: { fontSize: 13, color: '#64748B', paddingHorizontal: 4, marginBottom: 16, lineHeight: 18, fontStyle: 'italic' },
   leadFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F8FAFC' },
   timeArea: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeText: { fontSize: 12, color: '#94A3B8', fontWeight: '600' },
-  actionLink: { flexDirection: 'row', alignItems: 'center', backgroundColor: `${colors.primary}10`, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14 },
-  actionText: { fontSize: 12, fontWeight: '800', color: colors.primary, marginRight: 2 },
+  actionRow: { flexDirection: 'row', gap: 8 },
+  contactBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#4F46E5', 
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 12,
+    gap: 6
+  },
+  contactBtnText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
+  viewBtn: { 
+    backgroundColor: '#F1F5F9', 
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 12 
+  },
+  viewBtnText: { color: '#475569', fontSize: 11, fontWeight: '800' },
   
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, marginTop: -60 },
   emptyIconBg: { width: 120, height: 120, borderRadius: 60, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },

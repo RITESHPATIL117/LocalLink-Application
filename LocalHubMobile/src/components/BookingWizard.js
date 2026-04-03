@@ -7,11 +7,12 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import colors from '../styles/colors';
 import leadService from '../services/leadService';
-import { setLeadCaptured } from '../store/authSlice';
+import { setLeadCaptured, clearCredentials } from '../store/authSlice';
 
 const SLOTS = [
   { id: 'morning', label: 'Morning', time: '09:00 AM - 12:00 PM', icon: 'sunny-outline' },
@@ -25,8 +26,9 @@ const PAYMENT_METHODS = [
   { id: 'Pay After Service', label: 'Pay After Service', icon: 'cash-outline' },
 ];
 
-const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
+const BookingWizard = ({ visible, onClose, onSuccess, business, category, isRFQ }) => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const { isAuthenticated, user, temporaryLeadInfo } = useSelector(state => state.auth);
   
   const [step, setStep] = useState(1); // 1: Info, 2: Schedule, 3: Payment
@@ -49,6 +51,7 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
       setStep(1);
       if (isAuthenticated && user) {
         setName(user.name || '');
+        phoneRef.current?.focus(); // Focus phone if name is pre-filled
         setPhone(user.phone || '');
         setAddress(user.address || '');
       } else if (temporaryLeadInfo) {
@@ -63,6 +66,13 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
       Toast.show({ type: 'error', text1: 'Required Info', text2: 'Please provide name and phone.' });
       return;
     }
+
+    // Skip schedule/payment for RFQ
+    if (isRFQ && step === 1) {
+       handleSubmit();
+       return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep(step + 1);
   };
@@ -101,6 +111,13 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
   };
 
   const handleSubmit = async () => {
+    // Hard guard: Never allow a direct booking (non-RFQ) to proceed if not authenticated
+    if (!isRFQ && !isAuthenticated) {
+      dispatch(clearCredentials());
+      Toast.show({ type: 'error', text1: 'Login Required', text2: 'Please log in to book this service.' });
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -109,7 +126,7 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
         user_id: user?.id || null,
         customer_name: name,
         customer_phone: phone,
-        message: message || `Booking request for ${business?.name || 'service'}`,
+        message: message || (isRFQ ? `RFQ broadcast for ${business?.category || 'service'}` : `Booking request for ${business?.name || 'service'}`),
         address: address,
         booking_date: selectedDate,
         booking_time: selectedSlot.label + " (" + selectedSlot.time + ")",
@@ -118,16 +135,50 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
         amount: 499.00 // Example base price
       };
 
-      const result = await leadService.sendLead(payload);
+      let result;
+      // CRITICAL FIX: Explicitly check if it should be an RFQ based on props or business_id null
+      const effectivelyRFQ = isRFQ || !payload.business_id;
+
+      if (effectivelyRFQ) {
+        console.log(`[DEBUG] Routing to RFQ/Broadcast. Business ID: ${payload.business_id}`);
+        result = await leadService.broadcastRFQ(payload);
+      } else {
+        console.log(`[DEBUG] Routing to Direct Lead. Business ID: ${payload.business_id}`);
+        result = await leadService.sendLead(payload);
+      }
       
       if (result.error) throw new Error(result.error);
 
       dispatch(setLeadCaptured({ name, phone }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onSuccess();
+      onSuccess(result);
       onClose();
+
+      // Navigate to Requests screen for logged-in users to see their new booking
+      if (!isRFQ && isAuthenticated) {
+        navigation.navigate('Requests');
+      }
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Booking Failed', text2: 'Could not complete booking. Try again.' });
+      console.error('Booking submission error:', error);
+      const serverMessage = error.response?.data?.message || error.message;
+      
+      // Handle the 401 (Session Expired/Desync) specifically
+      if (error.response?.status === 401 || error.message?.includes('401')) {
+        dispatch(clearCredentials());
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        Toast.show({
+          type: 'error',
+          text1: 'Login Required',
+          text2: 'Session expired. Please log in to complete your booking.'
+        });
+        // Stay on step 3, but the render guard will now switch to renderAuthRequired()
+      } else {
+        Toast.show({ 
+          type: 'error', 
+          text1: isRFQ ? 'Broadcast Failed' : 'Booking Failed', 
+          text2: serverMessage || 'Please try again.' 
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -343,6 +394,33 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
     </View>
   );
 
+  const renderAuthRequired = () => (
+    <View style={styles.authContainer}>
+      <View style={styles.authIconCircle}>
+        <Ionicons name="lock-closed" size={48} color={colors.primary} />
+      </View>
+      <Text style={styles.authTitle}>Login Required</Text>
+      <Text style={styles.authSubtitle}>
+        To ensure a secure and personalized service experience, please log in or create an account to book this service.
+      </Text>
+      
+      <TouchableOpacity 
+        style={styles.authPrimaryBtn} 
+        onPress={() => {
+          onClose();
+          navigation.navigate('Login');
+        }}
+      >
+        <Text style={styles.authPrimaryBtnText}>Sign In / Register</Text>
+        <Ionicons name="arrow-forward" size={20} color="#FFF" />
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.authSecondaryBtn} onPress={onClose}>
+        <Text style={styles.authSecondaryBtnText}>Maybe Later</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -351,10 +429,10 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -200}
           style={{ flex: 1, justifyContent: 'flex-end' }}
         >
-          <View style={styles.card}>
+          <View style={[styles.card, (!isRFQ && !isAuthenticated) && { height: 450 }]}>
             <View style={styles.header}>
               <View style={styles.progressRow}>
-                {[1, 2, 3].map(i => (
+                {(isRFQ || isAuthenticated) && [1, 2, 3].map(i => (
                   <View key={i} style={[styles.dot, i <= step && { backgroundColor: colors.primary, width: 24 }]} />
                 ))}
               </View>
@@ -363,9 +441,13 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category }) => {
               </TouchableOpacity>
             </View>
 
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
+            {(!isRFQ && !isAuthenticated) ? renderAuthRequired() : (
+              <>
+                {step === 1 && renderStep1()}
+                {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
+              </>
+            )}
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -449,6 +531,26 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
   secondaryBtn: { flex: 1, backgroundColor: '#F3F4F6', height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   secondaryBtnText: { color: '#4B5563', fontSize: 16, fontWeight: '800' },
+  
+  // Auth Required Styles
+  authContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  authIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: `${colors.primary}10`, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  authTitle: { fontSize: 24, fontWeight: '900', color: '#111827', marginBottom: 12, textAlign: 'center' },
+  authSubtitle: { fontSize: 15, color: '#6B7280', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  authPrimaryBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: colors.primary, 
+    paddingHorizontal: 28, 
+    paddingVertical: 16, 
+    borderRadius: 20, 
+    gap: 10,
+    width: '100%',
+    justifyContent: 'center'
+  },
+  authPrimaryBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  authSecondaryBtn: { marginTop: 20, paddingVertical: 10 },
+  authSecondaryBtnText: { color: '#94A3B8', fontSize: 14, fontWeight: '700' },
 });
 
 export default BookingWizard;

@@ -6,7 +6,7 @@ export const checkAuthStatus = createAsyncThunk(
   'auth/checkAuthStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem('token');
       const userData = await AsyncStorage.getItem('userData');
       if (token && userData) {
         return { token, user: JSON.parse(userData) };
@@ -27,7 +27,7 @@ export const loginUser = createAsyncThunk(
       // Assuming response has { token, user }
       const data = response.data || response;
       const { token, user } = data;
-      await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('userData', JSON.stringify(user));
       return { token, user };
     } catch (error) {
@@ -43,7 +43,7 @@ export const registerUser = createAsyncThunk(
       const response = await authService.register(userData);
       const data = response.data || response;
       const { token, user } = data;
-      await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('userData', JSON.stringify(user));
       return { token, user };
     } catch (error) {
@@ -120,10 +120,12 @@ const authSlice = createSlice({
         state.role = action.payload.user.role || 'customer';
         state.isAuthenticated = true;
         state.loading = false;
+        console.log(`[AUTH SUCCESS] Token synchronized for ${state.user.email}`);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        console.error(`[AUTH FAILED] ${action.payload}`);
       })
       // registerUser
       .addCase(registerUser.pending, (state) => {
@@ -136,6 +138,7 @@ const authSlice = createSlice({
         state.role = action.payload.user.role || 'customer';
         state.isAuthenticated = true;
         state.loading = false;
+        console.log(`[AUTH SUCCESS] Registration complete. Token synchronized.`);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -145,7 +148,7 @@ const authSlice = createSlice({
 });
 
 export const logout = () => async (dispatch) => {
-  await AsyncStorage.removeItem('userToken');
+  await AsyncStorage.removeItem('token');
   await AsyncStorage.removeItem('userData');
   dispatch(authSlice.actions.clearCredentials());
 };

@@ -1,10 +1,29 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Security and Logging Middleware
+app.use(helmet());
+app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
+
+// Deep Diagnostic Middleware
+app.use((req, res, next) => {
+    if (req.originalUrl.includes('/rfq') || req.originalUrl.includes('/leads')) {
+        console.log(`\n--- [RFQ/LEAD DEBUG] ---`);
+        console.log(`URL: ${req.method} ${req.originalUrl}`);
+        console.log(`Headers:`, JSON.stringify(req.headers, null, 2));
+        console.log(`Body:`, JSON.stringify(req.body, null, 2));
+        console.log(`--- [END DEBUG] ---\n`);
+    }
+    next();
+});
 
 const categoryRoutes = require('./routes/categoryRoutes');
 const businessRoutes = require('./routes/businessRoutes');
@@ -13,6 +32,7 @@ const authRoutes = require('./routes/authRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const leadRoutes = require('./routes/leadRoutes');
+const rfqRoutes = require('./routes/rfqRoutes');
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/businesses', businessRoutes);
@@ -21,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/rfq', rfqRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
@@ -28,11 +49,18 @@ app.get('/api/health', (req, res) => {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-    console.error(`[Error] ${req.method} ${req.url}:`, err.message);
-    res.status(err.status || 500).json({
+    const status = err.status || 500;
+    const message = err.message || 'Internal Server Error';
+    
+    // Structured logging for better debugging
+    console.error(`[Error] ${status} - ${req.method} ${req.url} - ${req.ip} - ${message}`);
+    if (process.env.NODE_ENV === 'development' && err.stack) {
+        console.error(err.stack);
+    }
+
+    res.status(status).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        // Only include stack trace in development
+        message: message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
