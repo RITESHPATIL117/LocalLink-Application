@@ -307,7 +307,7 @@ const RequestsScreen = ({ navigation }) => {
     if (!isSilent) setLoading(true);
     try {
       if (!user) return;
-      const res = await leadService.getLeadsByUser();
+      const res = await leadService.getUserLeads();
       setRequests(res.data || []);
     } catch (e) {
       console.log('Fetch requests err:', e);

@@ -47,6 +47,20 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
 });
 
+// Friendly message for the root route so users don't see "Cannot GET /" if they accidentally hit the API port
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: system-ui, sans-serif; padding: 40px; text-align: center; color: #1f2937;">
+            <h1 style="color: #1e40af; font-weight: 900;">LocalHub Backend Engine</h1>
+            <p style="font-size: 18px; color: #4b5563;">The API is running successfully. 🟢</p>
+            <div style="margin-top: 24px; padding: 16px; background-color: #f3f4f6; border-radius: 8px; display: inline-block;">
+                <p style="margin: 0;"><b>Accessing the Web Portal?</b></p>
+                <p style="margin: 8px 0 0 0; color: #6b7280; font-size: 14px;">Next.js is likely running on <b>http://localhost:3001</b> since this backend is occupying port 3000.</p>
+            </div>
+        </div>
+    `);
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
     const status = err.status || 500;

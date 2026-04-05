@@ -156,7 +156,7 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category, isRFQ 
 
       // Navigate to Requests screen for logged-in users to see their new booking
       if (!isRFQ && isAuthenticated) {
-        navigation.navigate('Requests');
+        navigation.navigate('RequestsTab');
       }
     } catch (error) {
       console.error('Booking submission error:', error);
@@ -199,6 +199,7 @@ const BookingWizard = ({ visible, onClose, onSuccess, business, category, isRFQ 
               value={name}
               onChangeText={setName}
               placeholderTextColor="#9CA3AF"
+              autoCapitalize="words"
               returnKeyType="next"
               onSubmitEditing={() => phoneRef.current?.focus()}
               blurOnSubmit={false}

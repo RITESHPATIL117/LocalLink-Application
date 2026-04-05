@@ -65,5 +65,17 @@ const login = async (req, res, next) => {
 
 module.exports = {
     register,
-    login
+    login,
+    forgotPassword: async (req, res, next) => {
+        try {
+            const { email } = req.body;
+            // Simulated check and email sending
+            res.json({
+                success: true,
+                message: 'If an account exists with this email, a reset link has been sent.'
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 };

@@ -139,7 +139,7 @@ const LoginScreen = ({ navigation }) => {
                     )}
 
                     <View style={styles.passwordHeader}>
-                      <TouchableOpacity onPress={() => Toast.show({ type: 'info', text1: 'Feature coming soon' })}>
+                      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
                         <Text style={styles.forgotLink}>Forgot Password?</Text>
                       </TouchableOpacity>
                     </View>

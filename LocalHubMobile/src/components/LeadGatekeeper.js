@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, StyleSheet, Modal, TextInput, 
   TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform 
@@ -16,6 +16,7 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const phoneRef = useRef(null);
 
   useEffect(() => {
     if (visible) {
@@ -41,28 +42,16 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
 
     setLoading(true);
     try {
-      // Send a general lead for this category
-      const payload = {
-        category_id: category?.category_id || category?.id, 
-        business_id: null,
-        user_id: user?.id || null,
-        customer_name: name,
-        customer_phone: phone,
-        message: `Inquiry for category: ${category?.name || 'Unknown'}`
-      };
-      const result = await leadService.sendLead(payload);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
+      // Just limit this to taking info for tracking as requested by the user.
+      // We no longer trigger a backend API lead creation here because guest users
+      // get a 401 error since /leads is now protected. Wait until they actually book.
       dispatch(setLeadCaptured({ name, phone }));
       onSuccess();
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Submission Failed',
-        text2: 'Could not send inquiry. Please try again.'
+        text2: 'Could not capture info. Please try again.'
       });
     } finally {
       setLoading(false);
@@ -102,18 +91,25 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
                   value={name}
                   onChangeText={setName}
                   placeholderTextColor="#9CA3AF"
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                  onSubmitEditing={() => phoneRef.current?.focus()}
+                  blurOnSubmit={false}
                 />
               </View>
 
               <View style={styles.inputWrapper}>
                 <Ionicons name="call-outline" size={20} color="#6B7280" style={styles.inputIcon} />
                 <TextInput
+                  ref={phoneRef}
                   style={styles.input}
                   placeholder="Phone Number"
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
                   placeholderTextColor="#9CA3AF"
+                  returnKeyType="done"
+                  onSubmitEditing={handleSubmit}
                 />
               </View>
 
