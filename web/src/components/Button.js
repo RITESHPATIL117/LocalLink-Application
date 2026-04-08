@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function Button({
   children,
@@ -8,68 +8,46 @@ export default function Button({
   variant = 'primary',
   disabled = false,
   loading = false,
-  style,
-  textStyle,
+  className = '',
+  icon,
 }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Gradient definitions mapping mobile Button.js getGradient()
-  let background = 'linear-gradient(to right, #0F172A, #1E3A8A)';
-  if (disabled) background = 'linear-gradient(to right, #9CA3AF, #6B7280)';
-  else if (variant === 'secondary') background = 'linear-gradient(to right, #F59E0B, #B45309)';
-  else if (variant === 'outline') background = 'transparent';
-
-  const defaultStyle = {
-    padding: '18px 28px',
-    borderRadius: '18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '10px 0',
-    background,
-    border: variant === 'outline' ? '2px solid var(--color-primary)' : 'none',
-    boxShadow: disabled || variant === 'outline' ? 'none' : '0 10px 20px rgba(30, 64, 175, 0.3)',
-    color: variant === 'outline' ? 'var(--color-primary)' : '#FFFFFF',
-    fontSize: '14px',
-    fontWeight: '900',
-    letterSpacing: '1.5px',
-    textTransform: 'uppercase',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    transform: isHovered && !disabled ? 'scale(1.02)' : 'scale(1)',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    opacity: disabled ? 0.6 : 1,
-    ...style,
+  
+  const variants = {
+    primary: 'bg-primary text-white shadow-glow hover:brightness-110',
+    secondary: 'bg-amber-500 text-white shadow-glow-secondary hover:brightness-110',
+    outline: 'bg-transparent border-2 border-primary text-primary hover:bg-primary/5',
+    dark: 'bg-slate-900 text-white shadow-lg hover:bg-slate-800',
+    danger: 'bg-red-500 text-white shadow-glow-red hover:brightness-110',
+    ghost: 'bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
   };
 
+  const currentVariant = disabled ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : variants[variant];
+
   return (
-    <button
+    <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      style={defaultStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      whileHover={!disabled && !loading ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      className={`
+        px-8 py-4 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] 
+        transition-all flex items-center justify-center gap-3 relative overflow-hidden
+        ${currentVariant}
+        ${className}
+      `}
     >
       {loading ? (
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', ...textStyle }}>
-          <span style={styles.spinner}></span>
-          Processing...
-        </span>
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span>Processing...</span>
+        </div>
       ) : (
-        <span style={textStyle}>{children}</span>
+        <>
+          {icon && <span className="text-lg">{icon}</span>}
+          {children}
+        </>
       )}
-    </button>
+    </motion.button>
   );
 }
-
-const styles = {
-  spinner: {
-    display: 'inline-block',
-    width: '16px',
-    height: '16px',
-    border: '2px solid rgba(255,255,255,0.3)',
-    borderRadius: '50%',
-    borderTopColor: '#fff',
-    animation: 'spin 1s ease-in-out infinite',
-  }
-};

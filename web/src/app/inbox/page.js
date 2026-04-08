@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiSearch, FiEdit3, FiArrowLeft, FiMessageCircle, FiChevronRight, FiClock, FiCheck
+  FiSearch, FiEdit3, FiArrowLeft, FiMessageCircle, FiChevronRight, FiClock, FiCheck, FiMoreHorizontal, FiChevronLeft
 } from 'react-icons/fi';
 import chatService from '../../services/chatService';
 import Link from 'next/link';
@@ -41,117 +42,149 @@ export default function InboxPage() {
   const filteredChats = chats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '100px' }}>
+    <div className="bg-bg-main min-h-screen flex flex-col">
       
-      {/* 1. High-Fidelity App Bar Parity */}
-      <header style={{ 
-        backgroundColor: '#FFF', padding: '16px 24px', borderBottom: '1px solid #F1F5F9',
-        position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => router.back()} style={{ backgroundColor: '#F8FAFC', width: '44px', height: '44px', borderRadius: '14px', border: 'none', color: '#1E293B', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <FiArrowLeft size={20} />
-          </button>
-          <h1 style={{ fontSize: '24px', fontWeight: '1000', color: '#1E293B', margin: 0, letterSpacing: '-1px' }}>Messages</h1>
+      {/* 1. Immersive Navigation Header */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-6 shadow-premium">
+        <div className="section-container max-w-4xl flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <motion.button 
+              whileHover={{ x: -4 }}
+              onClick={() => router.back()} 
+              className="w-11 h-11 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-500 hover:text-primary transition-all"
+            >
+              <FiChevronLeft size={24} />
+            </motion.button>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Secure Inbox</h1>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 End-to-end encrypted
+              </p>
+            </div>
+          </div>
+          <motion.button 
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-12 h-12 rounded-2xl bg-primary text-white shadow-glow flex items-center justify-center"
+          >
+            <FiEdit3 size={20} />
+          </motion.button>
         </div>
-        <button style={{ backgroundColor: 'var(--color-primary)', width: '48px', height: '48px', borderRadius: '16px', border: 'none', color: '#FFF', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 8px 20px rgba(30,64,175,0.2)' }}>
-          <FiEdit3 size={20} />
-        </button>
       </header>
 
-      <main style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+      <main className="section-container max-w-4xl pt-10 pb-32">
         
-        {/* 2. Elite Search Input */}
-        <div style={{ position: 'relative', marginBottom: '32px' }}>
-          <div style={{ 
-            backgroundColor: '#FFF', borderRadius: '20px', padding: '0 20px', height: '60px',
-            display: 'flex', alignItems: 'center', gap: '14px', border: '1px solid #E2E8F0',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.02)'
-          }}>
-            <FiSearch size={22} color="#94A3B8" />
-            <input 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search conversations..."
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '16px', fontWeight: '700', color: '#1E293B' }}
-            />
-          </div>
+        {/* 2. Precision Search Cluster */}
+        <div className="relative group mb-12">
+          <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors text-xl" />
+          <input 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by professional name..."
+            className="w-full pl-16 pr-8 py-5 rounded-[24px] border border-slate-100 bg-white/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-semibold text-slate-800 shadow-subtle group-focus-within:shadow-premium"
+          />
         </div>
 
         {/* 3. Messaging Ledger */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px' }}>⏳ Loading your secure cloud inbox...</div>
-        ) : filteredChats.length === 0 ? (
-          <div style={{ 
-            backgroundColor: '#FFF', borderRadius: '32px', padding: '80px 40px', textAlign: 'center',
-            border: '1px solid #F1F5F9', boxShadow: '0 10px 30px rgba(0,0,0,0.02)'
-          }}>
-            <div style={{ width: '100px', height: '100px', borderRadius: '40px', backgroundColor: '#F8FAFC', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px auto' }}>
-              <FiMessageCircle size={48} color="#CBD5E1" />
-            </div>
-            <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#1E293B' }}>Silent Inbox</h2>
-            <p style={{ color: '#94A3B8', fontSize: '15px', maxWidth: '300px', margin: '12px auto 0 auto', lineHeight: '1.6' }}>
-              When you hire a pro or receive requests, your private chat will appear here.
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredChats.map((chat) => {
-              const active = chat.unread > 0;
-              return (
-                <div 
-                  key={chat.id}
-                  onClick={() => router.push(`/inbox/${chat.id}?name=${encodeURIComponent(chat.name)}`)}
-                  style={{ 
-                    backgroundColor: '#FFF', padding: '20px', borderRadius: '28px', border: '1px solid #F1F5F9',
-                    display: 'flex', gap: '20px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: active ? '0 12px 25px rgba(30,64,175,0.06)' : '0 4px 12px rgba(0,0,0,0.02)'
-                  }}
-                  className="chat-card-hover"
-                >
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ width: '72px', height: '72px', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
-                       <img src={`https://ui-avatars.com/api/?name=${chat.name}&background=random`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div className="space-y-4">
+          {loading ? (
+             <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-[40px] border border-dashed border-slate-200">
+                <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-6" />
+                <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">Synchronizing Cloud Messages...</p>
+             </div>
+          ) : filteredChats.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center p-24 bg-white rounded-[40px] border border-slate-100 shadow-premium"
+            >
+              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-10 border border-slate-100 shadow-inner">
+                <FiMessageCircle size={40} className="text-slate-200" />
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">Silent Inbox</h2>
+              <p className="text-slate-500 font-medium max-w-xs mx-auto mb-12">
+                When you hire an expert or receive service updates, your private conversations will appear here.
+              </p>
+              <button 
+                onClick={() => router.push('/search')}
+                className="btn-premium px-12 py-4 !rounded-2xl"
+              >
+                Hire a Professional
+              </button>
+            </motion.div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filteredChats.map((chat, idx) => {
+                const hasUnread = chat.unread > 0;
+                return (
+                  <motion.div 
+                    key={chat.id}
+                    layout
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    onClick={() => router.push(`/inbox/${chat.id}?name=${encodeURIComponent(chat.name)}`)}
+                    className={`group relative bg-white px-8 py-7 rounded-[32px] border transition-all flex items-center gap-6 cursor-pointer hover:shadow-premium hover:-translate-y-1 ${
+                      hasUnread ? 'border-primary/20 shadow-glow-primary/5' : 'border-slate-100 shadow-subtle'
+                    }`}
+                  >
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-[28px] overflow-hidden bg-slate-100 border-4 border-white shadow-subtle">
+                         <img 
+                          src={`https://ui-avatars.com/api/?name=${chat.name}&background=4f46e5&color=fff`} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                          alt={chat.name} 
+                         />
+                      </div>
+                      {chat.isOnline && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-4 border-white shadow-sm flex items-center justify-center">
+                           <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                        </div>
+                      )}
                     </div>
-                    {chat.isOnline && (
-                      <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#10B981', border: '4px solid #FFF' }} />
-                    )}
-                  </div>
 
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                       <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#1E293B', margin: 0 }}>{chat.name}</h3>
-                       <span style={{ fontSize: '12px', fontWeight: '800', color: '#94A3B8' }}>{chat.time}</span>
+                    <div className="flex-grow min-w-0">
+                      <div className="flex justify-between items-center mb-1">
+                         <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none truncate">{chat.name}</h3>
+                         <span className={`text-[10px] font-black uppercase tracking-widest ${hasUnread ? 'text-primary' : 'text-slate-300'}`}>
+                           {chat.time}
+                         </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                         <p className={`text-sm truncate pr-4 ${hasUnread ? 'text-slate-900 font-black' : 'text-slate-400 font-medium'}`}>
+                           {chat.lastMessage}
+                         </p>
+                         {hasUnread && (
+                           <motion.div 
+                             initial={{ scale: 0 }} 
+                             animate={{ scale: 1 }}
+                             className="bg-primary px-3 py-1 rounded-full text-white text-[10px] font-black shadow-glow"
+                           >
+                             {chat.unread}
+                           </motion.div>
+                         )}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                       <p style={{ 
-                         margin: 0, fontSize: '14px', fontWeight: active ? '800' : '600', color: active ? '#1E293B' : '#64748B',
-                         maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                       }}>
-                         {chat.lastMessage}
-                       </p>
-                       {active && (
-                         <div style={{ backgroundColor: 'var(--color-primary)', padding: '4px 10px', borderRadius: '10px', color: '#FFF', fontSize: '11px', fontWeight: '900' }}>
-                           {chat.unread}
-                         </div>
-                       )}
-                    </div>
-                  </div>
-                  <FiChevronRight size={20} color="#CBD5E1" />
-                </div>
-              )
-            })}
-          </div>
-        )}
+                    <FiChevronRight className="text-slate-200 group-hover:text-primary transition-colors flex-shrink-0" size={24} />
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          )}
+        </div>
       </main>
 
-      <style jsx>{`
-        .chat-card-hover:hover {
-          transform: translateY(-4px);
-          border-color: rgba(30,64,175,0.1) !important;
-          box-shadow: 0 15px 35px rgba(0,0,0,0.05) !important;
-        }
-      `}</style>
+      {/* Floating Global Action */}
+      <div className="fixed bottom-10 right-10 z-[110]">
+         <motion.button 
+           whileHover={{ scale: 1.1, rotate: 10 }}
+           whileTap={{ scale: 0.9 }}
+           className="w-16 h-16 rounded-full bg-slate-900 text-white shadow-2xl flex items-center justify-center border border-white/10"
+         >
+           <FiMoreHorizontal size={24} />
+         </motion.button>
+      </div>
     </div>
   );
 }

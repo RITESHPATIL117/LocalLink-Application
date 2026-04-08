@@ -119,16 +119,22 @@ const categoryService = {
         ? response 
         : (response?.data && Array.isArray(response.data) ? response.data : []);
       
-      // Merge Strategy: Sync IDs from DB into our rich mock data
-      mockCategories.forEach(m => {
+      // Merge Strategy: Sync IDs from DB into our rich mock data, prevent ID collisions
+      const merged = mockCategories.map(m => ({ ...m }));
+      
+      merged.forEach(m => {
         const apiMatch = apiCats.find(a => a.name.toLowerCase() === m.name.toLowerCase());
         if (apiMatch) {
           m.id = apiMatch.id.toString();
+        } else {
+          // If no API match, ensure the ID does not collide with real DB IDs
+          if (!m.id.startsWith('mock-')) {
+            m.id = 'mock-' + m.id;
+          }
         }
       });
 
       // Prepare return set: Use all mocks, and add any API-only categories
-      const merged = [...mockCategories];
       apiCats.forEach(apiCat => {
         if (!merged.find(m => m.name.toLowerCase() === apiCat.name.toLowerCase())) {
           merged.push({
@@ -139,8 +145,11 @@ const categoryService = {
         }
       });
 
-      logger.info(`Successfully prepared ${merged.length} categories (Merged API + Mocks)`);
-      return { data: merged };
+      // Deduplicate final list by ID just in case
+      const uniqueMerged = Array.from(new Map(merged.map(item => [item.id, item])).values());
+
+      logger.info(`Successfully prepared ${uniqueMerged.length} categories (Merged API + Mocks)`);
+      return { data: uniqueMerged };
     } catch (error) {
       logger.warn('API failed, falling back to pure mocks');
       return { data: mockCategories };

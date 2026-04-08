@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowLeft, FiHeart, FiStar, FiMapPin, FiCalendar, FiPhone, 
-  FiCheckCircle, FiInfo, FiImage, FiBriefcase, FiX, FiAward, FiSend
+  FiCheckCircle, FiInfo, FiImage, FiBriefcase, FiX, FiAward, FiSend, FiTag, FiClock
 } from 'react-icons/fi';
 import businessService from '../../../services/businessService';
 import reviewService from '../../../services/reviewService';
@@ -68,7 +69,6 @@ export default function BusinessDetailsPage() {
       setReviewModalVisible(false);
       setReviewComment('');
       fetchReviews();
-      alert('Review submitted successfully!');
     } catch (e) {
       alert('Failed to submit review');
     } finally {
@@ -76,323 +76,411 @@ export default function BusinessDetailsPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>⏳ Synchronizing business vault...</div>;
-  if (!business) return <div style={{ padding: '100px', textAlign: 'center' }}>Business not found.</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-bg-main">
+      <div className="flex flex-col items-center">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-6" />
+        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Synchronizing Provider Vault...</p>
+      </div>
+    </div>
+  );
+
+  if (!business) return (
+    <div className="min-h-screen flex items-center justify-center bg-bg-main">
+      <div className="text-center">
+         <FiInfo size={48} className="text-slate-200 mx-auto mb-6" />
+         <h2 className="text-2xl font-black text-slate-800 tracking-tighter">Business not found.</h2>
+         <button onClick={() => router.push('/')} className="btn-premium mt-8">Back to Home</button>
+      </div>
+    </div>
+  );
 
   const businessImage = business.image_url || business.image || 'https://images.unsplash.com/photo-1621905252507-eb6368d5ba18';
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh' }}>
+    <div className="bg-bg-main min-h-screen pb-32">
       
-      {/* Cover Section - 1:1 Parity with Glassmorphism Overlay */}
-      <section style={{ height: '400px', position: 'relative', overflow: 'hidden' }}>
-        <img src={businessImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Cover" />
-        <div style={{ 
-          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
-          backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7))' 
-        }} />
+      {/* 1. Immersive Cover Section */}
+      <section className="h-[450px] relative overflow-hidden">
+        <motion.img 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 10, ease: 'easeOut' }}
+          src={businessImage} 
+          className="w-full h-full object-cover" 
+          alt="Provider Cover" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/80" />
         
-        {/* Float Header */}
-        <div style={{ 
-          position: 'absolute', top: '30px', left: '40px', right: '40px', 
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 
-        }}>
-          <button 
+        {/* Float Controls */}
+        <div className="section-container max-w-7xl absolute top-10 left-0 right-0 z-10 flex justify-between">
+          <motion.button 
+            whileHover={{ scale: 1.05, x: -5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => router.back()}
-            style={{ 
-              width: '50px', height: '50px', borderRadius: '25px', backgroundColor: 'rgba(255,255,255,0.2)', 
-              backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#FFF',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer'
-            }}
+            className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 text-white flex items-center justify-center shadow-premium"
           >
-            <FiArrowLeft size={22} />
-          </button>
+            <FiArrowLeft size={24} />
+          </motion.button>
           
-          <button 
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsFav(!isFav)}
-            style={{ 
-              width: '50px', height: '50px', borderRadius: '25px', backgroundColor: isFav ? '#FFF' : 'rgba(255,255,255,0.2)', 
-              backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: isFav ? '#EF4444' : '#FFF',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s'
-            }}
+            className={`w-14 h-14 rounded-2xl backdrop-blur-xl border border-white/30 flex items-center justify-center transition-all ${
+              isFav ? 'bg-white text-red-500' : 'bg-white/20 text-white'
+            }`}
           >
-            {isFav ? <FiHeart fill="#EF4444" size={22} /> : <FiHeart size={22} />}
-          </button>
+            <FiHeart size={24} fill={isFav ? "currentColor" : "none"} />
+          </motion.button>
         </div>
 
-        {/* Info Pill Over Glass Header Area */}
-        <div style={{ 
-          position: 'absolute', bottom: '-40px', left: '40px', right: '40px', 
-          padding: '40px', backgroundColor: '#FFF', borderRadius: '32px', 
-          boxShadow: '0 20px 40px rgba(0,0,0,0.06)', zIndex: 5, border: '1px solid #F1F5F9'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              <div style={{ 
-                width: '100px', height: '100px', borderRadius: '30px', border: '6px solid #FFF', 
-                backgroundColor: '#F3F4F6', overflow: 'hidden', marginTop: '-80px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
-              }}>
-                <img src={business.avatar || businessImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div style={{ marginTop: '-40px' }}>
-                <h1 style={{ fontSize: '32px', fontWeight: '1000', color: '#1E293B', margin: 0, letterSpacing: '-1px' }}>{business.name}</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {[1,2,3,4,5].map(i => <FiStar key={i} color="#F59E0B" fill="#F59E0B" size={14} />)}
+        {/* Hero Info Content Overlay */}
+        <div className="section-container max-w-7xl absolute bottom-12 left-0 right-0 z-10">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-8">
+            <div className="flex items-center gap-8">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="w-24 h-24 md:w-32 md:h-32 rounded-[40px] border-8 border-white bg-white shadow-premium overflow-hidden flex-shrink-0"
+              >
+                <img src={business.avatar || businessImage} alt="Avatar" className="w-full h-full object-cover" />
+              </motion.div>
+              <div className="pb-2">
+                <motion.h1 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4"
+                >
+                  {business.name}
+                </motion.h1>
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
+                    <FiStar className="text-amber-400 fill-amber-400" size={16} />
+                    <span className="text-white font-black text-lg">{business.rating || '4.9'}</span>
+                    <span className="text-white/50 text-xs font-bold">({business.reviewsCount || 0} REVIEWS)</span>
                   </div>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#1E293B' }}>{business.rating || '4.9'}</span>
-                  <span style={{ color: '#94A3B8', fontSize: '14px', fontWeight: '600' }}>({business.reviewsCount || 0} Reviews)</span>
+                  <div className="flex items-center gap-2 text-white/80 font-bold">
+                    <FiMapPin size={18} className="text-primary-light" />
+                    <span>{business.address || 'Sangli, MH'}</span>
+                  </div>
                 </div>
               </div>
             </div>
-            {business.tier === 'Diamond' && (
-              <div style={{ backgroundColor: '#EEF2FF', padding: '10px 20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #E0E7FF', marginTop: '-40px' }}>
-                <FiAward color="#4F46E5" size={18} />
-                <span style={{ fontSize: '13px', fontWeight: '900', color: '#4F46E5', letterSpacing: '0.5px' }}>DIAMOND PARTNER</span>
-              </div>
-            )}
-          </div>
 
-          <div style={{ marginTop: '32px', display: 'flex', gap: '40px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748B' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <FiMapPin size={18} />
-              </div>
-              <span style={{ fontWeight: '700', fontSize: '15px' }}>{business.address || 'Sangli, Maharashtra'}</span>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'flex-end' }}>
-              <button 
-                onClick={() => setBookingModalVisible(true)}
-                style={{ 
-                  backgroundColor: 'var(--color-primary)', color: '#FFF', padding: '18px 40px', borderRadius: '20px',
-                  fontWeight: '900', border: 'none', cursor: 'pointer', boxShadow: '0 8px 24px rgba(30,64,175,0.2)',
-                  fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px'
-                }}
+            {business.tier === 'Diamond' && (
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-primary/20 backdrop-blur-xl border border-primary/30 px-6 py-3 rounded-2xl flex items-center gap-3"
               >
-               <FiCalendar /> Book Appointment
-              </button>
-              <button style={{ 
-                width: '56px', height: '56px', borderRadius: '20px', backgroundColor: '#FFF', 
-                border: '2px solid var(--color-primary)', color: 'var(--color-primary)',
-                display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer'
-              }}>
-                <FiPhone size={22} />
-              </button>
-            </div>
+                <FiAward className="text-primary-light" size={24} />
+                <span className="text-white font-black text-xs uppercase tracking-[0.2em]">Diamond Verified</span>
+              </motion.div>
+            )}
           </div>
         </div>
       </section>
 
-      <main style={{ maxWidth: '1200px', margin: '140px auto 100px auto', padding: '0 40px' }}>
-        
-        {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '48px', borderBottom: '2px solid #F1F5F9', marginBottom: '40px' }}>
-          {TABS.map(tab => {
-            const active = activeTab === tab;
-            return (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{ 
-                  padding: '20px 0', border: 'none', background: 'none', cursor: 'pointer',
-                  fontSize: '16px', fontWeight: '800', position: 'relative',
-                  color: active ? 'var(--color-primary)' : '#64748B'
-                }}
-              >
-                {tab}
-                {active && (
-                  <div style={{ position: 'absolute', bottom: '-2px', left: 0, width: '100%', height: '4px', backgroundColor: 'var(--color-primary)', borderRadius: '2px' }} />
-                )}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Tab Content Panels */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '60px' }}>
+      <main className="section-container max-w-7xl mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
-          <div className="tab-panel">
-            {activeTab === 'Overview' && (
-              <div>
-                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1E293B', marginBottom: '20px' }}>About this professional</h3>
-                <p style={{ fontSize: '17px', color: '#475569', lineHeight: '1.8', fontWeight: '500' }}>
-                  {business.description || `We provide elite ${business.category?.toLowerCase() || 'service'} in Sangli. Our verified team ensures a 100% satisfaction guarantee with same-day support for all emergencies. Book your slot today for the most reliable service in town.`}
-                </p>
-                <div style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                   <div style={{ backgroundColor: '#FFF', padding: '24px', borderRadius: '24px', border: '1px solid #F1F5F9' }}>
-                     <FiAward size={28} color="var(--color-primary)" />
-                     <h5 style={{ marginTop: '16px', fontSize: '16px', fontWeight: '900' }}>Verified Expert</h5>
-                     <p style={{ color: '#94A3B8', fontSize: '13px', margin: '8px 0 0 0' }}>Background checks cleared</p>
-                   </div>
-                   <div style={{ backgroundColor: '#FFF', padding: '24px', borderRadius: '24px', border: '1px solid #F1F5F9' }}>
-                     <FiCheckCircle size={28} color="#10B981" />
-                     <h5 style={{ marginTop: '16px', fontSize: '16px', fontWeight: '900' }}>Price Guarantee</h5>
-                     <p style={{ color: '#94A3B8', fontSize: '13px', margin: '8px 0 0 0' }}>Transparent market pricing</p>
-                   </div>
-                </div>
-              </div>
-            )}
+          {/* Main Content (Tabs & Panels) */}
+          <div className="lg:col-span-8">
+            {/* Tabs Header */}
+            <div className="flex gap-10 border-b border-slate-100 mb-10 overflow-x-auto no-scrollbar">
+              {TABS.map(tab => {
+                const active = activeTab === tab;
+                return (
+                  <button 
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`pb-6 relative font-black text-xs uppercase tracking-[0.2em] transition-all whitespace-nowrap ${
+                      active ? 'text-primary' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {tab}
+                    {active && (
+                      <motion.div layoutId="detail-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full shadow-glow" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
 
-            {activeTab === 'Services' && (
-              <div>
-                 <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1E293B', marginBottom: '24px' }}>Available Services</h3>
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    {['Premium Support', 'Standard Repair', 'Maintenance Visit', 'Emergency Call'].map(s => (
-                      <div key={s} style={{ backgroundColor: '#FFF', padding: '20px 24px', borderRadius: '20px', border: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#F0FDF4', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                          <FiCheckCircle color="#10B981" size={20} />
-                        </div>
-                        <span style={{ fontSize: '16px', fontWeight: '800', color: '#1E293B' }}>{s}</span>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            )}
+            {/* Tab Body */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {activeTab === 'Overview' && (
+                  <div className="space-y-12">
+                    <div>
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tighter mb-6 flex items-center gap-3">
+                        <FiInfo className="text-primary" /> Professional Background
+                      </h3>
+                      <p className="text-slate-600 text-lg leading-relaxed font-medium">
+                        {business.description || `Established as a premier provider in Sangli, ${business.name} specializes in high-quality ${business.category?.toLowerCase() || 'local services'}. With a proven track record of 300+ successful bookings and a customer-first approach, we guarantee reliability and transparent pricing for every neighborhood.`}
+                      </p>
+                    </div>
 
-            {activeTab === 'Reviews' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                  <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#1E293B' }}>Recent Feedback</h3>
-                  <button onClick={() => setReviewModalVisible(true)} style={{ color: 'var(--color-primary)', fontWeight: '900', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer' }}>+ Write Review</button>
-                </div>
-                {reviews.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {reviews.map(rev => (
-                      <div key={rev.id} style={{ backgroundColor: '#FFF', padding: '32px', borderRadius: '28px', border: '1px solid #F1F5F9' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <img src={rev.user?.avatar || `https://ui-avatars.com/api/?name=${rev.user_name || 'U'}`} style={{ width: '48px', height: '48px', borderRadius: '16px' }} />
-                            <div>
-                              <h5 style={{ margin: 0, fontSize: '16px', fontWeight: '900' }}>{rev.user_name || 'Verified Customer'}</h5>
-                              <span style={{ fontSize: '12px', color: '#94A3B8' }}>{new Date(rev.createdAt).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          <div style={{ backgroundColor: '#FEF9C3', padding: '6px 12px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                             <FiStar fill="#854D0E" color="#854D0E" size={14} />
-                             <span style={{ color: '#854D0E', fontWeight: '900', fontSize: '14px' }}>{rev.rating}</span>
-                          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-subtle flex items-start gap-6 group hover:border-primary/20 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <FiAward size={28} />
                         </div>
-                        <p style={{ color: '#475569', fontSize: '15px', fontWeight: '500', lineHeight: '1.6', margin: 0 }}>{rev.comment}</p>
+                        <div>
+                          <h5 className="text-lg font-black text-slate-800 mb-1">Accredited Pro</h5>
+                          <p className="text-slate-400 text-sm font-medium">Verified credentials and background check passed.</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <FiInfo size={40} color="#D1D5DB" />
-                    <p style={{ color: '#94A3B8', marginTop: '12px' }}>No reviews yet. Be the first!</p>
+                      <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-subtle flex items-start gap-6 group hover:border-emerald-200 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <FiCheckCircle size={28} />
+                        </div>
+                        <div>
+                          <h5 className="text-lg font-black text-slate-800 mb-1">Elite Standard</h5>
+                          <p className="text-slate-400 text-sm font-medium">Top 5% performer in customer satisfaction scores.</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {activeTab === 'Photos' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                {[1,2,3,4,5,6].map(i => (
-                  <div key={i} style={{ borderRadius: '24px', overflow: 'hidden', height: '220px' }}>
-                    <img src={`${businessImage}?sig=${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {activeTab === 'Services' && (
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter mb-8">Specialized Solutions</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {['Elite On-Site Support', 'Verified Standard Maintenance', 'Emergency Response Unit', 'Deep Diagnostic Check'].map(s => (
+                        <div key={s} className="bg-white p-6 rounded-2xl border border-slate-100 flex items-center gap-4 hover:border-primary/20 transition-all group">
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary">
+                            <FiTag size={18} />
+                          </div>
+                          <span className="font-bold text-slate-700">{s}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+
+                {activeTab === 'Reviews' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-10">
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Verified Feedback</h3>
+                      <button 
+                        onClick={() => setReviewModalVisible(true)}
+                        className="text-primary font-black text-xs uppercase tracking-widest hover:underline"
+                      >
+                        + Post Your Experience
+                      </button>
+                    </div>
+                    {reviews.length > 0 ? (
+                      <div className="space-y-6">
+                        {reviews.map(rev => (
+                          <div key={rev.id} className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-subtle">
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="flex items-center gap-4">
+                                <img src={rev.user?.avatar || `https://ui-avatars.com/api/?name=${rev.user_name || 'U'}`} className="w-12 h-12 rounded-2xl" />
+                                <div>
+                                  <h5 className="font-black text-slate-800">{rev.user_name || 'Verified User'}</h5>
+                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <div className="bg-amber-50 px-3 py-1.5 rounded-xl flex items-center gap-2 border border-amber-100">
+                                <FiStar className="text-amber-500 fill-amber-500" size={14} />
+                                <span className="text-amber-900 font-black text-sm">{rev.rating}</span>
+                              </div>
+                            </div>
+                            <p className="text-slate-600 font-medium leading-relaxed">{rev.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
+                         <FiInfo size={40} className="text-slate-200 mx-auto mb-4" />
+                         <p className="text-slate-400 font-bold">Be the first to review this pro!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'Photos' && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {[1,2,3,4,5,6].map(i => (
+                      <motion.div 
+                        key={i} 
+                        whileHover={{ scale: 1.05 }}
+                        className="rounded-[32px] overflow-hidden aspect-square shadow-subtle cursor-pointer group"
+                      >
+                        <img src={`${businessImage}?sig=${i}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          <aside>
-            {/* Action Sidecar */}
-            <div style={{ backgroundColor: '#FFF', borderRadius: '32px', padding: '32px', border: '1px solid #F1F5F9', position: 'sticky', top: '120px' }}>
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                 <div style={{ fontSize: '12px', fontWeight: '900', color: '#94A3B8', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>STARTING FROM</div>
-                 <div style={{ fontSize: '36px', fontWeight: '1000', color: '#1E293B' }}>₹499 <span style={{ fontSize: '14px', color: '#94A3B8', fontWeight: '600' }}>/ visit</span></div>
-              </div>
-              <button 
-                onClick={() => setBookingModalVisible(true)}
-                style={{ width: '100%', padding: '20px', borderRadius: '20px', backgroundColor: 'var(--color-primary)', color: '#FFF', border: 'none', fontWeight: '1000', fontSize: '16px', letterSpacing: '0.5px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(30,64,175,0.2)' }}>
-                SCHEDULE VISIT
-              </button>
-              
-              <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                   <div style={{ width: '10px', height: '10px', borderRadius: '5px', backgroundColor: '#10B981' }} />
-                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>Available for Booking today</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                   <FiCheckCircle color="#var(--color-primary)" />
-                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>Verified background</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                   <FiBriefcase color="#var(--color-primary)" />
-                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>120+ successful services</span>
-                </div>
-              </div>
+          {/* Sidebar Action Sidecar */}
+          <div className="lg:col-span-4">
+            <div className="bg-slate-950 rounded-[48px] p-10 text-white sticky top-32 shadow-premium overflow-hidden">
+               {/* Abstract background art inside the card */}
+               <FiBriefcase className="absolute -bottom-10 -right-10 text-white/[0.03] rotate-12" size={240} />
+               
+               <div className="relative z-10">
+                 <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary-light">
+                      <FiZap />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Service Ledger</span>
+                 </div>
 
-              <div style={{ borderTop: '1px solid #F1F5F9', marginTop: '32px', paddingTop: '32px', textAlign: 'center' }}>
-                 <p style={{ color: '#94A3B8', fontSize: '13px', fontWeight: '600' }}>Share with friends</p>
-                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
-                    {['Twitter', 'WhatsApp', 'Mail'].map(s => (
-                       <div key={s} style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid #F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                          <FiSend size={16} color="#64748B" />
-                       </div>
+                 <div className="mb-10 text-center lg:text-left">
+                   <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-2">Estimated Starting Price</p>
+                   <div className="text-5xl font-black tracking-tighter text-white">
+                      ₹499 <span className="text-sm text-white/30 font-bold uppercase tracking-widest">/ Visit</span>
+                   </div>
+                 </div>
+
+                 <motion.button 
+                   whileHover={{ scale: 1.02, brightness: 1.1 }}
+                   whileTap={{ scale: 0.98 }}
+                   onClick={() => setBookingModalVisible(true)}
+                   className="w-full py-5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-glow flex items-center justify-center gap-3 mb-8"
+                 >
+                   <FiCalendar /> Secure This Slot
+                 </motion.button>
+                 
+                 <div className="space-y-6 pt-8 border-t border-white/10">
+                    <div className="flex items-center gap-4 text-sm font-bold text-white/70">
+                      <FiClock className="text-emerald-500" /> Available for Booking Today
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-bold text-white/70">
+                      <FiPhone className="text-primary-light" /> Instant Voice Consultation
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-bold text-white/70">
+                      <FiAward className="text-amber-400" /> 100% Satisfaction Guarantee
+                    </div>
+                 </div>
+
+                 <div className="mt-12 flex justify-center gap-4">
+                    {[FiSend, FiImage, FiBriefcase].map((Icon, i) => (
+                      <motion.div 
+                        key={i}
+                        whileHover={{ y: -4, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 cursor-pointer"
+                      >
+                         <Icon size={18} />
+                      </motion.div>
                     ))}
                  </div>
-              </div>
+               </div>
             </div>
-          </aside>
+          </div>
 
         </div>
       </main>
 
-      {/* Booking Modal Overlay */}
-      {bookingModalVisible && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.7)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: '32px', width: '600px', padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '28px', fontWeight: '900', margin: 0 }}>Confirm Booking</h2>
-              <button onClick={() => setBookingModalVisible(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={32} color="#94A3B8" /></button>
-            </div>
-            <p>You are booking a service with <b>{business.name}</b>. A professional will contact you shortly.</p>
-            <div style={{ marginTop: '40px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-               <button style={{ backgroundColor: 'var(--color-primary)', color: '#FFF', padding: '20px', borderRadius: '20px', fontWeight: '900', border: 'none', cursor: 'pointer' }}>Proceed to Schedule</button>
-               <button onClick={() => setBookingModalVisible(false)} style={{ backgroundColor: '#F1F5F9', color: '#64748B', padding: '20px', borderRadius: '20px', fontWeight: '900', border: 'none', cursor: 'pointer' }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Review Modal Overlay */}
-      {reviewModalVisible && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.7)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: '32px', width: '500px', padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '900', margin: 0 }}>Rate & Review</h2>
-              <button onClick={() => setReviewModalVisible(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={28} color="#94A3B8" /></button>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '24px' }}>
-              {[1,2,3,4,5].map(i => (
-                <FiStar 
-                  key={i} 
-                  size={32} 
-                  cursor="pointer"
-                  fill={reviewRating >= i ? '#F59E0B' : 'transparent'} 
-                  color={reviewRating >= i ? '#F59E0B' : '#CBD5E1'}
-                  onClick={() => setReviewRating(i)}
-                />
-              ))}
-            </div>
-            <textarea 
-              value={reviewComment}
-              onChange={(e) => setReviewComment(e.target.value)}
-              placeholder="What was your experience like?"
-              style={{ width: '100%', height: '120px', borderRadius: '20px', padding: '16px', border: '1.5px solid #F1F5F9', backgroundColor: '#F8FAFC', outline: 'none', resize: 'none', fontFamily: 'inherit', color: '#1E293B', marginBottom: '24px' }}
+      {/* Booking Drawer (Simplified for Web) */}
+      <AnimatePresence>
+        {bookingModalVisible && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-6 py-20">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBookingModalVisible(false)}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" 
             />
-            <button 
-              onClick={handleReviewSubmit}
-              disabled={submittingReview}
-              style={{ width: '100%', backgroundColor: 'var(--color-primary)', color: '#FFF', padding: '20px', borderRadius: '20px', fontWeight: '900', border: 'none', cursor: 'pointer', opacity: submittingReview ? 0.7 : 1 }}>
-              {submittingReview ? 'Posting...' : 'SUBMIT REVIEW'}
-            </button>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="bg-white rounded-[56px] w-full max-w-xl p-10 md:p-14 relative z-10 shadow-premium"
+            >
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Booking Slot</h2>
+                <button onClick={() => setBookingModalVisible(false)} className="text-slate-300 hover:text-slate-600 transition-colors">
+                  <FiX size={32} />
+                </button>
+              </div>
+              <div className="space-y-8">
+                 <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <img src={business.avatar || businessImage} className="w-20 h-20 rounded-2xl object-cover" />
+                    <div>
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Confirming with</p>
+                      <h4 className="text-2xl font-black text-slate-900 tracking-tighter">{business.name}</h4>
+                    </div>
+                 </div>
+                 <p className="text-slate-500 font-medium">Ready to proceed? We'll notify the provider immediately and they will finalize the schedule via phone or the LocalHub messaging system.</p>
+                 <div className="flex flex-col gap-3 py-6">
+                    <button className="btn-premium px-10 py-5 !rounded-3xl w-full">Finalize Booking Request</button>
+                    <button onClick={() => setBookingModalVisible(false)} className="py-5 font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Maybe Later</button>
+                 </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Review Dialog */}
+      <AnimatePresence>
+        {reviewModalVisible && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-6 py-20">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setReviewModalVisible(false)}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[56px] w-full max-w-lg p-10 md:p-14 relative z-10 shadow-premium"
+            >
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Post Review</h2>
+                <button onClick={() => setReviewModalVisible(false)}><FiX size={28} className="text-slate-300 hover:text-slate-600 transition-colors" /></button>
+              </div>
+              <div className="space-y-8">
+                <div className="flex justify-center gap-4">
+                  {[1,2,3,4,5].map(i => (
+                    <FiStar 
+                      key={i} 
+                      size={40} 
+                      className={`cursor-pointer transition-all ${reviewRating >= i ? 'text-amber-500 fill-amber-500 scale-110' : 'text-slate-200'}`}
+                      onClick={() => setReviewRating(i)}
+                    />
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-2">Your Testimonial</label>
+                  <textarea 
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Tell us about the service quality..."
+                    className="w-full h-40 p-6 rounded-3xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-primary outline-none transition-all font-medium resize-none shadow-inner"
+                  />
+                </div>
+                <button 
+                  onClick={handleReviewSubmit}
+                  disabled={submittingReview}
+                  className="btn-premium px-10 py-5 !rounded-3xl w-full"
+                >
+                  {submittingReview ? 'Dispatching...' : 'Complete Review'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

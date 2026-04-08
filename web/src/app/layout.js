@@ -5,15 +5,15 @@ import Footer from '../components/Footer';
 
 export const metadata = {
   title: {
-    default: 'LocalHub | Find & Book Verified Local Services',
+    default: 'LocalHub | Find & Book Verified Local Services in Sangli',
     template: '%s | LocalHub'
   },
-  description: 'Connect with top-rated local professionals instantly. Search for plumbers, electricians, cleaners, beauty experts and more in your neighborhood.',
-  keywords: ['local services', 'plumber', 'electrician', 'cleaning', 'home services', 'verified professionals'],
+  description: 'Connect with top-rated local professionals in Sangli instantly. Search for plumbers, electricians, cleaners, beauty experts and more in your neighborhood.',
+  keywords: ['local services', 'sangli', 'plumber', 'electrician', 'cleaning', 'home services', 'verified professionals'],
   authors: [{ name: 'LocalHub Team' }],
   openGraph: {
     title: 'LocalHub | Find & Book Verified Local Services',
-    description: 'Connect with top-rated local professionals instantly.',
+    description: 'Connect with top-rated local professionals in Sangli instantly.',
     url: 'https://localhub.pro',
     siteName: 'LocalHub',
     images: [
@@ -26,22 +26,16 @@ export const metadata = {
     locale: 'en_US',
     type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'LocalHub | Local Services at Your Doorstep',
-    description: 'The easiest way to find and book local professionals.',
-    images: ['https://localhub.pro/twitter-image.jpg'],
-  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className="antialiased selection:bg-primary selection:text-white">
         <StoreProvider>
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main style={{ flex: 1 }}>
+            <main className="flex-grow">
               {children}
             </main>
             <Footer />

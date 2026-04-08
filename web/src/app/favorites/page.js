@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiHeart, FiSearch, FiStar, FiMapPin, FiChevronRight, FiGrid, FiList, FiSparkles, FiArrowRight
+  FiHeart, FiSearch, FiStar, FiMapPin, FiChevronRight, FiGrid, FiList, FiAward, FiArrowRight, FiChevronLeft
 } from 'react-icons/fi';
 import Link from 'next/link';
 
@@ -13,12 +14,15 @@ export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   
-  const [favorites, setFavorites] = useState([]); // This would normally come from a custom hook or Redux
+  const [favorites, setFavorites] = useState([]); // In production this would sync with Redux/Backend
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Filter Logic matching mobile app useMemo
+  useEffect(() => setMounted(true), []);
+
+  // Filter Logic
   const filteredFavorites = favorites.filter(b => {
     const categoryMatch = activeTab === 'All' || b.category?.toLowerCase() === activeTab.toLowerCase();
     const searchMatch = !search.trim() || 
@@ -27,152 +31,216 @@ export default function FavoritesPage() {
     return categoryMatch && searchMatch;
   });
 
+  if (!mounted) return null;
+
   if (!isAuthenticated) return (
-    <div style={{ padding: '100px', textAlign: 'center' }}>
-      <FiHeart size={48} color="#D1D5DB" />
-      <h2 style={{ marginTop: '20px' }}>Login to view your saved places</h2>
-      <button onClick={() => router.push('/login')} className="btn-primary" style={{ marginTop: '24px', padding: '12px 32px' }}>Login</button>
+    <div className="min-h-screen bg-bg-main flex flex-col items-center justify-center p-10 text-center">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-24 h-24 bg-red-50 text-red-100 rounded-full flex items-center justify-center mb-8"
+      >
+        <FiHeart size={48} className="text-red-200" />
+      </motion.div>
+      <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">Saved Places Secure Access</h2>
+      <p className="text-slate-500 font-medium max-w-xs mb-10">Please authenticate your account to view and manage your curated list of professionals.</p>
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => router.push('/login')} 
+        className="btn-premium px-12 py-4 !rounded-2xl"
+      >
+        Authorized Login
+      </motion.button>
     </div>
   );
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh' }}>
+    <div className="bg-bg-main min-h-screen flex flex-col">
       
-      {/* 1. Header & Filters Parity */}
-      <header style={{ 
-        backgroundColor: '#FFF', borderBottom: '1px solid #F1F5F9', position: 'sticky', top: 0, zIndex: 100,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px' }}>←</button>
+      {/* 1. Immersive Header & Precision Filters */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-8 shadow-premium">
+        <div className="section-container max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10">
+            <div className="flex items-center gap-6">
+              <motion.button 
+                whileHover={{ x: -4 }}
+                onClick={() => router.back()} 
+                className="w-11 h-11 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-500 hover:text-primary transition-all"
+              >
+                <FiChevronLeft size={24} />
+              </motion.button>
               <div>
-                <h1 style={{ fontSize: '28px', fontWeight: '1000', color: '#1E293B', margin: 0, letterSpacing: '-1px' }}>My Favorites</h1>
-                <div style={{ backgroundColor: '#FEF2F2', padding: '4px 12px', borderRadius: '8px', width: 'fit-content', marginTop: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#EF4444', textTransform: 'uppercase' }}>{favorites.length} SAVED PLACES</span>
+                <h1 className="text-4xl font-black text-slate-900 tracking-tighter">My Favorites</h1>
+                <div className="inline-flex gap-2 items-center bg-red-50 px-3 py-1 rounded-lg mt-2 border border-red-100/50">
+                  <FiHeart className="text-red-500 fill-red-500" size={12} />
+                  <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">{favorites.length} Saved Specialists</span>
                 </div>
               </div>
             </div>
-            <div style={{ 
-              backgroundColor: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', padding: '12px 20px',
-              display: 'flex', alignItems: 'center', gap: '12px', width: '400px'
-            }}>
-              <FiSearch color="#94A3B8" />
+            
+            <div className="w-full md:w-96 relative group">
+              <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
               <input 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search your saved services..."
-                style={{ background: 'none', border: 'none', outline: 'none', width: '100%', fontSize: '15px', fontWeight: '600' }}
+                className="w-full pl-12 pr-6 py-4 rounded-[20px] bg-slate-50 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-semibold text-slate-800 shadow-subtle"
               />
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', overflowX: 'auto' }} className="no-scrollbar">
-            {CATEGORIES.map(f => {
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            {CATEGORIES.map((f, idx) => {
               const active = activeTab === f;
               return (
-                <button 
+                <motion.button 
                   key={f}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
                   onClick={() => setActiveTab(f)}
-                  style={{ 
-                    whiteSpace: 'nowrap', padding: '10px 20px', borderRadius: '14px', fontSize: '14px', fontWeight: '800',
-                    cursor: 'pointer', border: '1.5px solid', 
-                    backgroundColor: active ? '#1E293B' : '#FFF',
-                    borderColor: active ? '#1E293B' : '#F1F5F9',
-                    color: active ? '#FFF' : '#64748B',
-                    transition: 'all 0.2s'
-                  }}
+                  className={`
+                    whitespace-nowrap px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border
+                    ${active 
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-lg px-8' 
+                      : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300 hover:text-slate-600 shadow-subtle'}
+                  `}
                 >
                   {f}
-                </button>
+                </motion.button>
               )
             })}
           </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px' }}>
+      <main className="section-container max-w-6xl py-16">
         
         {favorites.length === 0 ? (
           
-          /* 2. Stunning Empty State Parity */
-          <div style={{ textAlign: 'center', padding: '120px 40px' }}>
-            <div style={{ position: 'relative', width: '160px', height: '160px', margin: '0 auto 40px auto' }}>
-              <div style={{ 
-                width: '100%', height: '100%', borderRadius: '80px', backgroundColor: '#FEF2F2',
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                boxShadow: '0 10px 30px rgba(239, 68, 68, 0.1)'
-              }}>
-                <FiHeart size={80} color="#EF4444" fill="#EF4444" opacity={0.8} />
-              </div>
-              <div style={{ position: 'absolute', top: '10px', right: '-10px', color: '#F59E0B', transform: 'rotate(15deg)' }}><FiStar size={32} fill="#F59E0B" /></div>
-              <div style={{ position: 'absolute', bottom: '20px', left: '-10px', color: 'var(--color-primary)', transform: 'rotate(-15deg)' }}><FiSparkles size={28} /></div>
+          /* 2. Enhanced Empty State */
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20 px-10 bg-white rounded-[56px] border border-slate-100 shadow-premium max-w-3xl mx-auto"
+          >
+            <div className="relative w-40 h-40 mx-auto mb-12">
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-full h-full rounded-[48px] bg-red-50 flex items-center justify-center shadow-glow-red/5"
+              >
+                <FiHeart size={72} className="text-red-500 fill-red-500 opacity-80" />
+              </motion.div>
+              <motion.div 
+                animate={{ rotate: [0, 15, 0], y: [0, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute -top-4 -right-4 text-amber-500"
+              >
+                <FiStar size={40} className="fill-amber-500 drop-shadow-lg" />
+              </motion.div>
+              <motion.div 
+                animate={{ rotate: [0, -15, 0], x: [0, -5, 0] }}
+                transition={{ duration: 5, repeat: Infinity }}
+                className="absolute -bottom-4 -left-4 text-primary"
+              >
+                <FiAward size={36} className="drop-shadow-lg" />
+              </motion.div>
             </div>
 
-            <h2 style={{ fontSize: '32px', fontWeight: '1000', color: '#1E293B', letterSpacing: '-1px' }}>Nothing feels like home yet</h2>
-            <p style={{ fontSize: '17px', color: '#64748B', maxWidth: '450px', margin: '16px auto 48px auto', lineHeight: '1.6', fontWeight: '500' }}>
-              Found a local service you love? Tap the heart icon on their profile to save them for quick booking next time.
+            <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-6 underline decoration-primary/20 decoration-8 underline-offset-8">Nothing feels like home yet</h2>
+            <p className="text-lg text-slate-500 font-medium max-w-sm mx-auto mb-12 leading-relaxed">
+              Found a local specialist you love? Tap the heart icon on their profile to build your elite circle of providers.
             </p>
             
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/search')}
-              style={{ 
-                background: 'linear-gradient(135deg, var(--color-primary), #4338CA)', color: '#FFF', 
-                padding: '20px 48px', borderRadius: '24px', fontWeight: '1000', fontSize: '16px', border: 'none',
-                cursor: 'pointer', boxShadow: '0 12px 30px rgba(30,64,175,0.3)', display: 'flex', alignItems: 'center', gap: '12px', margin: '0 auto'
-              }}
+              className="px-12 py-5 rounded-[24px] bg-slate-900 text-white font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 mx-auto shadow-2xl hover:bg-primary transition-all group"
             >
-              <FiSearch /> Discover Services <FiArrowRight />
-            </button>
-          </div>
+              <FiSearch /> Discover Experts <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </motion.button>
+          </motion.div>
 
         ) : (
           
-          /* 3. Favorites Grid Parity */
-          <div>
-            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#1E293B' }}>Saved Professionals</h3>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#FFF', border: '1px solid #F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FiGrid size={18} color="var(--color-primary)" /></div>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#FFF', border: '1px solid #F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FiList size={18} color="#94A3B8" /></div>
+          /* 3. High-Density Favorites Grid */
+          <div className="space-y-10">
+            <div className="flex justify-between items-center">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+                 <FiAward className="text-primary" /> Curated Marketplace
+              </h3>
+              <div className="flex gap-2">
+                <button className="w-11 h-11 rounded-2xl bg-white border border-secondary/20 shadow-subtle flex items-center justify-center text-secondary">
+                  <FiGrid size={20} />
+                </button>
+                <button className="w-11 h-11 rounded-2xl bg-white border border-slate-100 shadow-subtle flex items-center justify-center text-slate-300">
+                  <FiList size={20} />
+                </button>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-              {filteredFavorites.map(biz => (
-                <Link key={biz.id} href={`/business/${biz.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ backgroundColor: '#FFF', borderRadius: '28px', overflow: 'hidden', border: '1px solid #F1F5F9', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-6px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                    <div style={{ height: '200px', position: 'relative' }}>
-                      <img src={biz.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{ position: 'absolute', top: '16px', right: '16px', width: '40px', height: '40px', borderRadius: '20px', backgroundColor: '#FFF', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                        <FiHeart fill="#EF4444" color="#EF4444" size={20} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <AnimatePresence>
+                {filteredFavorites.map((biz, idx) => (
+                  <motion.div 
+                    key={biz.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    whileHover={{ y: -8 }}
+                    className="group bg-white rounded-[40px] overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all"
+                  >
+                    <Link href={`/business/${biz.id}`} className="block relative h-64 overflow-hidden">
+                      <img src={biz.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={biz.name} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent flex items-bottom p-8">
+                         <div className="mt-auto">
+                            <span className="bg-primary/90 backdrop-blur-md text-white px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                               {biz.category}
+                            </span>
+                         </div>
                       </div>
-                    </div>
-                    <div style={{ padding: '24px' }}>
-                      <h4 style={{ fontSize: '18px', fontWeight: '900', color: '#1E293B', marginBottom: '8px' }}>{biz.name}</h4>
-                      <p style={{ fontSize: '14px', color: '#64748B', fontWeight: '600', marginBottom: '20px' }}>{biz.category}</p>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                           <FiStar fill="#F59E0B" color="#F59E0B" size={14} />
-                           <span style={{ fontSize: '14px', fontWeight: '900' }}>4.9</span>
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute top-6 right-6 w-12 h-12 rounded-2xl bg-white text-red-500 shadow-premium flex items-center justify-center transition-all"
+                      >
+                        <FiHeart size={20} fill="currentColor" />
+                      </motion.button>
+                    </Link>
+
+                    <div className="p-8">
+                      <div className="flex justify-between items-start mb-4">
+                        <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none truncate pr-4">{biz.name}</h4>
+                        <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-xl border border-amber-100 text-amber-600 font-black text-[10px]">
+                           <FiStar fill="currentColor" size={12} /> 4.9
                         </div>
-                        <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--color-primary)' }}>Book Now →</span>
+                      </div>
+                      <p className="text-sm font-medium text-slate-400 mb-8 border-l-4 border-slate-100 pl-4">Verified Professional Partner</p>
+                      
+                      <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
+                           <FiMapPin className="text-primary-light" /> Sangli, MH
+                        </div>
+                        <Link href={`/business/${biz.id}`} className="text-primary font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:gap-4 transition-all">
+                           Book Now <FiArrowRight />
+                        </Link>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         )}
 
+        <p className="text-center mt-32 text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
+           LOCAL-HUB ELITE CURATION &copy; {new Date().getFullYear()}
+        </p>
       </main>
-
-      <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function InputField({
   label,
@@ -9,7 +11,8 @@ export default function InputField({
   type = 'text',
   error,
   required,
-  style,
+  className = '',
+  icon,
   ...props
 }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,21 +22,29 @@ export default function InputField({
   const currentType = isPassword && showPassword ? 'text' : type;
 
   return (
-    <div style={{ marginVertical: '12px', ...style }}>
+    <div className={`space-y-2 ${className}`}>
       {label && (
-        <label style={styles.label}>
-          {label} {required && <span style={{ color: 'var(--color-error)' }}>*</span>}
+        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 transition-colors duration-200">
+          {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
+      
       <div 
-        style={{
-          ...styles.inputContainer,
-          borderColor: error ? 'var(--color-error)' : isFocused ? 'var(--color-primary)' : 'var(--color-border)',
-          backgroundColor: isFocused ? 'var(--color-surface)' : 'var(--color-surface-secondary)',
-          transform: isFocused ? 'scale(1.01)' : 'scale(1)',
-          boxShadow: isFocused ? '0 0 0 4px rgba(30, 64, 175, 0.1)' : 'none',
-        }}
+        className={`
+          flex items-center relative transition-all duration-300 border rounded-[20px] shadow-subtle
+          ${error 
+            ? 'border-red-200 bg-red-50/10 focus-within:border-red-500' 
+            : isFocused 
+              ? 'border-primary ring-4 ring-primary/5 bg-white shadow-premium' 
+              : 'border-slate-100 bg-slate-50 focus-within:bg-white'}
+        `}
       >
+        {icon && (
+          <div className={`pl-5 pr-2 transition-colors ${isFocused ? 'text-primary' : 'text-slate-400'}`}>
+            {icon}
+          </div>
+        )}
+        
         <input
           type={currentType}
           value={value}
@@ -41,72 +52,37 @@ export default function InputField({
           placeholder={placeholder}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={styles.input}
+          className={`
+            w-full py-4 px-5 bg-transparent border-none outline-none 
+            font-semibold text-slate-800 placeholder:text-slate-300 transition-all text-sm
+            ${icon ? 'pl-2' : ''}
+          `}
           {...props}
         />
+        
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={styles.iconContainer}
+            className="pr-5 pl-2 text-slate-400 hover:text-primary transition-colors flex items-center"
           >
-            {showPassword ? 'Hide' : 'Show'}
+            {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
           </button>
         )}
       </div>
-      {error && <span style={styles.errorText}>{error}</span>}
+
+      <AnimatePresence>
+        {error && (
+          <motion.p 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1 mt-1"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
-const styles = {
-  label: {
-    display: 'block',
-    fontSize: '12px',
-    fontWeight: '800',
-    color: 'var(--color-text-secondary)',
-    marginBottom: '8px',
-    marginLeft: '4px',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-  },
-  inputContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    borderWidth: '1.5px',
-    borderStyle: 'solid',
-    borderRadius: '16px',
-    padding: '0 16px',
-    height: '60px',
-    transition: 'all 0.2s ease',
-    marginBottom: '8px',
-  },
-  input: {
-    flex: 1,
-    height: '100%',
-    color: 'var(--color-text)',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: 'none',
-    background: 'none',
-    outline: 'none',
-    width: '100%',
-  },
-  iconContainer: {
-    padding: '8px',
-    fontSize: '14px',
-    color: 'var(--color-text-secondary)',
-    fontWeight: '700',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-  },
-  errorText: {
-    display: 'block',
-    color: 'var(--color-error)',
-    fontSize: '12px',
-    fontWeight: '700',
-    marginTop: '6px',
-    marginLeft: '4px',
-  },
-};

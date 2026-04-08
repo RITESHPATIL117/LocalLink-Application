@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../../store/authSlice';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock, FiArrowRight, FiHexagon, FiAlertCircle } from 'react-icons/fi';
 import InputField from '../../components/InputField';
 import Button from '../../components/Button';
 
@@ -54,114 +56,113 @@ export default function Login() {
     }
   };
 
-  if (isAuthenticated || authLoading) return null;
+  if (!hasMounted || isAuthenticated || authLoading) return null;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Sign in to your LocalHub account</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-bg-main relative overflow-hidden py-20 px-6">
+      {/* Abstract Background Accents */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
 
-        {error && <div style={styles.errorAlert}>{error}</div>}
-
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <InputField
-            label="Email Address"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            required
-          />
-          
-          <InputField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-          />
-
-          <div style={{ textAlign: 'right', marginTop: '-8px' }}>
-            <Link href="/forgot-password" style={styles.forgotLink}>
-              Forgot Password?
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-[480px] z-10"
+      >
+        <div className="bg-white rounded-[48px] p-8 md:p-12 shadow-premium border border-slate-100 relative group overflow-hidden">
+          {/* Logo Header */}
+          <div className="flex flex-col items-center mb-10">
+            <Link href="/" className="mb-6 group">
+              <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center shadow-glow group-hover:rotate-6 transition-transform">
+                <FiHexagon className="text-white text-3xl" />
+              </div>
             </Link>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">Welcome Back</h1>
+            <p className="text-slate-500 font-medium">Continue your LocalHub journey</p>
           </div>
 
-          <Button type="submit" loading={loading} style={{ marginTop: '16px', width: '100%' }}>
-            Sign In
-          </Button>
-        </form>
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 mb-6"
+              >
+                <FiAlertCircle className="text-red-500 flex-shrink-0" />
+                <p className="text-red-600 text-sm font-bold">{error}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <div style={styles.footer}>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
-            Don't have an account?{' '}
-            <Link href="/register" style={{ color: 'var(--color-primary)', fontWeight: '800', textDecoration: 'none' }}>
-              Sign up
-            </Link>
-          </p>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+              <div className="relative">
+                <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full pl-14 pr-6 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-semibold"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Password</label>
+                <Link href="/forgot-password" size="sm" className="text-[11px] font-black text-primary uppercase tracking-widest hover:underline">
+                  Forgot?
+                </Link>
+              </div>
+              <div className="relative">
+                <FiLock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-14 pr-6 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-semibold"
+                  required
+                />
+              </div>
+            </div>
+
+            <motion.button 
+              type="submit"
+              disabled={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-glow transition-all flex items-center justify-center gap-2 ${
+                loading ? 'bg-slate-200 text-slate-400' : 'bg-primary text-white hover:brightness-110'
+              }`}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+              ) : (
+                <>Sign In Securely <FiArrowRight /></>
+              )}
+            </motion.button>
+          </form>
+
+          <div className="mt-12 pt-8 border-t border-slate-100 text-center">
+            <p className="text-slate-500 font-medium">
+              Don't have an account yet?{' '}
+              <Link href="/register" className="text-primary font-black hover:underline underline-offset-4 decoration-2">
+                Join the Network
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+        
+        <p className="text-center mt-10 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+          LocalHub &copy; {new Date().getFullYear()} — Secure Access
+        </p>
+      </motion.div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: 'calc(100vh - 70px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #F3F4F6 0%, #E0E7FF 100%)',
-    padding: '20px'
-  },
-  card: {
-    background: 'var(--color-surface)',
-    width: '100%',
-    maxWidth: '440px',
-    borderRadius: '24px',
-    padding: '40px',
-    boxShadow: 'var(--shadow-card)',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '32px'
-  },
-  title: {
-    fontSize: '28px',
-    fontWeight: '900',
-    color: 'var(--color-text)',
-    marginBottom: '8px',
-    letterSpacing: '-0.5px'
-  },
-  subtitle: {
-    fontSize: '15px',
-    color: 'var(--color-text-secondary)'
-  },
-  errorAlert: {
-    padding: '12px 16px',
-    backgroundColor: '#FEF2F2',
-    color: 'var(--color-error)',
-    borderRadius: '12px',
-    border: '1px solid #FCA5A5',
-    marginBottom: '20px',
-    fontSize: '14px',
-    fontWeight: '600',
-    textAlign: 'center'
-  },
-  forgotLink: {
-    color: 'var(--color-text-secondary)',
-    fontSize: '13px',
-    fontWeight: '700',
-    textDecoration: 'none'
-  },
-  footer: {
-    marginTop: '32px',
-    textAlign: 'center',
-    borderTop: '1px solid var(--color-border)',
-    paddingTop: '24px'
-  }
-};

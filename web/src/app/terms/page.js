@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import { motion } from 'framer-motion';
+import { FiFileText, FiShield } from 'react-icons/fi';
 
 export default function TermsPage() {
   const sections = [
@@ -26,55 +28,59 @@ export default function TermsPage() {
   ];
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <h1 style={styles.title}>Terms of Service</h1>
-          <p style={styles.lastUpdated}>Last Updated: March 2024</p>
+    <div className="bg-bg-main min-h-screen">
+      
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 py-20 px-6 relative overflow-hidden">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-indigo-500 to-emerald-400" />
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="w-16 h-16 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-subtle border border-slate-100">
+              <FiFileText />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4">Terms of Service</h1>
+            <p className="inline-flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-full">
+               <FiShield className="text-primary" /> Last Updated: March 2024
+            </p>
+          </motion.div>
         </div>
       </header>
 
-      <main style={styles.main}>
-        <div style={styles.card}>
-          <p style={styles.intro}>
+      {/* Main Content */}
+      <main className="section-container max-w-4xl py-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white p-10 md:p-16 rounded-[40px] border border-slate-100 shadow-premium"
+        >
+          <p className="text-xl text-slate-500 font-medium leading-relaxed mb-12 pb-12 border-b border-slate-100">
             Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the LocalHub website and mobile application.
           </p>
           
-          {sections.map((section, i) => (
-            <div key={i} style={styles.section}>
-              <h2 style={styles.sectionTitle}>{section.title}</h2>
-              <p style={styles.sectionContent}>{section.content}</p>
-            </div>
-          ))}
-          
-          <div style={styles.footer}>
-            <p>If you have any questions about these Terms, please contact us at support@localhub.pro</p>
+          <div className="space-y-12">
+            {sections.map((section, i) => (
+              <div key={i} className="group">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter mb-4 group-hover:text-primary transition-colors">
+                  {section.title}
+                </h2>
+                <p className="text-lg text-slate-500 font-medium leading-relaxed pl-6 border-l-2 border-slate-100 group-hover:border-primary/50 transition-colors">
+                  {section.content}
+                </p>
+              </div>
+            ))}
           </div>
-        </div>
+          
+          <div className="mt-16 pt-10 border-t border-slate-100 text-center">
+            <p className="text-slate-400 font-bold text-sm">
+              If you have any questions about these Terms, please contact us at <a href="mailto:support@localhub.pro" className="text-primary">support@localhub.pro</a>
+            </p>
+          </div>
+        </motion.div>
       </main>
     </div>
   );
 }
-
-const styles = {
-  container: { backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '80px' },
-  header: { backgroundColor: '#FFF', borderBottom: '1px solid #E2E8F0', padding: '60px 24px' },
-  headerContent: { maxWidth: '800px', margin: '0 auto', textAlign: 'center' },
-  title: { fontSize: '42px', fontWeight: '900', color: '#1E293B', marginBottom: '12px' },
-  lastUpdated: { fontSize: '14px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' },
-  main: { padding: '40px 24px' },
-  card: { 
-    maxWidth: '800px', 
-    margin: '0 auto', 
-    backgroundColor: '#FFF', 
-    padding: '60px', 
-    borderRadius: '32px', 
-    boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
-    border: '1px solid #F1F5F9'
-  },
-  intro: { fontSize: '18px', color: '#475569', lineHeight: '1.7', marginBottom: '40px' },
-  section: { marginBottom: '32px' },
-  sectionTitle: { fontSize: '22px', fontWeight: '900', color: '#1E293B', marginBottom: '16px' },
-  sectionContent: { fontSize: '16px', color: '#64748B', lineHeight: '1.8' },
-  footer: { marginTop: '60px', paddingTop: '40px', borderTop: '1px solid #F1F5F9', color: '#94A3B8', textAlign: 'center', fontSize: '14px' }
-};

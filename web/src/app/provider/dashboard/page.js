@@ -2,6 +2,11 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FiGrid, FiList, FiBriefcase, FiZap, FiStar, FiCheckCircle, 
+  FiXCircle, FiClock, FiSettings, FiArrowRight, FiBell, FiPlus, FiLogOut
+} from 'react-icons/fi';
 import leadService from '../../../services/leadService';
 import Button from '../../../components/Button';
 import { io } from 'socket.io-client';
@@ -20,11 +25,6 @@ export default function ProviderDashboard() {
   const fetchLeads = async () => {
     try {
       if (!user?.id) return;
-      // In a real scenario, providers have a businessID. 
-      // We will mock fetching all leads since this translates the app's standard flow.
-      // E.g. const res = await leadService.getLeadsByBusiness(user.business_id);
-      
-      // For now, let's use the local mock structure if API fails
       const res = await leadService.getUserLeads(); 
       const existingLeads = res.data || [];
       
@@ -53,16 +53,12 @@ export default function ProviderDashboard() {
     }
   }, [mounted, authLoading, isAuthenticated, user, router]);
 
-  // Hook up WebSockets
   useEffect(() => {
     if (!user?.business_id) return;
-    
     const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000');
     socket.emit('joinRoom', `business_${user.business_id}`);
-    
     socket.on('new_rfq_lead', () => fetchLeads());
     socket.on('booking_status_updated', () => fetchLeads());
-
     return () => socket.disconnect();
   }, [user]);
 
@@ -72,63 +68,185 @@ export default function ProviderDashboard() {
   };
 
   if (!mounted || authLoading || loading || !isAuthenticated) {
-    return <div style={{ padding: '60px', textAlign: 'center' }}>Loading Provider Dashboard...</div>;
+    return (
+      <div className="min-h-screen bg-bg-main flex flex-col items-center justify-center p-10">
+         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-6" />
+         <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Authenticating Provider Dashboard...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="container" style={{ display: 'flex', gap: '30px', padding: '40px 20px' }}>
-      <aside style={{ width: '250px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div className="card" style={{ position: 'sticky', top: '100px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px', color: 'var(--color-primary)' }}>Provider Menu</h3>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <li><a href="#overview" style={{ fontWeight: '700', color: 'var(--color-text)' }}>Overview</a></li>
-            <li><a href="#leads" style={{ fontWeight: '600', color: 'var(--color-primary)' }}>My Leads</a></li>
-            <li><a href="#services" style={{ fontWeight: '600', color: 'var(--color-text-secondary)' }}>Services</a></li>
-          </ul>
+    <div className="bg-bg-main min-h-screen flex">
+      {/* 1. Slim Premium Sidebar */}
+      <aside className="w-80 bg-white border-r border-slate-200 sticky top-0 h-screen hidden lg:flex flex-col p-8 z-30">
+        <div className="flex items-center gap-4 mb-12">
+          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-glow text-white">
+            <FiZap size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-slate-800 tracking-tighter leading-none">LocalHub+</h2>
+            <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">Provider Console</p>
+          </div>
+        </div>
+
+        <nav className="flex-grow space-y-2">
+           {[
+             { label: 'Overview', ic: <FiGrid />, active: true },
+             { label: 'Leads & Bookings', ic: <FiList />, active: false },
+             { label: 'My Services', ic: <FiBriefcase />, active: false },
+             { label: 'Settings', ic: <FiSettings />, active: false },
+           ].map(item => (
+             <motion.button 
+               key={item.label}
+               whileHover={{ x: 4 }}
+               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                 item.active ? 'bg-primary text-white shadow-glow' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+               }`}
+             >
+               {item.ic} {item.label}
+             </motion.button>
+           ))}
+        </nav>
+
+        <div className="pt-8 border-t border-slate-100">
+           <button onClick={() => router.push('/logout')} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
+             <FiLogOut /> Sign Out
+           </button>
         </div>
       </aside>
 
-      <main style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', color: 'var(--color-text)' }}>Welcome, {user.name}</h1>
-        </div>
+      <main className="flex-grow flex flex-col min-w-0">
+        
+        {/* Top App Bar */}
+        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-6 shadow-subtle px-10">
+          <div className="flex justify-between items-center">
+             <div>
+               <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Welcome, {user.name}</h1>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-2">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 Ready to accept new jobs
+               </p>
+             </div>
+             <div className="flex items-center gap-4">
+               <motion.button whileHover={{ scale: 1.05 }} className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all relative shadow-subtle">
+                  <FiBell size={20} />
+                  <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+               </motion.button>
+               <motion.button whileHover={{ scale: 1.05 }} className="hidden md:flex bg-slate-900 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-lg items-center gap-3">
+                  <FiPlus /> New Service
+               </motion.button>
+             </div>
+          </div>
+        </header>
 
-        {/* Live Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
-          <div className="card"><h4 style={{ color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Active Leads</h4><div style={{ fontSize: '32px', fontWeight: '900', color: 'var(--color-primary)' }}>{stats.active}</div></div>
-          <div className="card"><h4 style={{ color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Completed</h4><div style={{ fontSize: '32px', fontWeight: '900', color: 'var(--color-success)' }}>{stats.completed}</div></div>
-          <div className="card"><h4 style={{ color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Rating</h4><div style={{ fontSize: '32px', fontWeight: '900', color: 'var(--color-secondary)' }}>{stats.rating} ★</div></div>
-        </div>
+        <div className="p-6 md:p-10 max-w-7xl w-full">
+          
+          {/* Quick Metrics */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {[
+              { label: 'Active Leads', count: stats.active, color: 'text-primary', bg: 'bg-white', border: 'border-slate-100' },
+              { label: 'Completed Jobs', count: stats.completed, color: 'text-emerald-500', bg: 'bg-white', border: 'border-slate-100' },
+              { label: 'Merchant Rating', count: `${stats.rating} ★`, color: 'text-amber-500', bg: 'bg-white', border: 'border-slate-100' },
+            ].map(stat => (
+              <motion.div 
+                key={stat.label}
+                whileHover={{ y: -4 }}
+                className={`${stat.bg} p-8 rounded-[40px] border ${stat.border} text-center shadow-subtle`}
+              >
+                <div className={`text-5xl font-black ${stat.color} tracking-tighter`}>{stat.count}</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">{stat.label}</div>
+              </motion.div>
+            ))}
+          </section>
 
-        {/* Live Leads */}
-        <div className="card">
-          <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px' }}>Recent Leads</h3>
-          {leads.length === 0 ? (
-             <p style={{ color: 'var(--color-text-secondary)', padding: '20px', textAlign: 'center' }}>No new leads today. Make sure your services are active!</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {leads.map(lead => (
-                <div key={lead.id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '4px' }}>{lead.service || 'General Service'}</h4>
-                    <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', marginBottom: '8px' }}>{lead.date} at {lead.time} • 📍 {lead.address}</p>
-                    <p style={{ fontSize: '13px', color: '#4B5563', fontStyle: 'italic', maxWidth: '400px' }}>"{lead.description}"</p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', backgroundColor: lead.status === 'Pending' ? '#FFFBEB' : '#ECFDF5', color: lead.status === 'Pending' ? '#F59E0B' : '#10B981', display: 'inline-block', marginBottom: '12px' }}>
-                      {lead.status}
-                    </div>
-                    {lead.status === 'Pending' && (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button variant="outline" onClick={() => handleUpdateStatus(lead.id, 'Cancelled')} style={{ padding: '6px 12px', fontSize: '12px' }}>Reject</Button>
-                        <Button onClick={() => handleUpdateStatus(lead.id, 'Accepted')} style={{ padding: '6px 12px', fontSize: '12px' }}>Accept Lead</Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+          {/* Leads Board */}
+          <section className="bg-white rounded-[48px] border border-slate-100 shadow-premium overflow-hidden">
+            <div className="p-10 border-b border-slate-50 flex justify-between items-center">
+              <h3 className="text-2xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
+                <FiZap className="text-primary" /> Recent Leads Box
+              </h3>
+              <div className="flex gap-2">
+                <button className="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/10">All Leads</button>
+                <button className="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 border border-slate-100">Live (0)</button>
+              </div>
             </div>
-          )}
+
+            <div className="p-6 md:p-10">
+              {leads.length === 0 ? (
+                 <div className="text-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-100">
+                    <FiList size={48} className="text-slate-200 mx-auto mb-6" />
+                    <p className="text-slate-400 font-bold max-w-xs mx-auto">No job requests detected yet. Make sure your services are verified and active!</p>
+                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {leads.map((lead, idx) => {
+                      const isPending = lead.status === 'Pending';
+                      return (
+                        <motion.div 
+                          key={lead.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="group bg-white p-8 rounded-[32px] border border-slate-100 shadow-subtle hover:shadow-premium transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                        >
+                          <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-primary border border-slate-100 shadow-inner group-hover:scale-110 transition-transform">
+                              <FiBriefcase size={24} />
+                            </div>
+                            <div>
+                               <h4 className="text-xl font-black text-slate-900 tracking-tighter leading-none mb-2">{lead.service || 'Priority Service'}</h4>
+                               <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400">
+                                  <span className="flex items-center gap-1.5"><FiCalendar className="text-primary-light" /> {lead.date}</span>
+                                  <span className="flex items-center gap-1.5"><FiClock className="text-primary-light" /> {lead.time}</span>
+                                  <span className="flex items-center gap-1.5"><FiMapPin className="text-primary-light" /> {lead.address}</span>
+                               </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col md:items-end gap-3">
+                            <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                              isPending ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            }`}>
+                              {lead.status}
+                            </div>
+                            
+                            {isPending && (
+                              <div className="flex gap-2">
+                                <motion.button 
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleUpdateStatus(lead.id, 'Cancelled')}
+                                  className="w-11 h-11 rounded-2xl bg-white border border-red-100 text-red-400 flex items-center justify-center hover:bg-red-50"
+                                >
+                                  <FiXCircle size={20} />
+                                </motion.button>
+                                <motion.button 
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => handleUpdateStatus(lead.id, 'Accepted')}
+                                  className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-glow flex items-center gap-2"
+                                >
+                                  Accept Job <FiArrowRight />
+                                </motion.button>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <footer className="mt-20 text-center">
+             <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">
+                LocalHub Provider Network &copy; {new Date().getFullYear()} — Secure Dashboard Access
+             </p>
+          </footer>
         </div>
       </main>
     </div>

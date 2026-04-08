@@ -2,8 +2,19 @@ const Category = require('../models/categoryModel');
 
 const getAllCategories = async (req, res, next) => {
     try {
-        const categories = await Category.getAll();
+        const { tree } = req.query;
+        const categories = await Category.getAll(tree === 'true');
         res.json(categories);
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getSubcategories = async (req, res, next) => {
+    try {
+        const { parentId } = req.params;
+        const subcategories = await Category.getSubcategories(parentId);
+        res.json(subcategories);
     } catch (err) {
         next(err);
     }
@@ -26,5 +37,6 @@ const suggestCategory = async (req, res, next) => {
 
 module.exports = {
     getAllCategories,
+    getSubcategories,
     suggestCategory
 };

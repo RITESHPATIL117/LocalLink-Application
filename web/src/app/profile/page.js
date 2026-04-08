@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiUser, FiMail, FiMapPin, FiBriefcase, FiArrowRight, FiSettings, 
-  FiHeart, FiClipboard, FiHeadphones, FiLogOut, FiEdit3, FiShield
+  FiHeart, FiClipboard, FiHeadphones, FiLogOut, FiEdit3, FiShield, FiChevronRight, FiChevronLeft
 } from 'react-icons/fi';
 import { logoutUser } from '../../store/authSlice';
 import Link from 'next/link';
@@ -27,141 +28,182 @@ export default function ProfilePage() {
   if (!mounted || !isAuthenticated) return null;
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh' }}>
+    <div className="bg-bg-main min-h-screen flex flex-col">
       
-      {/* 1. Profile Header area */}
-      <header style={{ 
-        background: 'linear-gradient(135deg, var(--color-primary), #4338CA)', 
-        height: '300px', position: 'relative', overflow: 'hidden' 
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px', position: 'relative', zIndex: 5 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-             <button onClick={() => router.back()} style={{ backgroundColor: 'rgba(255,255,255,0.2)', width: '44px', height: '44px', borderRadius: '14px', border: 'none', color: '#FFF', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-               <FiArrowRight size={22} style={{ transform: 'rotate(180deg)' }} />
-             </button>
-             <button style={{ backgroundColor: 'rgba(255,255,255,0.2)', width: '44px', height: '44px', borderRadius: '14px', border: 'none', color: '#FFF', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <FiSettings size={20} />
-             </button>
+      {/* 1. Immersive Profile Header */}
+      <header className="bg-primary relative overflow-hidden h-[340px] flex items-center shadow-premium">
+        {/* Animated Background Orbs */}
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-20 -right-20 w-[400px] h-[400px] bg-white/5 rounded-full blur-[80px]" 
+        />
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, -5, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-40 -left-20 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px]" 
+        />
+
+        <div className="section-container max-w-4xl relative z-10 w-full">
+          <div className="flex justify-between items-center mb-12">
+             <motion.button 
+               whileHover={{ x: -4 }}
+               onClick={() => router.back()} 
+               className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all"
+             >
+               <FiChevronLeft size={24} />
+             </motion.button>
+             <motion.button 
+               whileHover={{ rotate: 90 }}
+               className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all"
+             >
+                <FiSettings size={22} />
+             </motion.button>
           </div>
 
-          <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-             <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  width: '120px', height: '120px', borderRadius: '40px', backgroundColor: '#FFF', 
-                  border: '6px solid rgba(255,255,255,0.3)', overflow: 'hidden', boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
-                }}>
+          <div className="flex flex-col md:flex-row gap-10 items-center md:items-end">
+             <div className="relative group">
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-[48px] border-8 border-white/20 bg-white/10 backdrop-blur-xl overflow-hidden shadow-premium group-hover:scale-105 transition-transform duration-500"
+                >
                    <img 
-                    src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'U'}&background=random`} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'U'}&background=4f46e5&color=fff`} 
+                    className="w-full h-full object-cover" 
+                    alt="Profile Avatar"
                    />
-                </div>
-                <div style={{ position: 'absolute', bottom: '-5px', right: '-5px', backgroundColor: '#FFF', width: '36px', height: '36px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                   <FiEdit3 color="var(--color-primary)" size={18} />
-                </div>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.1 }}
+                  className="absolute bottom-0 right-0 bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-glow text-primary cursor-pointer border-4 border-primary"
+                >
+                   <FiEdit3 size={18} />
+                </motion.div>
              </div>
              
-             <div>
-                <h1 style={{ fontSize: '32px', fontWeight: '1000', color: '#FFF', margin: 0, letterSpacing: '-0.5px' }}>{user?.name || 'LocalHub Elite User'}</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px' }}>
-                   <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '900', letterSpacing: '0.5px' }}>
-                     {(user?.role || 'CUSTOMER').toUpperCase()}
+             <div className="text-center md:text-left pb-4">
+                <motion.h1 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="text-4xl md:text-5xl font-black text-white tracking-tighter"
+                >
+                  {user?.name || 'Elite User'}
+                </motion.h1>
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 mt-4">
+                   <span className="bg-white/20 backdrop-blur-md text-white border border-white/20 px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em]">
+                     {(user?.role || 'Customer').toUpperCase()}
                    </span>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: '600' }}>
-                      <FiMapPin size={14} /> Sangli, IN
+                   <div className="flex items-center gap-2 text-white/70 text-sm font-bold bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
+                      <FiMapPin size={14} className="text-primary-light" /> Sangli, MH
                    </div>
                 </div>
              </div>
           </div>
         </div>
-        
-        {/* Background Decorative Circles Parity */}
-        <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', borderRadius: '150px', backgroundColor: 'rgba(255,255,255,0.05)' }} />
       </header>
 
-      <main style={{ maxWidth: '800px', margin: '-40px auto 100px auto', padding: '0 24px', position: 'relative', zIndex: 10 }}>
+      <main className="section-container max-w-4xl -mt-10 pb-32 relative z-[20]">
         
-        {/* 2. Account Overview Metrics */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+        {/* 2. Personalized Dashboard Metrics */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
            {[
-             { label: 'Bookings', count: '12', icon: <FiClipboard /> },
-             { label: 'Favorites', count: '8', icon: <FiHeart /> },
-             { label: 'Support', count: '24/7', icon: <FiHeadphones /> },
-           ].map(metric => (
-             <div key={metric.label} style={{ 
-               backgroundColor: '#FFF', padding: '24px', borderRadius: '24px', border: '1px solid #F1F5F9',
-               display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
-             }}>
-                <div style={{ fontSize: '24px', fontWeight: '1000', color: '#1E293B' }}>{metric.count}</div>
-                <div style={{ fontSize: '11px', fontWeight: '900', color: '#94A3B8', marginTop: '4px', textTransform: 'uppercase' }}>{metric.label}</div>
-             </div>
-           ))}
-        </section>
-
-        {/* 3. Personalized Menu List */}
-        <section style={{ backgroundColor: '#FFF', borderRadius: '32px', border: '1px solid #F1F5F9', overflow: 'hidden', padding: '12px' }}>
-           {[
-             { label: 'My Bookings', ic: <FiClipboard color="#F59E0B" />, route: '/requests' },
-             { label: 'Saved Professionals', ic: <FiHeart color="#EF4444" />, route: '/favorites' },
-             { label: 'Account Settings', ic: <FiSettings color="#6366F1" />, route: '/settings' },
-             { label: 'Help & Support', ic: <FiHeadphones color="#10B981" />, route: '/support' },
-             { label: 'Privacy & Security', ic: <FiShield color="#8B5CF6" />, route: '#' },
-           ].map((item, idx) => (
-             <Link href={item.route} key={item.label} style={{ textDecoration: 'none' }}>
-                <div style={{ 
-                  padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  borderBottom: idx === 4 ? 'none' : '1px solid #F1F5F9', cursor: 'pointer'
-                }} className="menu-item-hover">
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#F8FAFC', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px' }}>
-                        {item.ic}
-                      </div>
-                      <span style={{ fontSize: '16px', fontWeight: '800', color: '#1E293B' }}>{item.label}</span>
-                   </div>
-                   <FiChevronRight color="#CBD5E1" size={20} />
+             { label: 'Orders', count: '12', icon: <FiClipboard className="text-amber-500" /> },
+             { label: 'Saved', count: '8', icon: <FiHeart className="text-red-500" /> },
+             { label: 'Support', count: '24/7', icon: <FiHeadphones className="text-indigo-500" /> },
+           ].map((metric, idx) => (
+             <motion.div 
+               key={metric.label}
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: idx * 0.1 }}
+               whileHover={{ y: -5 }}
+               className="bg-white p-8 rounded-[40px] border border-slate-100 flex flex-col items-center justify-center text-center shadow-subtle group hover:border-primary/20 transition-all"
+             >
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                  {metric.icon}
                 </div>
-             </Link>
+                <div className="text-3xl font-black text-slate-900 tracking-tighter">{metric.count}</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">{metric.label}</div>
+             </motion.div>
            ))}
         </section>
 
+        {/* 3. Account Menu Cluster */}
+        <section className="bg-white rounded-[56px] border border-slate-100 overflow-hidden shadow-premium group">
+           <div className="divide-y divide-slate-50">
+             {[
+               { label: 'My Bookings', ic: <FiClipboard />, color: 'text-amber-600', bg: 'bg-amber-50', route: '/requests' },
+               { label: 'Saved Professionals', ic: <FiHeart />, color: 'text-red-600', bg: 'bg-red-50', route: '/favorites' },
+               { label: 'Account Settings', ic: <FiSettings />, color: 'text-indigo-600', bg: 'bg-indigo-50', route: '/settings' },
+               { label: 'Help & Support', ic: <FiHeadphones />, color: 'text-emerald-600', bg: 'bg-emerald-50', route: '/support' },
+               { label: 'Privacy & Security', ic: <FiShield />, color: 'text-slate-600', bg: 'bg-slate-50', route: '#' },
+             ].map((item, idx) => (
+               <Link href={item.route} key={item.label}>
+                  <motion.div 
+                    whileHover={{ x: 8 }}
+                    className="group px-10 py-6 flex justify-between items-center cursor-pointer transition-all hover:bg-slate-50/50"
+                  >
+                     <div className="flex items-center gap-6">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${item.bg} ${item.color} group-hover:scale-110 transition-transform`}>
+                          {item.ic}
+                        </div>
+                        <span className="text-lg font-black text-slate-800 tracking-tight">{item.label}</span>
+                     </div>
+                     <FiChevronRight className="text-slate-300 group-hover:text-primary transition-colors" size={24} />
+                  </motion.div>
+               </Link>
+             ))}
+           </div>
+        </section>
+
+        {/* 4. Provider Special Access */}
         {user?.role === 'provider' && (
-          <section style={{ marginTop: '24px' }}>
-            <Link href="/provider/dashboard" style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '24px', padding: '24px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFF',
-                boxShadow: '0 8px 20px rgba(16,185,129,0.2)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                   <FiBriefcase size={28} />
+          <motion.section 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-8"
+          >
+            <Link href="/provider/dashboard">
+              <motion.div 
+                whileHover={{ y: -5, scale: 1.01 }}
+                className="bg-slate-950 text-white p-10 rounded-[48px] flex items-center justify-between shadow-premium relative overflow-hidden group border border-white/5"
+              >
+                {/* Background Decor */}
+                <FiBriefcase className="absolute -bottom-10 -right-10 text-white/5 rotate-12" size={200} />
+                
+                <div className="relative z-10 flex items-center gap-8">
+                   <div className="w-16 h-16 rounded-[24px] bg-primary flex items-center justify-center text-white shadow-glow group-hover:rotate-6 transition-transform">
+                      <FiBriefcase size={32} />
+                   </div>
                    <div>
-                     <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900' }}>Provider Dashboard</h4>
-                     <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.8, fontWeight: '600' }}>Manage your listings & earnings</p>
+                     <h4 className="text-2xl font-black tracking-tighter mb-1">Provider Dashboard</h4>
+                     <p className="text-white/40 font-medium">Manage your pro-profile & listings</p>
                    </div>
                 </div>
-                <FiArrowRight size={24} />
-              </div>
+                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:translate-x-2 transition-transform relative z-10">
+                  <FiArrowRight size={24} />
+                </div>
+              </motion.div>
             </Link>
-          </section>
+          </motion.section>
         )}
 
-        <button 
+        {/* 5. Danger Zone - Sign Out */}
+        <motion.button 
+          whileHover={{ scale: 0.98 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleLogout}
-          style={{ 
-            width: '100%', marginTop: '32px', backgroundColor: '#FEF2F2', border: '1.5px solid #FCA5A5',
-            padding: '20px', borderRadius: '24px', color: '#EF4444', fontWeight: '900', fontSize: '16px',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', cursor: 'pointer'
-          }}
+          className="w-full mt-10 p-6 rounded-[32px] bg-red-50 border border-red-100 text-red-500 font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-red-100 transition-all shadow-subtle group"
         >
-          <FiLogOut /> SIGN OUT
-        </button>
+          <FiLogOut className="group-hover:rotate-12 transition-transform" /> TERMINATE SESSION
+        </motion.button>
+
+        <p className="text-center mt-12 text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
+           LocalHub Elite Security &copy; {new Date().getFullYear()}
+        </p>
 
       </main>
-
-      <style jsx>{`
-        .menu-item-hover:hover {
-          background-color: #F8FAFC;
-        }
-      `}</style>
     </div>
   );
 }

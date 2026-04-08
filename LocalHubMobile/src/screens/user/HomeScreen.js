@@ -34,41 +34,50 @@ const MAX_APP_WIDTH = 800;
 // ─── Fallback Data ─────────────────────────────────────────────────────────────
 
 const FALLBACK_CATEGORIES = [
-  { id: '1', name: 'Cleaning',     icon: 'sparkles-outline',   color: '#3B82F6', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800' },
-  { id: '2', name: 'Plumbing',     icon: 'water-outline',      color: '#3B82F6', image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800' },
-  { id: '3', name: 'Electrical',   icon: 'flash-outline',      color: '#F59E0B', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=800' },
-  { id: '4', name: 'AC Service',   icon: 'snow-outline',       color: '#06B6D4', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800' },
-  { id: '5', name: 'Salon',        icon: 'cut-outline',        color: '#EC4899', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800' },
-  { id: '6', name: 'Carpentry',    icon: 'hammer-outline',     color: '#EF4444', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800' },
-  { id: '7', name: 'Events',       icon: 'calendar-outline',   color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800' },
-  { id: '8', name: 'Health',       icon: 'fitness-outline',    color: '#10B981', image: 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?q=80&w=800' },
+  { id: 'daily-life', name: 'Daily Life', icon: 'basket-outline', color: '#0EA5E9', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400' },
+  { id: 'professional', name: 'Professional', icon: 'briefcase-outline', color: '#6366F1', image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=400' },
+  { id: 'home-repair', name: 'Home & Repair', icon: 'hammer-outline', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400' },
+  { id: 'travel', name: 'Travel', icon: 'car-sport-outline', color: '#EF4444', image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=400' },
+  { id: 'shopping', name: 'Shopping', icon: 'bag-handle-outline', color: '#EC4899', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=400' },
 ];
 
 const FALLBACK_BUSINESSES = [
   {
-    id: 'b1', name: 'Elite Plumbers', category: 'Plumbing', rating: '4.8',
-    reviewsCount: 156, address: '123 Water St', tier: 'Diamond',
-    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    id: 'b1',
+    name: 'Sparkle Home Cleaning',
+    category: 'Home Services',
+    rating: 4.8,
+    reviews: 124,
+    address: '123 Clean St, City Center',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400',
+    distance: '1.2 km',
+    tier: 'premium',
+    featured: true
   },
   {
-    id: 'b2', name: 'Sparky Electricians', category: 'Electrical', rating: '4.9',
-    reviewsCount: 220, address: '456 Flow Ave', tier: 'Gold',
-    image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
+    id: 'b2',
+    name: 'QuickFix Auto Mechanics',
+    category: 'Auto Repair',
+    rating: 4.6,
+    reviews: 89,
+    address: '456 Garage Ave, Westside',
+    image: 'https://images.unsplash.com/photo-1516321165247-4aa89a48be28?q=80&w=400',
+    distance: '2.5 km',
+    tier: 'basic',
+    featured: true
   },
   {
-    id: 'b3', name: 'Pest Control Pro', category: 'Pest', rating: '4.7',
-    reviewsCount: 89, address: '789 Bug Way', tier: 'Silver',
-    image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-  },
-  {
-    id: 'b4', name: 'Glow Salon', category: 'Beauty', rating: '4.9',
-    reviewsCount: 442, address: 'Saket, New Delhi', tier: 'Diamond',
+    id: 'b3',
+    name: 'Glow Beauty Salon',
+    category: 'Beauty',
+    rating: 4.9,
+    reviews: 312,
+    address: '789 Main St, Downtown',
     image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=400',
-    avatar: 'https://randomuser.me/api/portraits/women/12.jpg',
-  },
+    distance: '0.8 km',
+    tier: 'premium',
+    featured: true
+  }
 ];
 
 const BANNERS = [
@@ -95,14 +104,6 @@ const BANNERS = [
     subtitle: 'Top-rated stylists at your service',
     cta: 'Explore Services',
     ctaRoute: { name: 'SearchResults', params: { query: 'Beauty' } },
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=1200',
-    tag: '🪠 Fast Plumbing',
-    title: 'Leak fixed fast,\nGuaranteed.',
-    subtitle: 'Transparent pricing, zero hidden costs',
-    cta: 'Call Plumber',
-    ctaRoute: { name: 'SearchResults', params: { query: 'Plumbing' } },
   },
 ];
 
