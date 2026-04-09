@@ -9,6 +9,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import chatService from '../../services/chatService';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -41,7 +42,7 @@ const ChatListScreen = ({ navigation }) => {
         activeOpacity={0.8}
         onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.navigate('ChatDetail', { name: item.name });
+            navigation.navigate('ChatDetail', { name: item.name, chatId: item.id });
         }}
       >
         <View style={styles.avatarWrapper}>

@@ -41,9 +41,9 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="mt-8 mb-20 overflow-hidden">
+    <section className="mt-6 md:mt-8 mb-12 md:mb-16 overflow-hidden">
       <div className="section-container">
-        <div className="relative h-[600px] lg:h-[700px] rounded-[40px] lg:rounded-[60px] overflow-hidden bg-slate-950 group">
+        <div className="relative h-[320px] sm:h-[380px] md:h-[430px] lg:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden bg-slate-950 group">
           
           <AnimatePresence mode="wait">
             <motion.div
@@ -54,10 +54,10 @@ export default function HeroSection() {
               transition={{ duration: 1 }}
               className="absolute inset-0 shadow-inner"
             >
-              <img 
+              <img
                 src={SLIDES[current].image} 
                 alt={SLIDES[current].title}
-                className="w-full h-full object-cover scale-105"
+                className="w-full h-full object-cover"
               />
               {/* Complex Gradients for Premium Look */}
               <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent" />
@@ -66,7 +66,7 @@ export default function HeroSection() {
           </AnimatePresence>
 
           {/* Content Wrapper (Split Layout Grid) */}
-          <div className="absolute inset-0 grid grid-cols-1 lg:grid-cols-2 items-center px-8 md:px-20 py-12">
+          <div className="absolute inset-0 grid grid-cols-1 lg:grid-cols-2 items-center px-5 sm:px-8 md:px-12 lg:px-16 py-6 md:py-10">
             <motion.div
               key={`content-${current}`}
               initial={{ x: -50, opacity: 0 }}
@@ -74,26 +74,26 @@ export default function HeroSection() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="max-w-xl z-20"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 mb-4 md:mb-6">
                 <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_2px_rgba(79,70,229,0.5)] animate-pulse" />
                 <span className="text-white font-black text-[10px] tracking-[0.2em] uppercase">{SLIDES[current].tag}</span>
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-8 leading-[1] tracking-tighter">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 md:mb-6 leading-[1.05] tracking-tighter">
                 {SLIDES[current].title}
               </h1>
               
-              <p className="text-lg md:text-xl text-white/60 font-medium mb-12 leading-relaxed max-w-lg">
+              <p className="text-sm sm:text-base md:text-lg text-white/70 font-medium mb-6 md:mb-10 leading-relaxed max-w-lg">
                 {SLIDES[current].desc}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                <button className="btn-premium px-12 py-5 !rounded-[24px] text-lg hover-lift group">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
+                <button className="btn-premium px-6 sm:px-8 py-3 sm:py-4 !rounded-full text-sm md:text-base hover-lift group">
                   {SLIDES[current].cta} 
                   <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button className="flex items-center gap-4 text-white font-bold group">
-                  <div className="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-slate-950 transition-all">
+                <button className="hidden sm:flex items-center gap-4 text-white font-bold group">
+                  <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-slate-950 transition-all">
                     <FiPlay fill="currentColor" />
                   </div>
                   <span className="text-sm tracking-widest uppercase opacity-60 group-hover:opacity-100 transition-opacity">Watch Demo</span>
@@ -103,7 +103,7 @@ export default function HeroSection() {
           </div>
 
           {/* Navigation Dots (Right Side Vertical) */}
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 z-30">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-3 z-30">
              {SLIDES.map((_, idx) => (
                <button
                  key={idx}
@@ -116,7 +116,7 @@ export default function HeroSection() {
           </div>
 
           {/* Slider Count Indicator */}
-          <div className="absolute bottom-12 left-20 hidden md:flex items-center gap-4 z-30">
+          <div className="absolute bottom-6 left-8 hidden md:flex items-center gap-4 z-30">
             <span className="text-white text-3xl font-black italic opacity-20">0{current + 1}</span>
             <div className="h-[2px] w-20 bg-white/10 overflow-hidden rounded-full">
               <motion.div 

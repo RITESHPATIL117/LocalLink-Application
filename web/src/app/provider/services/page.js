@@ -3,22 +3,15 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Button from '../../../components/Button';
-import InputField from '../../../components/InputField';
+import { FiCheckCircle, FiClock, FiMapPin, FiBriefcase } from 'react-icons/fi';
+import businessOwnerService from '../../../services/businessOwnerService';
 
 export default function ProviderServices() {
   const { isAuthenticated, user, loading: authLoading } = useSelector(state => state.auth);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  
-  // Dummy data representing fetched business services
-  const [services, setServices] = useState([
-    { id: 1, name: 'Premium Full Inspection', price: 999, description: 'Comprehensive diagnostic of all related aspects.' },
-    { id: 2, name: 'Basic Maintenance', price: 499, description: 'Standard maintenance protocol for general safety.' }
-  ]);
-  
-  const [isAdding, setIsAdding] = useState(false);
-  const [newService, setNewService] = useState({ name: '', price: '', description: '' });
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => setMounted(true), []);
 
@@ -26,110 +19,94 @@ export default function ProviderServices() {
     if (mounted && !authLoading) {
       if (!isAuthenticated || user?.role !== 'provider') {
         router.push('/login');
+      } else {
+        fetchProviderBusinesses();
       }
     }
   }, [mounted, authLoading, isAuthenticated, user, router]);
+
+  const fetchProviderBusinesses = async () => {
+    setLoading(true);
+    try {
+      const response = await businessOwnerService.getBusinesses().catch(() => []);
+      const rows = Array.isArray(response) ? response : (response?.data || []);
+      setServices(rows);
+    } catch (error) {
+      console.error('Error loading provider businesses:', error);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!mounted || authLoading || !isAuthenticated) {
     return <div style={{ padding: '60px', textAlign: 'center' }}>Loading Provider Services...</div>;
   }
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    if (newService.name && newService.price) {
-      setServices([...services, { id: Date.now(), ...newService }]);
-      setNewService({ name: '', price: '', description: '' });
-      setIsAdding(false);
-    }
-  };
-
-  const handleDelete = (id) => {
-    setServices(services.filter(s => s.id !== id));
-  };
-
   return (
-    <div className="container" style={{ display: 'flex', gap: '30px', padding: '40px 20px' }}>
+    <div className="section-container py-10">
       
       {/* Sidebar */}
-      <aside style={{ width: '250px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div className="card" style={{ position: 'sticky', top: '100px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px', color: 'var(--color-primary)' }}>Provider Menu</h3>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <li><Link href="/provider/dashboard" style={{ fontWeight: '600', color: 'var(--color-text-secondary)', textDecoration: 'none' }}>Overview</Link></li>
-            <li><a href="/provider/dashboard#leads" style={{ fontWeight: '600', color: 'var(--color-text-secondary)', textDecoration: 'none' }}>My Leads</a></li>
-            <li><Link href="/provider/services" style={{ fontWeight: '800', color: 'var(--color-primary)', textDecoration: 'none' }}>Services Console</Link></li>
-          </ul>
-        </div>
-      </aside>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <aside className="lg:col-span-3">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sticky top-28 shadow-subtle">
+            <h3 className="text-lg font-black mb-6 text-primary">Provider Menu</h3>
+            <ul className="space-y-4 text-sm font-bold text-slate-500">
+              <li><Link href="/provider/dashboard" className="hover:text-primary">Overview</Link></li>
+              <li><a href="/provider/dashboard#leads" className="hover:text-primary">My Leads</a></li>
+              <li><Link href="/provider/services" className="text-primary">Services Console</Link></li>
+            </ul>
+          </div>
+        </aside>
 
       {/* Main Block */}
-      <main style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', color: 'var(--color-text)' }}>Services Console</h1>
-          {!isAdding && (
-            <Button onClick={() => setIsAdding(true)}>+ Add New Service</Button>
-          )}
+      <main className="lg:col-span-9">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <h1 className="page-title">Services Console</h1>
+          <button
+            onClick={() => router.push('/provider/dashboard')}
+            className="btn-premium px-6 py-3 !rounded-2xl text-xs"
+          >
+            Go to Dashboard
+          </button>
         </div>
 
-        {isAdding && (
-          <div className="card" style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px' }}>Add New Service</h3>
-            <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ flex: 2 }}>
-                  <InputField 
-                    label="Service Name" 
-                    value={newService.name} 
-                    onChange={e => setNewService({...newService, name: e.target.value})} 
-                    placeholder="e.g. Deep Cleaning" required 
-                  />
+        {loading ? (
+          <div className="ui-card p-10 text-center text-slate-500 font-semibold">Loading your businesses...</div>
+        ) : services.length === 0 ? (
+          <div className="ui-card p-10 text-center">
+            <FiBriefcase className="mx-auto text-slate-300 mb-4" size={44} />
+            <h3 className="text-xl font-black text-slate-900 mb-2">No businesses found</h3>
+            <p className="text-slate-500 mb-6">Create your first business listing from the provider onboarding flow.</p>
+            <button onClick={() => router.push('/provider/dashboard')} className="btn-premium px-6 py-3 !rounded-2xl text-xs">
+              Open Provider Dashboard
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {services.map((service) => (
+              <div key={service.id} className="ui-card p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 mb-1">{service.name}</h3>
+                  <p className="text-slate-500 text-sm mb-2">{service.description || 'No description added yet.'}</p>
+                  <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-500">
+                    <span className="inline-flex items-center gap-1.5"><FiMapPin /> {service.city || 'Sangli'}</span>
+                    <span className={`inline-flex items-center gap-1.5 ${service.is_verified ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {service.is_verified ? <FiCheckCircle /> : <FiClock />}
+                      {service.is_verified ? 'Verified' : 'Pending Verification'}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <InputField 
-                    label="Base Price (₹)" 
-                    type="number" 
-                    value={newService.price} 
-                    onChange={e => setNewService({...newService, price: e.target.value})} 
-                    placeholder="499" required 
-                  />
+                <div className="text-right">
+                  <div className="text-xs font-black tracking-widest uppercase text-slate-400 mb-1">Category</div>
+                  <div className="text-sm font-black text-primary">{service.category_name || 'General'}</div>
                 </div>
               </div>
-              <div style={{ marginVertical: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Description</label>
-                <textarea 
-                  value={newService.description}
-                  onChange={e => setNewService({...newService, description: e.target.value})}
-                  placeholder="Describe your service in detail..."
-                  style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-surface-secondary)', fontFamily: 'inherit', resize: 'vertical' }}
-                  rows={3}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
-                <Button type="submit">Save Service</Button>
-              </div>
-            </form>
+            ))}
           </div>
         )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {services.map(service => (
-            <div key={service.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
-              <div>
-                <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '8px' }}>{service.name}</h3>
-                <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px' }}>{service.description}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '24px', fontWeight: '900', color: 'var(--color-primary)', marginBottom: '12px' }}>₹{service.price}</div>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => handleDelete(service.id)} style={{ color: 'var(--color-error)', background: 'none', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Remove</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </main>
+      </div>
     </div>
   );
 }

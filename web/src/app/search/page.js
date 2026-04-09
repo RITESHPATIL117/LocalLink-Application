@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -13,15 +13,30 @@ const FILTERS = ['Top Rated', 'Near Me', 'Open Now', 'Price', 'Newest'];
 
 function SearchContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
-  const categoryId = searchParams.get('category') || '';
 
-  const [search, setSearch] = useState(query);
+  const [query, setQuery] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('Top Rated');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+
+  const syncFromUrl = () => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextQuery = urlParams.get('q') || '';
+    const nextCategoryId = urlParams.get('category') || '';
+    setQuery(nextQuery);
+    setCategoryId(nextCategoryId);
+    setSearch(nextQuery);
+  };
+
+  useEffect(() => {
+    syncFromUrl();
+    window.addEventListener('popstate', syncFromUrl);
+    return () => window.removeEventListener('popstate', syncFromUrl);
+  }, []);
 
   useEffect(() => {
     fetchResults();
@@ -46,14 +61,17 @@ function SearchContent() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    router.push(`/search?q=${encodeURIComponent(search)}`);
+    const nextQuery = search.trim();
+    setQuery(nextQuery);
+    setCategoryId('');
+    router.push(`/search?q=${encodeURIComponent(nextQuery)}`);
   };
 
   return (
     <div className="bg-bg-main min-h-screen pb-24">
       
       {/* 1. High-Fidelity Header */}
-      <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] shadow-premium">
+      <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200 sticky sticky-page-header z-[80] shadow-premium">
         <div className="section-container max-w-7xl py-5">
           <div className="flex items-center gap-5">
             <motion.button 
@@ -124,14 +142,14 @@ function SearchContent() {
         </div>
       </header>
 
-      <main className="section-container max-w-7xl pt-10">
+      <main className="page-container pt-8">
         
-        <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8 pb-4 border-b border-slate-100">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tighter">
+            <h2 className="page-title">
               {query ? `Results for "${query}"` : (categoryId ? 'Category Specialists' : 'All Marketplace Professionals')}
             </h2>
-            <p className="text-slate-400 font-bold mt-1 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
+            <p className="page-subtitle mt-2 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {results.length} EXPERTS FOUND NEAR YOU
             </p>
@@ -147,14 +165,14 @@ function SearchContent() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[40px] p-24 text-center border border-slate-100 shadow-premium"
+            className="ui-card p-10 md:p-16 text-center"
           >
             <div className="w-24 h-24 rounded-[40px] bg-slate-50 flex items-center justify-center text-4xl mx-auto mb-10 shadow-inner">
               🔍
             </div>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">No direct matches found</h3>
-            <p className="text-slate-500 text-lg font-medium max-w-md mx-auto mb-12 leading-relaxed">
-              We couldn't find any professionals matching that search. try expanding your filters or search for another neighborhood in Sangli.
+              <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter mb-4">No direct matches found</h3>
+            <p className="text-slate-500 text-base md:text-lg font-medium max-w-md mx-auto mb-10 leading-relaxed">
+              We couldn't find any professionals matching that search. Try expanding your filters or search for another neighborhood in Sangli.
             </p>
             <button 
               onClick={() => { setSearch(''); router.push('/search'); }}
@@ -187,11 +205,11 @@ function SearchContent() {
 
       {/* Floating CTA */}
       {results.length > 0 && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]">
+        <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-[90] w-[calc(100%-1.5rem)] sm:w-auto max-w-md sm:max-w-none">
           <motion.button 
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="bg-slate-950 text-white px-10 py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.3)] border border-white/10"
+            className="bg-slate-950 text-white w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.14em] flex items-center justify-center gap-3 sm:gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.3)] border border-white/10"
           >
             <FiZap className="text-primary" /> Get Best Price Quote
           </motion.button>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiGrid, FiList, FiBriefcase, FiZap, FiStar, FiCheckCircle, 
-  FiXCircle, FiClock, FiSettings, FiArrowRight, FiBell, FiPlus, FiLogOut
+  FiXCircle, FiClock, FiSettings, FiArrowRight, FiBell, FiPlus, FiLogOut, FiCalendar, FiMapPin
 } from 'react-icons/fi';
 import leadService from '../../../services/leadService';
 import Button from '../../../components/Button';
@@ -55,8 +55,11 @@ export default function ProviderDashboard() {
 
   useEffect(() => {
     if (!user?.business_id) return;
-    const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000');
-    socket.emit('joinRoom', `business_${user.business_id}`);
+    const socketBaseUrl = process.env.NEXT_PUBLIC_SOCKET_URL
+      || process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')
+      || 'http://127.0.0.1:5000';
+    const socket = io(socketBaseUrl);
+    socket.emit('join_room', `business_${user.business_id}`);
     socket.on('new_rfq_lead', () => fetchLeads());
     socket.on('booking_status_updated', () => fetchLeads());
     return () => socket.disconnect();
@@ -119,7 +122,7 @@ export default function ProviderDashboard() {
       <main className="flex-grow flex flex-col min-w-0">
         
         {/* Top App Bar */}
-        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-6 shadow-subtle px-10">
+        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-6 shadow-subtle px-4 sm:px-6 lg:px-10">
           <div className="flex justify-between items-center">
              <div>
                <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Welcome, {user.name}</h1>
@@ -140,7 +143,7 @@ export default function ProviderDashboard() {
           </div>
         </header>
 
-        <div className="p-6 md:p-10 max-w-7xl w-full">
+        <div className="p-6 md:p-10 max-w-7xl w-full mx-auto">
           
           {/* Quick Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

@@ -51,6 +51,11 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const TOTAL_STEPS = 4;
 
+const getImagePickerMediaTypes = () =>
+  (ImagePicker.MediaType && ImagePicker.MediaType.Images)
+    ? ImagePicker.MediaType.Images
+    : ImagePicker.MediaTypeOptions.Images;
+
 const INITIAL_DATA = {
   profileImage: null,
   name: '', tagline: '', category: '', customCategory: '', subCategory: '', description: '',
@@ -128,7 +133,7 @@ const PhotoPicker = ({ label, value, onPick, isRequired, error }) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images || ImagePicker.MediaType.Images,
+      mediaTypes: getImagePickerMediaTypes(),
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
@@ -494,7 +499,7 @@ const StepOperations = ({ data, onChange, refs, images, setImages }) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images || ImagePicker.MediaType.Images,
+      mediaTypes: getImagePickerMediaTypes(),
       allowsMultipleSelection: true,
       quality: 0.7,
     });

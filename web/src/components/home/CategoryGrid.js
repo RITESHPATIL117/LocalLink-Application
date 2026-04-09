@@ -40,7 +40,7 @@ export default function CategoryGrid() {
 
   if (loading) {
     return (
-      <div className="mb-20 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
+      <div className="mb-12 md:mb-16 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 md:gap-6">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div key={i} className="flex flex-col items-center gap-4">
             <div className="w-20 h-20 rounded-full skeleton" />
@@ -52,15 +52,15 @@ export default function CategoryGrid() {
   }
 
   return (
-    <section className="mb-20">
-      <div className="flex justify-between items-end mb-10">
+    <section className="mb-12 md:mb-16">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 md:mb-10">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Browse by Category</h2>
-          <p className="text-slate-500 mt-2 font-medium">Verified local services in Sangli, Maharashtra</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Browse by Category</h2>
+          <p className="text-slate-500 mt-2 text-sm md:text-base">Verified local services in Sangli, Maharashtra</p>
         </div>
         <button 
           onClick={() => router.push('/categories')}
-          className="group flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all"
+          className="group flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
         >
           View All Categories <span className="text-xl">→</span>
         </button>
@@ -71,7 +71,7 @@ export default function CategoryGrid() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-8"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-4 md:gap-6"
       >
         {categories.map((cat) => (
           <motion.div
@@ -79,7 +79,7 @@ export default function CategoryGrid() {
             variants={itemVariants}
             whileHover={{ y: -8 }}
             onClick={() => router.push(`/categories?id=${cat.id}`)}
-            className="flex flex-col items-center group cursor-pointer"
+            className="flex flex-col items-center group cursor-pointer h-full"
           >
             <div 
               className="w-24 h-24 rounded-full bg-white border border-slate-100 shadow-subtle group-hover:shadow-premium flex items-center justify-center transition-all duration-500 overflow-hidden relative"

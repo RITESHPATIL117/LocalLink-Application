@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../../../store/authSlice';
+import { logoutUser } from '../../store/authSlice';
 import { motion } from 'framer-motion';
 import { 
   FiChevronLeft, FiUser, FiLock, FiShield, FiBell, 

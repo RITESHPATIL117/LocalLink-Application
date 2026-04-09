@@ -69,9 +69,9 @@ export default function CategoriesPage() {
   return (
     <div className="bg-bg-main min-h-screen flex flex-col">
       {/* 1. Header Section */}
-      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[60] py-4">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky sticky-page-header z-[60] py-4">
         <div className="section-container max-w-7xl">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-4">
               <motion.button 
                 whileHover={{ x: -4 }}
@@ -80,7 +80,7 @@ export default function CategoriesPage() {
               >
                 <FiArrowLeft size={20} />
               </motion.button>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tighter">Explore Services</h1>
+              <h1 className="page-title">Explore Services</h1>
             </div>
             <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 shadow-subtle">
               <FiMapPin size={14} className="text-primary" />
@@ -95,7 +95,7 @@ export default function CategoriesPage() {
               placeholder="Search for 'AC Repair', 'Cleaning', 'Wedding'..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-14 pr-14 py-4 rounded-[20px] border border-slate-200 bg-white/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 text-slate-900 font-semibold outline-none transition-all shadow-subtle"
+              className="w-full pl-14 pr-14 py-4 rounded-2xl border border-slate-200 bg-white/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 text-slate-900 font-semibold outline-none transition-all shadow-subtle"
             />
             {isSearching && (
               <button 
@@ -117,10 +117,11 @@ export default function CategoriesPage() {
             <p>Gathering the best professionals in Sangli...</p>
           </div>
         ) : (
-          <div className="flex section-container max-w-7xl pt-8 h-[calc(100vh-180px)]">
+          <div className="section-container max-w-7xl pt-8 pb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Sidebar Navigation */}
-            <aside className="w-32 md:w-48 overflow-y-auto pr-4 scrollbar-hide border-r border-slate-100 group">
-              <div className="flex flex-col gap-2 pb-12">
+            <aside className="lg:col-span-3 w-full lg:w-auto overflow-x-auto lg:overflow-y-auto pr-0 lg:pr-4 pb-4 lg:pb-0 scrollbar-hide border-b lg:border-b-0 lg:border-r border-slate-100 group">
+              <div className="flex flex-row lg:flex-col gap-2 pb-2 lg:pb-12">
                 {categories.map((cat) => {
                   const isActive = selectedMainCat === cat.id;
                   return (
@@ -128,7 +129,7 @@ export default function CategoriesPage() {
                       key={cat.id} 
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSelectNav(cat.id)}
-                      className={`cursor-pointer flex flex-col items-center p-4 rounded-[28px] transition-all relative ${
+                      className={`cursor-pointer min-w-[108px] lg:min-w-0 flex flex-col items-center p-4 rounded-[24px] transition-all relative ${
                         isActive 
                         ? 'bg-primary text-white shadow-glow translate-x-2' 
                         : 'bg-white text-slate-500 hover:bg-slate-50 border border-transparent'
@@ -151,7 +152,7 @@ export default function CategoriesPage() {
             </aside>
 
             {/* Sub-Category Content Area */}
-            <main className="flex-1 overflow-y-auto pl-8 pb-32">
+            <main className="lg:col-span-9 overflow-visible lg:overflow-y-auto pl-0 lg:pl-6 pb-10 lg:pb-24">
               <AnimatePresence mode="wait">
                 {activeCategoryData && (
                   <motion.div 
@@ -162,9 +163,9 @@ export default function CategoriesPage() {
                     transition={{ duration: 0.3 }}
                   >
                     {/* Header Info */}
-                    <div className="flex justify-between items-start mb-10 pb-6 border-b border-slate-100">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-10 pb-6 border-b border-slate-100">
                       <div>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tighter mb-2">
                           {activeCategoryData.name}
                         </h2>
                         <div className="flex items-center gap-3">
@@ -186,7 +187,7 @@ export default function CategoriesPage() {
                     </div>
 
                     {/* Sub-Category Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                       {subLoading ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
                           <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mb-4" />
@@ -200,7 +201,7 @@ export default function CategoriesPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             onClick={() => router.push(`/search?q=${encodeURIComponent(sub.name)}`)}
-                            className="group bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all cursor-pointer"
+                            className="group ui-card overflow-hidden hover:shadow-premium transition-all cursor-pointer"
                           >
                             <div className="h-40 overflow-hidden relative">
                               <img 
@@ -228,7 +229,7 @@ export default function CategoriesPage() {
                           </motion.div>
                         ))
                       ) : (
-                        <div className="col-span-full py-20 px-10 text-center bg-slate-50 rounded-[40px] border border-slate-100">
+                        <div className="col-span-full py-20 px-10 text-center bg-slate-50 rounded-3xl border border-slate-100">
                            <p className="text-slate-400 text-lg font-bold italic mb-2">No specialized services found here.</p>
                            <p className="text-slate-300">Try searching generally or check our trending section.</p>
                         </div>
@@ -238,6 +239,7 @@ export default function CategoriesPage() {
                 )}
               </AnimatePresence>
             </main>
+            </div>
           </div>
         )}
       </div>

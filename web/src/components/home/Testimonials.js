@@ -29,19 +29,19 @@ const TESTIMONIALS = [
 
 export default function Testimonials() {
   return (
-    <section className="mb-32">
+    <section className="mb-12 md:mb-16">
       <div className="section-container">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-10 md:mb-14 gap-6">
           <div className="max-w-2xl text-center md:text-left">
-            <h2 className="text-4xl font-black text-slate-900 mb-6 tracking-tight">What Customers Say <span className="text-amber-400">★</span></h2>
-            <p className="text-xl text-slate-500 font-medium">Join 50,000+ happy customers in Sangli using LocalHub</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 tracking-tight">What Customers Say <span className="text-amber-400">★</span></h2>
+            <p className="text-sm md:text-base text-slate-500">Join 50,000+ happy customers in Sangli using LocalHub</p>
           </div>
           <div className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-50 border border-slate-100 italic font-medium text-slate-500 text-sm">
              "The Trustworthy Choice for Home Services"
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {TESTIMONIALS.map((t, idx) => (
             <motion.div
               key={idx}
@@ -50,7 +50,7 @@ export default function Testimonials() {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
               whileHover={{ y: -10 }}
-              className="p-10 rounded-[40px] bg-white border border-slate-100 shadow-subtle hover:shadow-premium transition-all duration-500 flex flex-col justify-between"
+              className="p-6 md:p-8 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col justify-between h-full"
             >
               <div>
                 <div className="flex gap-1 mb-8">
@@ -58,7 +58,7 @@ export default function Testimonials() {
                     <FiStar key={i} className="text-amber-400" fill="currentColor" size={18} />
                   ))}
                 </div>
-                <p className="text-slate-600 text-lg leading-relaxed font-medium italic mb-10">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-medium italic mb-8">
                   {t.text}
                 </p>
               </div>

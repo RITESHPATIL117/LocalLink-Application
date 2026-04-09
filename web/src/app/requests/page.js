@@ -91,9 +91,9 @@ export default function RequestsPage() {
     <div className="bg-bg-main min-h-screen flex flex-col">
       
       {/* 1. Header Parity */}
-      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[100] py-6 shadow-premium">
-        <div className="section-container max-w-7xl flex justify-between items-center">
-          <div className="flex items-center gap-6">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky sticky-page-header z-[80] py-5 shadow-premium">
+        <div className="section-container max-w-7xl flex justify-between items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             <motion.button 
               whileHover={{ x: -4 }}
               onClick={() => router.back()} 
@@ -102,8 +102,8 @@ export default function RequestsPage() {
               <FiChevronLeft size={24} />
             </motion.button>
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter">My Ledger</h1>
-              <div className="flex items-center gap-2 mt-1 px-3 py-1 bg-primary/10 rounded-full w-fit border border-primary/10">
+              <h1 className="page-title">My Ledger</h1>
+              <div className="hidden sm:flex items-center gap-2 mt-1 px-3 py-1 bg-primary/10 rounded-full w-fit border border-primary/10">
                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">{requests.length} TOTAL ENTRIES</span>
               </div>
@@ -119,7 +119,7 @@ export default function RequestsPage() {
         </div>
       </header>
 
-      <main className="section-container max-w-7xl pt-10 pb-32">
+      <main className="page-container">
         
         {/* 2. Stats Dashboard Row */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -131,7 +131,7 @@ export default function RequestsPage() {
             <motion.div 
               key={stat.label}
               whileHover={{ y: -4 }}
-              className={`${stat.bg} p-8 rounded-[40px] border ${stat.border} text-center shadow-subtle`}
+              className={`${stat.bg} p-8 rounded-3xl border ${stat.border} text-center shadow-subtle`}
             >
               <div className={`text-5xl font-black ${stat.color} tracking-tighter`}>{stat.count}</div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">{stat.label} Bookings</div>
@@ -140,7 +140,7 @@ export default function RequestsPage() {
         </section>
 
         {/* 3. Filter Tabs Panel */}
-        <div className="bg-white/50 backdrop-blur-md border border-slate-100 p-2 rounded-[32px] mb-10 overflow-x-auto no-scrollbar flex gap-2">
+        <div className="bg-white/50 backdrop-blur-md border border-slate-100 p-2 rounded-3xl mb-10 overflow-x-auto no-scrollbar flex gap-2">
           {FILTERS.map(f => {
             const active = activeFilter === f;
             const cfg = STATUS_CONFIG[f];
@@ -149,7 +149,7 @@ export default function RequestsPage() {
                 key={f}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveFilter(f)}
-                className={`flex items-center gap-3 px-8 py-4 rounded-[24px] font-black text-xs uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-3 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
                   active 
                     ? 'bg-primary text-white shadow-glow' 
                     : 'text-slate-500 hover:text-slate-800'
@@ -165,7 +165,7 @@ export default function RequestsPage() {
         {/* 4. Requests List */}
         <div className="space-y-6">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-[40px] border border-dashed border-slate-200">
+            <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-3xl border border-dashed border-slate-200">
                <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-6" />
                <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">Refreshing booking ledger...</p>
             </div>
@@ -173,7 +173,7 @@ export default function RequestsPage() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center p-24 bg-white rounded-[40px] border border-slate-100 shadow-premium"
+              className="text-center p-12 md:p-20 bg-white rounded-3xl border border-slate-100 shadow-premium"
             >
               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-slate-100 shadow-inner">
                 <FiList size={32} className="text-slate-200" />
@@ -201,7 +201,7 @@ export default function RequestsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-[40px] overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all group flex flex-col lg:flex-row"
+                    className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all group flex flex-col lg:flex-row"
                   >
                     <div className="lg:w-48 h-48 lg:h-auto overflow-hidden flex-shrink-0 relative">
                       <img 
@@ -212,7 +212,7 @@ export default function RequestsPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent" />
                     </div>
                     
-                    <div className="p-10 flex-grow">
+                    <div className="p-6 md:p-10 flex-grow">
                       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
                         <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">
                           {item.businessName || 'Elite Service Partner'}
@@ -248,7 +248,7 @@ export default function RequestsPage() {
                       </div>
                     </div>
 
-                    <div className="p-10 bg-slate-50 border-t lg:border-t-0 lg:border-l border-slate-100 lg:w-72 flex flex-col justify-center">
+                    <div className="p-6 md:p-10 bg-slate-50 border-t lg:border-t-0 lg:border-l border-slate-100 lg:w-72 flex flex-col justify-center">
                       <div className="mb-8">
                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Estimated Total</div>
                          <div className="text-3xl font-black text-slate-900 tracking-tighter">

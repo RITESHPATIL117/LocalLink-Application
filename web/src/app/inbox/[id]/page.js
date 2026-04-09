@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowLeft, FiMoreVertical, FiPaperclip, FiSend, FiCheck, FiCheckCircle, FiClock, FiShield, FiChevronLeft
@@ -9,14 +9,20 @@ import chatService from '../../../services/chatService';
 
 export default function ChatDetailPage() {
   const router = useRouter();
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const chatId = params.id;
-  const chatName = searchParams.get('name') || 'Elite Specialist';
+  const pathname = usePathname();
+  const chatId = pathname?.split('/').filter(Boolean).pop();
+  const [chatName, setChatName] = useState('Elite Specialist');
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setChatName(urlParams.get('name') || 'Elite Specialist');
+    }
+  }, [pathname]);
 
   useEffect(() => {
     // Initial fetch of messages mock

@@ -1,13 +1,18 @@
 import api from './api';
 
+const normalizeAuthPayload = (response) => {
+  const payload = response?.data || response || {};
+  return payload?.data || payload;
+};
+
 const authService = {
   login: async (email, password, role = 'user') => {
     try {
       const response = await api.post('/auth/login', { email, password, role });
-      return { data: response };
+      return { data: normalizeAuthPayload(response) };
     } catch (e) {
       if (e.code === 'ERR_NETWORK' || e.message?.includes('timeout')) {
-        return { data: { token: 'demo-token', user: { id: 'u1', name: 'Demo User', email, role } } };
+        return { data: { token: 'demo-token', refreshToken: 'demo-refresh-token', user: { id: 'u1', name: 'Demo User', email, role } } };
       }
       throw e;
     }
@@ -15,10 +20,10 @@ const authService = {
   register: async (userData) => {
     try {
       const response = await api.post('/auth/register', userData);
-      return { data: response };
+      return { data: normalizeAuthPayload(response) };
     } catch (e) {
       if (e.code === 'ERR_NETWORK' || e.message?.includes('timeout')) {
-        return { data: { token: 'demo-token', user: { ...userData, id: 'u_new' } } };
+        return { data: { token: 'demo-token', refreshToken: 'demo-refresh-token', user: { ...userData, id: 'u_new' } } };
       }
       throw e;
     }

@@ -11,6 +11,27 @@ const getAllBusinesses = async (req, res, next) => {
     }
 };
 
+const getBusinessById = async (req, res, next) => {
+    try {
+        const business = await Business.getById(req.params.id);
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        res.json(business);
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getNearbyBusinesses = async (req, res, next) => {
+    try {
+        const businesses = await Business.getAll(req.query);
+        res.json(businesses);
+    } catch (err) {
+        next(err);
+    }
+};
+
 const getBusinessesByCategory = async (req, res, next) => {
     try {
         const { categoryId } = req.params;
@@ -74,6 +95,26 @@ const createBusiness = async (req, res, next) => {
     }
 };
 
+const updateBusiness = async (req, res, next) => {
+    try {
+        const providerId = req.user.id;
+        await Business.updateById(req.params.id, providerId, req.body);
+        res.json({ success: true, message: 'Business updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const deleteBusiness = async (req, res, next) => {
+    try {
+        const providerId = req.user.id;
+        await Business.deleteById(req.params.id, providerId);
+        res.json({ success: true, message: 'Business deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 const getPublicStats = async (req, res, next) => {
     try {
         const stats = await Business.getStats();
@@ -114,9 +155,13 @@ const getProviderStats = async (req, res, next) => {
 
 module.exports = {
     getAllBusinesses,
+    getBusinessById,
+    getNearbyBusinesses,
     getBusinessesByCategory,
     getOwnerBusinesses,
     createBusiness,
+    updateBusiness,
+    deleteBusiness,
     getPublicStats,
     getProviderStats
 };

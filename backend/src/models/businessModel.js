@@ -127,6 +127,33 @@ class Business {
         await db.query('UPDATE businesses SET is_verified = ? WHERE id = ?', [is_verified, id]);
         return true;
     }
+
+    static async updateById(id, providerId, data) {
+        const allowedFields = ['name', 'description', 'category_id', 'address', 'city', 'image_url', 'subcategory', 'latitude', 'longitude'];
+        const updates = [];
+        const values = [];
+
+        allowedFields.forEach((field) => {
+            if (Object.prototype.hasOwnProperty.call(data, field)) {
+                updates.push(`${field} = ?`);
+                values.push(data[field]);
+            }
+        });
+
+        if (updates.length === 0) return false;
+
+        values.push(id, providerId);
+        await db.query(
+            `UPDATE businesses SET ${updates.join(', ')} WHERE id = ? AND provider_id = ?`,
+            values
+        );
+        return true;
+    }
+
+    static async deleteById(id, providerId) {
+        await db.query('DELETE FROM businesses WHERE id = ? AND provider_id = ?', [id, providerId]);
+        return true;
+    }
 }
 
 module.exports = Business;

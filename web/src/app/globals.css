@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -58,8 +58,11 @@
   --radius-xl: 40px;
   
   /* Typography */
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --navbar-height: 96px;
+  --layout-gutter: clamp(16px, 4vw, 48px);
+  --content-max-width: 1280px;
 }
 
 * {
@@ -75,6 +78,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -113,15 +122,61 @@ button {
 
 /* Premium Component Classes */
 .section-container {
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 0 48px;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .section-container {
-    padding: 0 20px;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
+}
+
+@media (min-width: 1024px) {
+  .section-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.page-shell {
+  padding-top: var(--navbar-height);
+}
+
+.sticky-page-header {
+  top: var(--navbar-height);
+}
+
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 2.5vw, 2rem) var(--layout-gutter) clamp(3rem, 7vw, 5rem);
+}
+
+.page-title {
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.page-subtitle {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+}
+
+.ui-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  border-radius: 24px;
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
 }
 
 .card-premium {
@@ -142,13 +197,14 @@ button {
 .btn-premium {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
-  padding: 12px 28px;
+  padding: 12px 24px;
   border-radius: var(--radius-md);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btn-premium:hover {

@@ -1,7 +1,6 @@
 import './globals.css';
 import StoreProvider from '../store/StoreProvider';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import AppShell from '../components/AppShell';
 
 export const metadata = {
   title: {
@@ -33,13 +32,7 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased selection:bg-primary selection:text-white">
         <StoreProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <AppShell>{children}</AppShell>
         </StoreProvider>
       </body>
     </html>

@@ -37,7 +37,7 @@ const ACTIONS = [
 
 export default function QuickActions() {
   return (
-    <section className="mb-20">
+    <section className="mb-12 md:mb-16">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {ACTIONS.map((action, idx) => (
           <motion.div
@@ -49,7 +49,7 @@ export default function QuickActions() {
           >
             <Link 
               href={action.path}
-              className="flex items-center gap-6 p-6 rounded-[32px] bg-white border border-slate-100 hover:border-primary/10 hover:shadow-premium transition-all duration-300 group"
+              className="flex items-center gap-4 p-5 rounded-xl bg-white border border-slate-100 shadow-sm hover:border-primary/10 hover:shadow-md transition-all duration-300 group h-full"
             >
               <div 
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 group-hover:scale-110 shadow-subtle group-hover:shadow-glow"
@@ -58,8 +58,8 @@ export default function QuickActions() {
                 {action.icon}
               </div>
               <div>
-                <h4 className="text-lg font-black text-slate-900 tracking-tight">{action.title}</h4>
-                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">{action.desc}</p>
+                <h4 className="text-base md:text-lg font-bold text-slate-900 tracking-tight">{action.title}</h4>
+                <p className="text-xs font-semibold text-slate-500 mt-1">{action.desc}</p>
               </div>
             </Link>
           </motion.div>

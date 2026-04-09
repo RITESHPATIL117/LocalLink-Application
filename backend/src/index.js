@@ -33,6 +33,8 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const rfqRoutes = require('./routes/rfqRoutes');
+const favoriteRoutes = require('./routes/favoriteRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/businesses', businessRoutes);
@@ -42,6 +44,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/rfq', rfqRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/chats', chatRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
@@ -99,6 +103,12 @@ io.on('connection', (socket) => {
     socket.on('join_room', (roomId) => {
         socket.join(roomId);
         console.log(`User ${socket.id} joined room ${roomId}`);
+    });
+
+    // Backward-compatible alias for older clients
+    socket.on('joinRoom', (roomId) => {
+        socket.join(roomId);
+        console.log(`User ${socket.id} joined room ${roomId} via joinRoom alias`);
     });
 
     socket.on('disconnect', () => {

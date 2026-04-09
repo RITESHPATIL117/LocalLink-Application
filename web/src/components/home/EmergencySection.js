@@ -13,13 +13,13 @@ const EMERGENCIES = [
 
 export default function EmergencySection() {
   return (
-    <section className="mb-20">
+    <section className="mb-12 md:mb-16">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center animate-pulse shadow-sm">
             <FiAlertCircle size={22} />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">QuickFix Emergencies</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">QuickFix Emergencies</h3>
         </div>
         <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 border border-red-100">
            <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -27,7 +27,7 @@ export default function EmergencySection() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3 md:gap-4">
         {EMERGENCIES.map((item, idx) => (
           <motion.div
             key={idx}
@@ -36,7 +36,7 @@ export default function EmergencySection() {
           >
             <Link 
               href={item.path}
-              className="flex items-center gap-4 px-8 py-4 rounded-full bg-white border border-slate-100 hover:border-red-100 hover:shadow-premium transition-all group"
+              className="flex items-center gap-3 px-5 md:px-6 py-3 rounded-full bg-white border border-slate-100 shadow-sm hover:border-red-100 hover:shadow-md transition-all group"
             >
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-transform group-hover:rotate-12"

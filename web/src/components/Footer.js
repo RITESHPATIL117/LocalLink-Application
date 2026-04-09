@@ -32,12 +32,12 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-950 text-slate-300 pt-24 pb-12 border-t border-slate-900 overflow-hidden relative">
+    <footer className="bg-slate-950 text-slate-300 pt-16 md:pt-24 pb-10 md:pb-12 border-t border-slate-900 overflow-hidden relative">
       {/* Decorative Blur */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
       
       <div className="section-container relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-20 border-b border-slate-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 md:gap-12 pb-14 md:pb-20 border-b border-slate-900">
           
           {/* Column 1: Brand */}
           <div className="lg:col-span-1">
@@ -124,14 +124,14 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="text-slate-500 text-xs font-medium">
+        <div className="mt-10 md:mt-12 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 md:gap-8">
+          <div className="text-slate-500 text-xs font-medium leading-relaxed">
             &copy; {currentYear} <span className="text-slate-300 font-black">LocalHub Elite Pro</span>. All rights reserved. 
             <span className="mx-2">|</span> 
             Powered by <span className="text-primary font-bold">Purple Labs</span>
           </div>
           
-          <div className="flex items-center gap-8">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 md:gap-8">
             <Link href="/terms" className="text-slate-500 hover:text-slate-300 text-xs font-bold transition-colors">Terms of Use</Link>
             <Link href="/privacy" className="text-slate-500 hover:text-slate-300 text-xs font-bold transition-colors">Privacy Policy</Link>
             <div className="flex gap-4">

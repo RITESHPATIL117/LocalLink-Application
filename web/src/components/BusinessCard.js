@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { FiStar, FiMapPin, FiCheckCircle, FiShield, FiArrowRight } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
-export default function BusinessCard({ business }) {
+export default function BusinessCard({ business, horizontal = false }) {
   const router = useRouter();
   
   const imageSrc = (business.image_url && business.image_url.length > 10) 
@@ -18,11 +18,13 @@ export default function BusinessCard({ business }) {
   return (
     <motion.article
       whileHover={{ y: -10 }}
-      className="bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all duration-500 cursor-pointer group flex flex-col h-full"
+      className={`bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-subtle hover:shadow-premium transition-all duration-500 cursor-pointer group h-full ${
+        horizontal ? 'flex flex-col md:flex-row' : 'flex flex-col'
+      }`}
       onClick={() => router.push(`/business/${business.id}`)}
     >
       {/* Media Content */}
-      <div className="relative h-64 overflow-hidden">
+      <div className={`relative overflow-hidden ${horizontal ? 'h-52 md:h-auto md:w-72 md:flex-shrink-0' : 'aspect-[4/3] min-h-[200px] max-h-[260px]'}`}>
         <img 
           src={imageSrc} 
           alt={business.name} 
@@ -46,27 +48,27 @@ export default function BusinessCard({ business }) {
         </div>
 
         {/* Rating Overlay */}
-        <div className="absolute bottom-5 right-5 glass px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg">
+        <div className="absolute bottom-4 right-4 glass px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
           <FiStar className="text-amber-400 fill-amber-400 text-sm" />
           <span className="text-sm font-black text-slate-900">{business.rating || '4.9'}</span>
         </div>
         
         {/* Availability Badge */}
-        <div className="absolute bottom-5 left-5 bg-emerald-500/90 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg">
+        <div className="absolute bottom-4 left-4 bg-emerald-500/90 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
            <span className="text-[9px] font-black text-white tracking-widest uppercase">Available</span>
         </div>
       </div>
 
       {/* Text Content */}
-      <div className="p-8 flex flex-col flex-1">
+      <div className="p-6 md:p-8 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">
             {business.category_name || 'Premium Service'}
           </span>
         </div>
         
-        <h3 className="text-2xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors line-clamp-1">
+        <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-3 group-hover:text-primary transition-colors line-clamp-1">
           {business.name}
         </h3>
         
@@ -78,7 +80,7 @@ export default function BusinessCard({ business }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
+        <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">Starts at</p>
             <p className="text-2xl font-black text-slate-900 tracking-tighter">₹499</p>

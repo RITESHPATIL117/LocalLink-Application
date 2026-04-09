@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
+import chatService from '../../services/chatService';
 
 const ChatDetailScreen = ({ route, navigation }) => {
-  const { name = 'Customer' } = route.params || {};
+  const { name = 'Customer', chatId = null } = route.params || {};
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
     { id: '1', text: 'Hello, are you available today for a plumbing leak?', sender: 'other', time: '10:30 AM' },
@@ -15,6 +16,23 @@ const ChatDetailScreen = ({ route, navigation }) => {
   ]);
 
   const flatListRef = useRef();
+
+  React.useEffect(() => {
+    const fetchMessages = async () => {
+      if (!chatId) return;
+      const res = await chatService.getMessages(chatId);
+      if (Array.isArray(res?.data) && res.data.length > 0) {
+        const normalized = res.data.map((item, index) => ({
+          id: String(item.id ?? item.message_id ?? `${Date.now()}-${index}`),
+          text: item.text ?? item.message ?? '',
+          sender: item.sender ?? (item.sender_id ? 'other' : 'me'),
+          time: item.time ?? item.created_at ?? 'Now',
+        }));
+        setMessages(normalized);
+      }
+    };
+    fetchMessages();
+  }, [chatId]);
 
   const handleSend = () => {
     if (message.trim() === '') return;
@@ -25,6 +43,9 @@ const ChatDetailScreen = ({ route, navigation }) => {
       time: 'Just now',
     };
     setMessages([...messages, newMessage]);
+    if (chatId) {
+      chatService.sendMessage(chatId, message).catch(() => {});
+    }
     setMessage('');
     setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
   };

@@ -3,7 +3,7 @@ import api from './api';
 const businessOwnerService = {
   getBusinesses: async () => {
     try {
-      const response = await api.get('/businesses/owner');
+      const response = await api.get('/businesses/my-businesses');
       return response;
     } catch (error) {
       console.error('Error fetching owner businesses:', error);

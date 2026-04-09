@@ -31,7 +31,7 @@ export default function Button({
       whileHover={!disabled && !loading ? { scale: 1.02, y: -2 } : {}}
       whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
       className={`
-        px-8 py-4 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] 
+        px-7 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.16em]
         transition-all flex items-center justify-center gap-3 relative overflow-hidden
         ${currentVariant}
         ${className}

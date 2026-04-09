@@ -48,10 +48,10 @@ export default function Home() {
           Using modular components assembled into a premium layout.
           Horizontal spacing handled by components internal .section-container classes
       */}
-      <main className="pb-32">
+      <main className="pb-16 md:pb-24">
         
-        {/* Welcome & Dashboard Lite (Top Padding for Sticky Nav) */}
-        <section className="section-container pt-32 mb-8">
+        {/* Welcome & Dashboard Lite */}
+        <section className="section-container pt-8 md:pt-10 mb-10 md:mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <motion.div
               initial={{ x: -20, opacity: 0 }}
@@ -101,20 +101,20 @@ export default function Home() {
         </div>
 
         {/* Business Partner CTA (Professional Grade) */}
-        <section className="mb-20">
+        <section className="mb-12 md:mb-16">
           <div className="section-container">
-            <motion.div 
+            <motion.div
               whileHover={{ y: -4 }}
-              className="bg-slate-950 rounded-[60px] p-12 lg:p-24 relative overflow-hidden shadow-premium"
+              className="bg-slate-950 rounded-3xl p-8 md:p-12 lg:p-20 relative overflow-hidden shadow-premium"
             >
               <div className="relative z-10 max-w-2xl">
                 <div className="bg-primary/20 backdrop-blur-md px-5 py-2 rounded-2xl inline-block mb-8 border border-white/5">
                   <span className="text-primary-light font-black text-[10px] tracking-[0.2em] uppercase">Pro Network</span>
                 </div>
-                <h3 className="text-4xl lg:text-5xl font-black text-white mb-8 leading-[1.1] tracking-tighter">
+                <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-6 md:mb-8 leading-[1.1] tracking-tighter">
                   Scale your local business <br/> to new heights
                 </h3>
-                <p className="text-white/50 text-xl font-medium mb-12 leading-relaxed">
+                <p className="text-white/60 text-base md:text-lg lg:text-xl font-medium mb-8 md:mb-12 leading-relaxed">
                   Join 5,000+ local providers in Sangli. Get verified leads, 
                   manage bookings, and grow your revenue by 3x.
                 </p>
@@ -144,8 +144,8 @@ export default function Home() {
         <Testimonials />
 
         {/* Final Trust Stats Section */}
-        <section className="section-container mb-24">
-           <div className="bg-white rounded-[60px] p-16 border border-slate-100 shadow-subtle grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+        <section className="section-container mb-12 md:mb-16">
+           <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-subtle grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 text-center">
               <div>
                 <p className="text-5xl font-black text-primary mb-3 tracking-tighter">50K+</p>
                 <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Verified Users</p>

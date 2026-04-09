@@ -7,6 +7,7 @@ import {
   FiHeart, FiSearch, FiStar, FiMapPin, FiChevronRight, FiGrid, FiList, FiAward, FiArrowRight, FiChevronLeft
 } from 'react-icons/fi';
 import Link from 'next/link';
+import favoriteService from '../../services/favoriteService';
 
 const CATEGORIES = ['All', 'Home Services', 'Personal Care', 'Cleaning', 'Repair'];
 
@@ -14,13 +15,39 @@ export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   
-  const [favorites, setFavorites] = useState([]); // In production this would sync with Redux/Backend
+  const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      fetchFavoriteBusinesses();
+    }
+  }, [mounted, isAuthenticated]);
+
+  const fetchFavoriteBusinesses = async () => {
+    setLoading(true);
+    try {
+      const rows = await favoriteService.getFavorites();
+      const normalized = (rows || []).map((row) => ({
+        id: String(row.id),
+        name: row.name || 'Service Partner',
+        category: row.category_name || 'Home Services',
+        image: row.image_url || row.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=600',
+        location: row.address || 'Sangli, MH'
+      }));
+      setFavorites(normalized);
+    } catch (error) {
+      console.error('Error loading favorite businesses:', error);
+      setFavorites([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter Logic
   const filteredFavorites = favorites.filter(b => {
@@ -117,7 +144,12 @@ export default function FavoritesPage() {
 
       <main className="section-container max-w-6xl py-16">
         
-        {favorites.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20 px-10 bg-white rounded-[56px] border border-slate-100 shadow-premium max-w-3xl mx-auto">
+            <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-6" />
+            <p className="text-slate-500 font-semibold">Loading your saved providers...</p>
+          </div>
+        ) : favorites.length === 0 ? (
           
           /* 2. Enhanced Empty State */
           <motion.div 
@@ -223,7 +255,7 @@ export default function FavoritesPage() {
                       
                       <div className="flex items-center justify-between pt-6 border-t border-slate-50">
                         <div className="flex items-center gap-2 text-slate-500 text-xs font-bold">
-                           <FiMapPin className="text-primary-light" /> Sangli, MH
+                           <FiMapPin className="text-primary-light" /> {biz.location || 'Sangli, MH'}
                         </div>
                         <Link href={`/business/${biz.id}`} className="text-primary font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:gap-4 transition-all">
                            Book Now <FiArrowRight />

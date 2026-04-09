@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import favoriteService from '../services/favoriteService';
 
 const FAVORITES_KEY = '@localhub_favorites_v1';
 
@@ -10,9 +11,15 @@ export const useFavorites = () => {
 
   const loadFavorites = async () => {
     try {
-      const stored = await AsyncStorage.getItem(FAVORITES_KEY);
-      if (stored) {
-        setFavorites(JSON.parse(stored));
+      const backendFavorites = await favoriteService.getFavorites().catch(() => null);
+      if (backendFavorites) {
+        setFavorites(backendFavorites);
+        await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(backendFavorites));
+      } else {
+        const stored = await AsyncStorage.getItem(FAVORITES_KEY);
+        if (stored) {
+          setFavorites(JSON.parse(stored));
+        }
       }
     } catch (e) {
       console.error('Failed to load favorites', e);
@@ -28,14 +35,16 @@ export const useFavorites = () => {
   );
 
   const isFavorite = (businessId) => {
-    return favorites.some(b => b.id === businessId);
+    return favorites.some(b => String(b.id) === String(businessId));
   };
 
   const toggleFavorite = async (business) => {
     try {
+      await favoriteService.toggleFavorite(business.id).catch(() => null);
+
       let updatedFavorites = [];
       if (isFavorite(business.id)) {
-        updatedFavorites = favorites.filter(b => b.id !== business.id);
+        updatedFavorites = favorites.filter(b => String(b.id) !== String(business.id));
       } else {
         updatedFavorites = [business, ...favorites];
       }

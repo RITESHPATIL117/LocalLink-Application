@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { register, login, forgotPassword } = require('../controllers/authController');
+const { register, login, me, refresh, logout, forgotPassword } = require('../controllers/authController');
+const { protect } = require('../middlewares/authMiddleware');
+const { registerValidator, loginValidator } = require('../validators/authValidators');
+const { validateRequest } = require('../middlewares/validateRequest');
 
 // Rate limiter for auth routes
 const authLimiter = rateLimit({
@@ -12,8 +15,11 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-router.post('/register', authLimiter, register);
-router.post('/login', authLimiter, login);
+router.post('/register', authLimiter, registerValidator, validateRequest, register);
+router.post('/login', authLimiter, loginValidator, validateRequest, login);
+router.post('/refresh', authLimiter, refresh);
+router.post('/logout', logout);
 router.post('/forgot-password', authLimiter, forgotPassword);
+router.get('/me', protect, me);
 
 module.exports = router;

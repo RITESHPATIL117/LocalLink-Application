@@ -39,14 +39,14 @@ export default function Navbar() {
   if (!mounted) return null;
 
   return (
-    <nav 
+    <nav
       className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
         isScrolled 
-          ? 'py-3 backdrop-blur-xl bg-white/80 shadow-premium border-b border-slate-200/50' 
-          : 'py-5 bg-transparent'
+          ? 'py-3 backdrop-blur-xl bg-white/85 shadow-premium border-b border-slate-200/50'
+          : 'py-4 bg-transparent'
       }`}
     >
-      <div className="section-container flex items-center justify-between">
+      <div className="section-container flex items-center justify-between min-h-[64px]">
         
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
@@ -152,9 +152,9 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="lg:hidden absolute top-[100%] left-0 right-0 bg-white border-b border-slate-100 shadow-premium py-6 px-6 overflow-hidden"
+            className="lg:hidden absolute top-[100%] left-0 right-0 bg-white border-b border-slate-100 shadow-premium py-6 overflow-hidden"
           >
-            <div className="flex flex-col gap-4">
+            <div className="section-container flex flex-col gap-4">
               {NAV_LINKS.map((link) => (
                 <Link 
                   key={link.path} 

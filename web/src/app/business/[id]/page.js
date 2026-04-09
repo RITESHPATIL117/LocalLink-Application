@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowLeft, FiHeart, FiStar, FiMapPin, FiCalendar, FiPhone, 
@@ -14,8 +14,8 @@ const TABS = ['Overview', 'Services', 'Reviews', 'Photos'];
 
 export default function BusinessDetailsPage() {
   const router = useRouter();
-  const params = useParams();
-  const businessId = params.id;
+  const pathname = usePathname();
+  const businessId = pathname?.split('/').filter(Boolean).pop();
 
   const [business, setBusiness] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');

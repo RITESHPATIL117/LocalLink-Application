@@ -31,7 +31,7 @@ export default function InputField({
       
       <div 
         className={`
-          flex items-center relative transition-all duration-300 border rounded-[20px] shadow-subtle
+          flex items-center relative transition-all duration-300 border rounded-2xl shadow-subtle
           ${error 
             ? 'border-red-200 bg-red-50/10 focus-within:border-red-500' 
             : isFocused 
@@ -53,7 +53,7 @@ export default function InputField({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`
-            w-full py-4 px-5 bg-transparent border-none outline-none 
+            w-full py-3.5 px-5 bg-transparent border-none outline-none 
             font-semibold text-slate-800 placeholder:text-slate-300 transition-all text-sm
             ${icon ? 'pl-2' : ''}
           `}

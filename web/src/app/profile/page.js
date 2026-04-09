@@ -103,7 +103,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="section-container max-w-4xl -mt-10 pb-32 relative z-[20]">
+      <main className="section-container max-w-4xl -mt-10 pb-24 relative z-[20]">
         
         {/* 2. Personalized Dashboard Metrics */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -118,7 +118,7 @@ export default function ProfilePage() {
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: idx * 0.1 }}
                whileHover={{ y: -5 }}
-               className="bg-white p-8 rounded-[40px] border border-slate-100 flex flex-col items-center justify-center text-center shadow-subtle group hover:border-primary/20 transition-all"
+               className="bg-white p-8 rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center shadow-subtle group hover:border-primary/20 transition-all"
              >
                 <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
                   {metric.icon}
@@ -130,7 +130,7 @@ export default function ProfilePage() {
         </section>
 
         {/* 3. Account Menu Cluster */}
-        <section className="bg-white rounded-[56px] border border-slate-100 overflow-hidden shadow-premium group">
+        <section className="bg-white rounded-[28px] border border-slate-100 overflow-hidden shadow-premium group">
            <div className="divide-y divide-slate-50">
              {[
                { label: 'My Bookings', ic: <FiClipboard />, color: 'text-amber-600', bg: 'bg-amber-50', route: '/requests' },
@@ -142,13 +142,13 @@ export default function ProfilePage() {
                <Link href={item.route} key={item.label}>
                   <motion.div 
                     whileHover={{ x: 8 }}
-                    className="group px-10 py-6 flex justify-between items-center cursor-pointer transition-all hover:bg-slate-50/50"
+                    className="group px-6 md:px-10 py-5 flex justify-between items-center cursor-pointer transition-all hover:bg-slate-50/50"
                   >
                      <div className="flex items-center gap-6">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${item.bg} ${item.color} group-hover:scale-110 transition-transform`}>
                           {item.ic}
                         </div>
-                        <span className="text-lg font-black text-slate-800 tracking-tight">{item.label}</span>
+                        <span className="text-base md:text-lg font-black text-slate-800 tracking-tight">{item.label}</span>
                      </div>
                      <FiChevronRight className="text-slate-300 group-hover:text-primary transition-colors" size={24} />
                   </motion.div>
@@ -167,7 +167,7 @@ export default function ProfilePage() {
             <Link href="/provider/dashboard">
               <motion.div 
                 whileHover={{ y: -5, scale: 1.01 }}
-                className="bg-slate-950 text-white p-10 rounded-[48px] flex items-center justify-between shadow-premium relative overflow-hidden group border border-white/5"
+                className="bg-slate-950 text-white p-8 md:p-10 rounded-3xl flex items-center justify-between shadow-premium relative overflow-hidden group border border-white/5"
               >
                 {/* Background Decor */}
                 <FiBriefcase className="absolute -bottom-10 -right-10 text-white/5 rotate-12" size={200} />
@@ -194,7 +194,7 @@ export default function ProfilePage() {
           whileHover={{ scale: 0.98 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleLogout}
-          className="w-full mt-10 p-6 rounded-[32px] bg-red-50 border border-red-100 text-red-500 font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-red-100 transition-all shadow-subtle group"
+          className="w-full mt-10 p-5 rounded-3xl bg-red-50 border border-red-100 text-red-500 font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-red-100 transition-all shadow-subtle group"
         >
           <FiLogOut className="group-hover:rotate-12 transition-transform" /> TERMINATE SESSION
         </motion.button>

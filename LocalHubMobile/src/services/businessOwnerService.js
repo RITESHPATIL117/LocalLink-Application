@@ -3,10 +3,10 @@ import api from './api';
 // In-memory session cache for newly added businesses to ensure they persist while app is open
 const businessOwnerService = {
   register: async (data) => {
-    return api.post('/business-owners/register', data);
+    return api.post('/auth/register', { ...data, role: 'provider' });
   },
   login: async (email, password) => {
-    return api.post('/business-owners/login', { email, password });
+    return api.post('/auth/login', { email, password, role: 'provider' });
   },
   getBusinesses: async () => {
     return api.get('/businesses/my-businesses');

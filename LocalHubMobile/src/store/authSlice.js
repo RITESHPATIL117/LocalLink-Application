@@ -26,10 +26,11 @@ export const loginUser = createAsyncThunk(
       const response = await authService.login(credentials.email, credentials.password, credentials.role);
       // Assuming response has { token, user }
       const data = response.data || response;
-      const { token, user } = data;
+      const { token, refreshToken, user } = data;
       await AsyncStorage.setItem('token', token);
+      if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
       await AsyncStorage.setItem('userData', JSON.stringify(user));
-      return { token, user };
+      return { token, refreshToken, user };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
@@ -42,10 +43,11 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await authService.register(userData);
       const data = response.data || response;
-      const { token, user } = data;
+      const { token, refreshToken, user } = data;
       await AsyncStorage.setItem('token', token);
+      if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
       await AsyncStorage.setItem('userData', JSON.stringify(user));
-      return { token, user };
+      return { token, refreshToken, user };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }
@@ -149,6 +151,7 @@ const authSlice = createSlice({
 
 export const logout = () => async (dispatch) => {
   await AsyncStorage.removeItem('token');
+  await AsyncStorage.removeItem('refreshToken');
   await AsyncStorage.removeItem('userData');
   dispatch(authSlice.actions.clearCredentials());
 };

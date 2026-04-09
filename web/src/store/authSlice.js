@@ -25,12 +25,13 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await authService.login(credentials.email, credentials.password, credentials.role);
       const data = response.data || response;
-      const { token, user } = data;
+      const { token, refreshToken, user } = data;
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userData', JSON.stringify(user));
       }
-      return { token, user };
+      return { token, refreshToken, user };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
@@ -43,12 +44,13 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await authService.register(userData);
       const data = response.data || response;
-      const { token, user } = data;
+      const { token, refreshToken, user } = data;
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('userData', JSON.stringify(user));
       }
-      return { token, user };
+      return { token, refreshToken, user };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }
@@ -58,6 +60,7 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = () => async (dispatch) => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
   }
   dispatch(clearCredentials());
