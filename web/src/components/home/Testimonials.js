@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiStar, FiUser } from 'react-icons/fi';
+import { FiStar } from 'react-icons/fi';
 
 const TESTIMONIALS = [
   {
@@ -29,19 +29,19 @@ const TESTIMONIALS = [
 
 export default function Testimonials() {
   return (
-    <section className="mb-12 md:mb-16">
+    <section className="mb-10 md:mb-14">
       <div className="section-container">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 md:mb-14 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-10 gap-5">
           <div className="max-w-2xl text-center md:text-left">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 tracking-tight">What Customers Say <span className="text-amber-400">★</span></h2>
-            <p className="text-sm md:text-base text-slate-500">Join 50,000+ happy customers in Sangli using LocalHub</p>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 tracking-tight">What Customers Say <span className="text-amber-400">★</span></h2>
+            <p className="text-sm text-slate-500">Join 50,000+ happy customers in Sangli using LocalHub</p>
           </div>
-          <div className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-50 border border-slate-100 italic font-medium text-slate-500 text-sm">
-             "The Trustworthy Choice for Home Services"
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 italic font-medium text-slate-500 text-xs md:text-sm">
+             &quot;The Trustworthy Choice for Home Services&quot;
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {TESTIMONIALS.map((t, idx) => (
             <motion.div
               key={idx}
@@ -50,26 +50,26 @@ export default function Testimonials() {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
               whileHover={{ y: -10 }}
-              className="p-6 md:p-8 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col justify-between h-full"
+              className="p-5 md:p-6 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col justify-between h-full"
             >
               <div>
-                <div className="flex gap-1 mb-8">
+                <div className="flex gap-1 mb-5">
                   {[...Array(t.rating)].map((_, i) => (
                     <FiStar key={i} className="text-amber-400" fill="currentColor" size={18} />
                   ))}
                 </div>
-                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-medium italic mb-8">
+                <p className="text-slate-600 text-sm leading-relaxed font-medium italic mb-6">
                   {t.text}
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 pt-8 border-t border-slate-50">
-                <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm">
+              <div className="flex items-center gap-3 pt-5 border-t border-slate-50">
+                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
                   <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="text-slate-900 font-black text-base">{t.name}</h4>
-                  <p className="text-primary font-bold text-xs uppercase tracking-widest mt-1">{t.service}</p>
+                  <h4 className="text-slate-900 font-black text-sm md:text-base">{t.name}</h4>
+                  <p className="text-primary font-bold text-[10px] uppercase tracking-widest mt-1">{t.service}</p>
                 </div>
               </div>
             </motion.div>

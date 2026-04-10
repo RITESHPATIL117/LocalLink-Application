@@ -100,6 +100,8 @@ const InputField = React.forwardRef(({
   );
 });
 
+InputField.displayName = 'InputField';
+
 const styles = StyleSheet.create({
   container: {
     marginVertical: 12,

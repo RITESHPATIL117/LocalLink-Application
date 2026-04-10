@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowLeft, FiHeart, FiStar, FiMapPin, FiCalendar, FiPhone, 
-  FiCheckCircle, FiInfo, FiImage, FiBriefcase, FiX, FiAward, FiSend, FiTag, FiClock
+  FiCheckCircle, FiInfo, FiImage, FiBriefcase, FiX, FiAward, FiSend, FiTag, FiClock, FiZap
 } from 'react-icons/fi';
 import businessService from '../../../services/businessService';
 import reviewService from '../../../services/reviewService';
@@ -285,7 +285,7 @@ export default function BusinessDetailsPage() {
                           <div key={rev.id} className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-subtle">
                             <div className="flex justify-between items-start mb-6">
                               <div className="flex items-center gap-4">
-                                <img src={rev.user?.avatar || `https://ui-avatars.com/api/?name=${rev.user_name || 'U'}`} className="w-12 h-12 rounded-2xl" />
+                                <img src={rev.user?.avatar || `https://ui-avatars.com/api/?name=${rev.user_name || 'U'}`} alt={rev.user_name || 'Reviewer avatar'} className="w-12 h-12 rounded-2xl" />
                                 <div>
                                   <h5 className="font-black text-slate-800">{rev.user_name || 'Verified User'}</h5>
                                   <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{new Date(rev.createdAt).toLocaleDateString()}</span>
@@ -317,7 +317,7 @@ export default function BusinessDetailsPage() {
                         whileHover={{ scale: 1.05 }}
                         className="rounded-[32px] overflow-hidden aspect-square shadow-subtle cursor-pointer group"
                       >
-                        <img src={`${businessImage}?sig=${i}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img src={`${businessImage}?sig=${i}`} alt={`${business.name} photo ${i}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       </motion.div>
                     ))}
                   </div>
@@ -411,13 +411,13 @@ export default function BusinessDetailsPage() {
               </div>
               <div className="space-y-8">
                  <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <img src={business.avatar || businessImage} className="w-20 h-20 rounded-2xl object-cover" />
+                    <img src={business.avatar || businessImage} alt={business.name || 'Business avatar'} className="w-20 h-20 rounded-2xl object-cover" />
                     <div>
                       <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Confirming with</p>
                       <h4 className="text-2xl font-black text-slate-900 tracking-tighter">{business.name}</h4>
                     </div>
                  </div>
-                 <p className="text-slate-500 font-medium">Ready to proceed? We'll notify the provider immediately and they will finalize the schedule via phone or the LocalHub messaging system.</p>
+                 <p className="text-slate-500 font-medium">Ready to proceed? We&apos;ll notify the provider immediately and they will finalize the schedule via phone or the LocalHub messaging system.</p>
                  <div className="flex flex-col gap-3 py-6">
                     <button className="btn-premium px-10 py-5 !rounded-3xl w-full">Finalize Booking Request</button>
                     <button onClick={() => setBookingModalVisible(false)} className="py-5 font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Maybe Later</button>

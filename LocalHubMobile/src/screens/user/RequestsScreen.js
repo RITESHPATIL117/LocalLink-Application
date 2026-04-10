@@ -303,7 +303,7 @@ const RequestsScreen = ({ navigation }) => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const fetchRequests = async (isSilent = false) => {
+  const fetchRequests = React.useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
       if (!user) return;
@@ -316,7 +316,7 @@ const RequestsScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -326,7 +326,7 @@ const RequestsScreen = ({ navigation }) => {
         setLoading(false);
         setRequests([]);
       }
-    }, [isAuthenticated, user])
+    }, [isAuthenticated, fetchRequests])
   );
 
   React.useEffect(() => {
@@ -344,7 +344,7 @@ const RequestsScreen = ({ navigation }) => {
             fetchRequests(true); // Silent refresh
         });
     }
-  }, [user]);
+  }, [user, fetchRequests]);
 
   const filtered = activeFilter === 'All' 
     ? (requests || [])

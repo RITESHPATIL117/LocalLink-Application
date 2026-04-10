@@ -1,6 +1,6 @@
-import { useWindowDimensions, TextInput, ActivityIndicator, View, StyleSheet, TouchableOpacity, Text, FlatList, Platform } from 'react-native';
+import { useWindowDimensions, TextInput, View, StyleSheet, TouchableOpacity, Text, FlatList, Platform } from 'react-native';
 import PremiumLoader from '../../components/PremiumLoader';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
   
@@ -10,7 +10,6 @@ import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
 import BusinessCard from '../../components/BusinessCard';
 import businessService from '../../services/businessService';
-import Skeleton from '../../components/Skeleton';
 import BookingWizard from '../../components/BookingWizard';
 import Toast from 'react-native-toast-message';
 
@@ -37,11 +36,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
 
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
 
-  useEffect(() => {
-    fetchResults();
-  }, [query, activeFilter]);
-
-  const fetchResults = async () => {
+  const fetchResults = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -55,7 +50,11 @@ const SearchResultsScreen = ({ route, navigation }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, activeFilter]);
+
+  useEffect(() => {
+    fetchResults();
+  }, [fetchResults]);
 
   const renderMapView = () => {
     if (Platform.OS === 'web') {
@@ -183,7 +182,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={80} color="#E5E7EB" />
-              <Text style={styles.emptyText}>No results found for "{search}"</Text>
+              <Text style={styles.emptyText}>No results found for &quot;{search}&quot;</Text>
             </View>
           }
         />

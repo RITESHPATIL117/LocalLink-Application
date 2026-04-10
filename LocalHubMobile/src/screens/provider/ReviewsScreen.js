@@ -251,7 +251,7 @@ const ReviewsScreen = ({ navigation }) => {
 
             <View style={styles.reviewSnippet}>
                <Text style={styles.snippetTitle}>Replying to {selectedReview?.customer}</Text>
-               <Text style={styles.snippetText} numberOfLines={2}>"{selectedReview?.comment}"</Text>
+               <Text style={styles.snippetText} numberOfLines={2}>&quot;{selectedReview?.comment}&quot;</Text>
             </View>
 
             <TextInput

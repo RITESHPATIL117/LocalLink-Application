@@ -1,5 +1,5 @@
 'use client';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,9 +10,11 @@ import {
 import leadService from '../../../services/leadService';
 import Button from '../../../components/Button';
 import { io } from 'socket.io-client';
+import { logoutUser } from '../../../store/authSlice';
 
 export default function ProviderDashboard() {
   const { isAuthenticated, user, loading: authLoading } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
   const router = useRouter();
   
   const [leads, setLeads] = useState([]);
@@ -95,14 +97,17 @@ export default function ProviderDashboard() {
 
         <nav className="flex-grow space-y-2">
            {[
-             { label: 'Overview', ic: <FiGrid />, active: true },
-             { label: 'Leads & Bookings', ic: <FiList />, active: false },
-             { label: 'My Services', ic: <FiBriefcase />, active: false },
-             { label: 'Settings', ic: <FiSettings />, active: false },
+             { label: 'Overview', ic: <FiGrid />, active: true, route: '/provider/dashboard' },
+             { label: 'Leads & Bookings', ic: <FiList />, active: false, route: '/provider/services' },
+             { label: 'My Services', ic: <FiBriefcase />, active: false, route: '/provider/services' },
+             { label: 'Profile', ic: <FiBriefcase />, active: false, route: '/provider/profile' },
+             { label: 'Settings', ic: <FiSettings />, active: false, route: '/provider/settings' },
+             { label: 'Messages', ic: <FiBell />, active: false, route: '/provider/chats' },
            ].map(item => (
              <motion.button 
                key={item.label}
                whileHover={{ x: 4 }}
+               onClick={() => router.push(item.route)}
                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
                  item.active ? 'bg-primary text-white shadow-glow' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                }`}
@@ -113,7 +118,7 @@ export default function ProviderDashboard() {
         </nav>
 
         <div className="pt-8 border-t border-slate-100">
-           <button onClick={() => router.push('/logout')} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
+           <button onClick={() => { dispatch(logoutUser()); router.push('/login'); }} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
              <FiLogOut /> Sign Out
            </button>
         </div>
@@ -132,11 +137,11 @@ export default function ProviderDashboard() {
                </p>
              </div>
              <div className="flex items-center gap-4">
-               <motion.button whileHover={{ scale: 1.05 }} className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all relative shadow-subtle">
+               <motion.button onClick={() => router.push('/provider/notifications')} whileHover={{ scale: 1.05 }} className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-500 hover:text-primary transition-all relative shadow-subtle">
                   <FiBell size={20} />
                   <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
                </motion.button>
-               <motion.button whileHover={{ scale: 1.05 }} className="hidden md:flex bg-slate-900 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-lg items-center gap-3">
+               <motion.button onClick={() => router.push('/provider/services')} whileHover={{ scale: 1.05 }} className="hidden md:flex bg-slate-900 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-lg items-center gap-3">
                   <FiPlus /> New Service
                </motion.button>
              </div>
@@ -144,6 +149,27 @@ export default function ProviderDashboard() {
         </header>
 
         <div className="p-6 md:p-10 max-w-7xl w-full mx-auto">
+          {/* Quick Actions Grid (parity with mobile provider dashboard) */}
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              { label: 'Add Listing', icon: <FiPlus />, route: '/provider/services', color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'All Leads', icon: <FiList />, route: '/provider/services', color: 'text-blue-600 bg-blue-50' },
+              { label: 'Analytics', icon: <FiGrid />, route: '/provider/analytics', color: 'text-amber-600 bg-amber-50' },
+              { label: 'Reviews', icon: <FiStar />, route: '/provider/reviews', color: 'text-violet-600 bg-violet-50' },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => router.push(item.route)}
+                className="bg-white border border-slate-100 rounded-2xl p-4 text-left hover:shadow-md transition-all"
+              >
+                <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center mb-3`}>
+                  {item.icon}
+                </div>
+                <p className="text-sm font-bold text-slate-900">{item.label}</p>
+              </button>
+            ))}
+          </section>
+
           
           {/* Quick Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

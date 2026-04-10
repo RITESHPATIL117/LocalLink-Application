@@ -4,7 +4,7 @@ const Lead = require('../models/leadModel');
 
 const getAllBusinesses = async (req, res, next) => {
     try {
-        const businesses = await Business.getAll(req.query);
+        const businesses = await Business.getAll({ ...req.query, includeUnverified: false });
         res.json(businesses);
     } catch (err) {
         next(err);
@@ -13,7 +13,7 @@ const getAllBusinesses = async (req, res, next) => {
 
 const getBusinessById = async (req, res, next) => {
     try {
-        const business = await Business.getById(req.params.id);
+        const business = await Business.getById(req.params.id, { includeUnverified: false });
         if (!business) {
             return res.status(404).json({ success: false, message: 'Business not found' });
         }
@@ -25,7 +25,7 @@ const getBusinessById = async (req, res, next) => {
 
 const getNearbyBusinesses = async (req, res, next) => {
     try {
-        const businesses = await Business.getAll(req.query);
+        const businesses = await Business.getAll({ ...req.query, includeUnverified: false });
         res.json(businesses);
     } catch (err) {
         next(err);
@@ -35,7 +35,7 @@ const getNearbyBusinesses = async (req, res, next) => {
 const getBusinessesByCategory = async (req, res, next) => {
     try {
         const { categoryId } = req.params;
-        const businesses = await Business.getByCategory(categoryId);
+        const businesses = await Business.getByCategory(categoryId, req.query?.subcategory, { includeUnverified: false });
         res.json(businesses);
     } catch (err) {
         next(err);
@@ -137,6 +137,7 @@ const getProviderStats = async (req, res, next) => {
         
         let totalViews = 0;
         let activeListings = businesses.filter(b => b.is_verified === 1).length;
+        let pendingListings = businesses.filter(b => b.is_verified === 0).length;
         
         businesses.forEach(b => {
             totalViews += (b.views || 0);
@@ -146,7 +147,7 @@ const getProviderStats = async (req, res, next) => {
             totalViews,
             totalLeads, 
             activeListings,
-            pendingListings: businesses.length - activeListings
+            pendingListings
         });
     } catch (err) {
         next(err);

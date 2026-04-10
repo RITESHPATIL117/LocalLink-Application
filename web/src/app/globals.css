@@ -171,6 +171,27 @@ button {
   color: var(--text-muted);
 }
 
+.section-heading {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.section-description {
+  font-size: clamp(0.875rem, 1.2vw, 1rem);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.btn-ui {
+  border-radius: 9999px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .ui-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-main);

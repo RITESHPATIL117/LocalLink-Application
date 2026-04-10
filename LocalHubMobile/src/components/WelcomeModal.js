@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,9 +15,9 @@ const WelcomeModal = ({ isProvider = false }) => {
 
   useEffect(() => {
     checkFirstTime();
-  }, []);
+  }, [checkFirstTime]);
 
-  const checkFirstTime = async () => {
+  const checkFirstTime = useCallback(async () => {
     const hasSeen = await AsyncStorage.getItem('hasSeenWelcome');
     if (!hasSeen) {
       setVisible(true);
@@ -26,7 +26,7 @@ const WelcomeModal = ({ isProvider = false }) => {
         Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true })
       ]).start();
     }
-  };
+  }, [fadeAnim, scaleAnim]);
 
   const handleClose = async () => {
     await AsyncStorage.setItem('hasSeenWelcome', 'true');
@@ -76,7 +76,7 @@ const WelcomeModal = ({ isProvider = false }) => {
 
             <TouchableOpacity style={styles.primaryBtn} onPress={handleClose}>
               <LinearGradient colors={[colors.primary, '#E65C00']} start={{x:0, y:0}} end={{x:1, y:1}} style={styles.btnGradient}>
-                <Text style={styles.btnText}>Got It, Let's Go!</Text>
+                <Text style={styles.btnText}>Got It, Let&apos;s Go!</Text>
               </LinearGradient>
             </TouchableOpacity>
 

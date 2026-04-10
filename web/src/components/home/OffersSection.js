@@ -22,13 +22,13 @@ const OFFERS = [
 
 export default function OffersSection() {
   return (
-    <section className="mb-12 md:mb-16">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+    <section className="mb-10 md:mb-14">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
         {OFFERS.map((offer, idx) => (
           <motion.div
             key={idx}
             whileHover={{ y: -8 }}
-            className={`relative rounded-xl overflow-hidden shadow-sm hover:shadow-md group cursor-pointer h-[260px] md:h-[300px] bg-gradient-to-br ${offer.color}`}
+            className={`relative rounded-xl overflow-hidden shadow-sm hover:shadow-md group cursor-pointer h-[220px] md:h-[260px] bg-gradient-to-br ${offer.color}`}
           >
             {/* Background Image with Overlay */}
             <img 
@@ -38,14 +38,14 @@ export default function OffersSection() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-            <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between">
+            <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 mb-4">
                   <FiGift className="text-white" />
                   <span className="text-white font-black text-[10px] tracking-widest uppercase">Limited Offer</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-tight">{offer.title}</h3>
-                <p className="text-white/80 font-medium text-sm md:text-base leading-relaxed max-w-sm">{offer.subtitle}</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">{offer.title}</h3>
+                <p className="text-white/80 font-medium text-xs md:text-sm leading-relaxed max-w-sm">{offer.subtitle}</p>
               </div>
 
               <div className="flex items-center justify-between">

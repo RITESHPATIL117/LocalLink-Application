@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMail, FiLock, FiArrowRight, FiHexagon, FiAlertCircle } from 'react-icons/fi';
-import InputField from '../../components/InputField';
-import Button from '../../components/Button';
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -17,6 +15,7 @@ export default function Login() {
   const [hasMounted, setHasMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,9 +25,11 @@ export default function Login() {
 
   useEffect(() => {
     if (hasMounted && isAuthenticated) {
-      router.push('/');
+      if (role === 'provider') router.push('/provider/dashboard');
+      else if (role === 'admin') router.push('/admin/dashboard');
+      else router.push('/');
     }
-  }, [isAuthenticated, router, hasMounted]);
+  }, [isAuthenticated, router, hasMounted, role]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -41,7 +42,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await dispatch(loginUser({ email, password })).unwrap();
+      const res = await dispatch(loginUser({ email, password, role })).unwrap();
       if (res.user.role === 'provider') {
         router.push('/provider/dashboard');
       } else if (res.user.role === 'admin') {
@@ -56,7 +57,15 @@ export default function Login() {
     }
   };
 
-  if (!hasMounted || isAuthenticated || authLoading) return null;
+  if (!hasMounted) return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-main">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (isAuthenticated) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-main relative overflow-hidden py-20 px-6">
@@ -97,6 +106,25 @@ export default function Login() {
           </AnimatePresence>
 
           <form onSubmit={handleLogin} className="space-y-6">
+            <div className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100 flex gap-1 shadow-inner">
+              {[
+                { id: 'user', label: 'Customer' },
+                { id: 'provider', label: 'Provider' },
+                { id: 'admin', label: 'Admin' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setRole(item.id)}
+                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                    role === item.id ? 'bg-white text-primary shadow-subtle' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative">
@@ -151,7 +179,7 @@ export default function Login() {
 
           <div className="mt-12 pt-8 border-t border-slate-100 text-center">
             <p className="text-slate-500 font-medium">
-              Don't have an account yet?{' '}
+              Don&apos;t have an account yet?{' '}
               <Link href="/register" className="text-primary font-black hover:underline underline-offset-4 decoration-2">
                 Join the Network
               </Link>

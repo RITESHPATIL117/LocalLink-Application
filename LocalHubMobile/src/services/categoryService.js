@@ -112,12 +112,37 @@ const categoryService = {
   getCategories: async () => {
     try {
       logger.info('Fetching categories...');
-      const response = await api.get('/categories');
+      const response = await api.get('/categories?tree=true');
       
       // Standardize response extraction
       const apiCats = Array.isArray(response) 
         ? response 
         : (response?.data && Array.isArray(response.data) ? response.data : []);
+
+      if (apiCats.length > 0) {
+        const normalized = apiCats.map((cat) => {
+          const mockMatch = mockCategories.find((m) => m.name?.toLowerCase() === cat.name?.toLowerCase());
+          return {
+            ...cat,
+            id: cat.id?.toString() || mockMatch?.id || Math.random().toString(),
+            color: cat.color || mockMatch?.color || '#3B82F6',
+            bg: mockMatch?.bg || '#EFF6FF',
+            icon: cat.icon || mockMatch?.icon || 'grid-outline',
+            subcategories: (cat.subcategories || []).map((sub) => {
+              const mockSubMatch = (mockMatch?.subcategories || []).find(
+                (ms) => ms.name?.toLowerCase() === sub.name?.toLowerCase()
+              );
+              return {
+                ...sub,
+                id: sub.id?.toString() || mockSubMatch?.id || `${cat.id}-${sub.name}`,
+                icon: sub.icon || mockSubMatch?.icon || 'construct-outline',
+                image: sub.image || mockSubMatch?.image || '',
+              };
+            }),
+          };
+        });
+        return { data: normalized };
+      }
       
       // Merge Strategy: Sync IDs from DB into our rich mock data, prevent ID collisions
       const merged = mockCategories.map(m => ({ ...m }));
@@ -150,7 +175,7 @@ const categoryService = {
 
       logger.info(`Successfully prepared ${uniqueMerged.length} categories (Merged API + Mocks)`);
       return { data: uniqueMerged };
-    } catch (error) {
+    } catch (_error) {
       logger.warn('API failed, falling back to pure mocks');
       return { data: mockCategories };
     }
@@ -160,7 +185,7 @@ const categoryService = {
       logger.info('Creating new category...');
       const response = await api.post('/categories', categoryData);
       return { data: response || { ...categoryData, id: Math.random().toString() } };
-    } catch (error) {
+    } catch (_error) {
       logger.error('API failed while creating category. Simulating success locally.');
       const newCategory = { ...categoryData, id: Math.random().toString() };
       mockCategories.unshift(newCategory); // Add locally so it appears in immediate fetches
@@ -170,18 +195,32 @@ const categoryService = {
   getSubcategories: async (catId) => {
     try {
       logger.info(`Fetching subcategories for cat: ${catId}`);
-      await new Promise(resolve => setTimeout(resolve, 300)); 
-      
-      // Robust lookup: Match by id directly or try to find by ID in current state if we had access.
-      // Since it's a singleton, mockCategories is now synced.
-      let cat = mockCategories.find(c => c.id === catId.toString());
-      
-      // Final fallback: If we can't find it by ID, it might be because the ID didn't sync correctly.
-      // But we should have synced them in getCategories.
-      
-      return { data: cat ? cat.subcategories : [] };
-    } catch (error) {
-      return { data: [] };
+      const response = await api.get(`/categories/${catId}/subcategories`);
+      const apiSubs = Array.isArray(response)
+        ? response
+        : (response?.data && Array.isArray(response.data) ? response.data : []);
+
+      if (apiSubs.length > 0) {
+        const parentMock = mockCategories.find(c => c.id === catId.toString());
+        const normalizedSubs = apiSubs.map((sub) => {
+          const mockSubMatch = (parentMock?.subcategories || []).find(
+            (ms) => ms.name?.toLowerCase() === sub.name?.toLowerCase()
+          );
+          return {
+            ...sub,
+            id: sub.id?.toString() || mockSubMatch?.id || `${catId}-${sub.name}`,
+            icon: sub.icon || mockSubMatch?.icon || 'construct-outline',
+            image: sub.image || mockSubMatch?.image || '',
+          };
+        });
+        return { data: normalizedSubs };
+      }
+
+      const fallbackCat = mockCategories.find(c => c.id === catId.toString());
+      return { data: fallbackCat ? fallbackCat.subcategories : [] };
+    } catch (_error) {
+      const fallbackCat = mockCategories.find(c => c.id === catId.toString());
+      return { data: fallbackCat ? fallbackCat.subcategories : [] };
     }
   },
   suggestCategory: async (name) => {

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { 
   FiHexagon, FiLayers, FiCheckCircle, FiUsers, FiBriefcase, 
-  FiActivity, FiArrowLeft, FiX, FiCheck, FiInfo, FiClock, FiCalendar
+  FiActivity, FiArrowLeft, FiX, FiCheck, FiInfo, FiClock, FiCalendar, FiImage
 } from 'react-icons/fi';
 import adminService from '../../../services/adminService';
 import Link from 'next/link';
@@ -123,7 +123,7 @@ export default function AdminApprovalsPage() {
                   display: 'flex', transition: 'transform 0.2s'
                 }}>
                   <div style={{ width: '220px', height: '100%', minHeight: '200px' }}>
-                    <img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.image} alt={item.name || 'Business listing'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{ padding: '32px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -174,7 +174,7 @@ export default function AdminApprovalsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '40px' }}>
                  <div>
-                    <img src={selectedBiz.image} style={{ width: '100%', borderRadius: '24px', height: '180px', objectFit: 'cover' }} />
+                    <img src={selectedBiz.image} alt={selectedBiz.name || 'Selected business'} style={{ width: '100%', borderRadius: '24px', height: '180px', objectFit: 'cover' }} />
                     <div style={{ marginTop: '20px', display: 'flex', gap: '8px' }}>
                        <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px', flex: 1, textAlign: 'center' }}>
                           <FiImage color="#94A3B8" />

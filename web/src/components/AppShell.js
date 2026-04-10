@@ -1,10 +1,9 @@
 'use client';
-
 import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const HIDE_CHROME_PREFIXES = ['/admin', '/provider', '/inbox'];
+const HIDE_CHROME_PREFIXES = ['/admin', '/provider', '/inbox', '/login', '/register', '/forgot-password'];
 
 export default function AppShell({ children }) {
   const pathname = usePathname() || '';

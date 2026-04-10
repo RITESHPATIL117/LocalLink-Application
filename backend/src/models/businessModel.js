@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 class Business {
-    static async getByCategory(categoryId, subcategory) {
+    static async getByCategory(categoryId, subcategory, options = {}) {
         let query = `
             SELECT b.*, c.name as category_name 
             FROM businesses b
@@ -9,6 +9,11 @@ class Business {
             WHERE b.category_id = ?
         `;
         const params = [categoryId];
+        const includeUnverified = options?.includeUnverified === true;
+
+        if (!includeUnverified) {
+            query += ' AND b.is_verified = 1';
+        }
 
         if (subcategory) {
             query += ' AND b.subcategory = ?';
@@ -22,6 +27,7 @@ class Business {
     static async getAll(params) {
         let selectFields = 'b.*, c.name as category_name';
         let queryParams = [];
+        const includeUnverified = params?.includeUnverified === true;
         
         // Distance calculation logic (Haversine formula placeholder)
         if (params?.lat && params?.lng) {
@@ -41,6 +47,10 @@ class Business {
             const searchVal = `%${params.q}%`;
             queryParams.push(searchVal, searchVal, searchVal, searchVal);
         }
+
+        if (!includeUnverified) {
+            query += ' AND b.is_verified = 1';
+        }
         
         if (params?.featured) {
             query += ' AND b.rating >= 4.0'; // Simulate featured
@@ -54,12 +64,14 @@ class Business {
         return rows;
     }
 
-    static async getById(id) {
+    static async getById(id, options = {}) {
+        const includeUnverified = options?.includeUnverified === true;
         const [rows] = await db.query(`
             SELECT b.*, c.name as category_name 
             FROM businesses b
             LEFT JOIN categories c ON b.category_id = c.id
             WHERE b.id = ?
+            ${includeUnverified ? '' : 'AND b.is_verified = 1'}
         `, [id]);
         return rows[0];
     }

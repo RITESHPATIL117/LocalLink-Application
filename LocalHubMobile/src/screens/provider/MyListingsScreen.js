@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
@@ -11,6 +11,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+
+const getListingStatus = (item) => {
+  if (item?.is_verified === 1) return 'Live';
+  if (item?.is_verified === 2) return 'Suspended';
+  return 'Pending';
+};
 
 const MyListingsScreen = ({ navigation }) => {
   const [listings, setListings] = useState([]);
@@ -35,7 +41,12 @@ const MyListingsScreen = ({ navigation }) => {
     }
   };
 
-  const renderListing = ({ item, index }) => (
+  const renderListing = ({ item, index }) => {
+    const listingStatus = getListingStatus(item);
+    const isLive = listingStatus === 'Live';
+    const isSuspended = listingStatus === 'Suspended';
+
+    return (
     <AnimatedFadeIn duration={600} delay={index * 100}>
       <TouchableOpacity 
         style={styles.card} 
@@ -50,13 +61,23 @@ const MyListingsScreen = ({ navigation }) => {
           source={{ uri: item.images?.[0] || item.image || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600' }} 
           style={styles.cardImage} 
         />
-        <LinearGradient 
+        <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.6)']} 
           style={styles.imageOverlay}
         >
-          <View style={[styles.statusBadge, item.status === 'Active' ? styles.statusActive : styles.statusPending]}>
-            <Text style={[styles.statusText, item.status === 'Active' ? styles.statusActiveText : styles.statusPendingText]}>
-              {(item.status || 'Active').toUpperCase()}
+          <View
+            style={[
+              styles.statusBadge,
+              isLive ? styles.statusActive : isSuspended ? styles.statusSuspended : styles.statusPending
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                isLive ? styles.statusActiveText : isSuspended ? styles.statusSuspendedText : styles.statusPendingText
+              ]}
+            >
+              {listingStatus.toUpperCase()}
             </Text>
           </View>
         </LinearGradient>
@@ -120,13 +141,16 @@ const MyListingsScreen = ({ navigation }) => {
       </TouchableOpacity>
     </AnimatedFadeIn>
   );
+  };
+
+  const liveCount = listings.filter((item) => item?.is_verified === 1).length;
 
   return (
     <SafeAreaView style={[globalStyles.container, styles.container]} edges={['top']}>
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>My Businesses</Text>
-          <Text style={styles.headerSubtitle}>{listings.length} active service{listings.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.headerSubtitle}>{liveCount} live service{liveCount !== 1 ? 's' : ''}</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddBusiness')}>
           <Ionicons name="add" size={20} color="#FFF" />
@@ -191,6 +215,8 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 9, fontWeight: '900' },
   statusActiveText: { color: '#10B981' },
   statusPendingText: { color: '#F59E0B' },
+  statusSuspended: { backgroundColor: 'rgba(254, 242, 242, 0.9)', borderColor: '#EF4444' },
+  statusSuspendedText: { color: '#EF4444' },
   
   cardContent: { padding: 20 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },

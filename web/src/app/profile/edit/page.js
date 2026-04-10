@@ -2,9 +2,9 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Button from '../../../../components/Button';
-import InputField from '../../../../components/InputField';
-import api from '../../../../services/api'; // Direct API for updating user if we had userService
+import Button from '../../../components/Button';
+import InputField from '../../../components/InputField';
+import api from '../../../services/api'; // Direct API for updating user if we had userService
 
 export default function EditProfile() {
   const { isAuthenticated, user, loading: authLoading } = useSelector(state => state.auth);

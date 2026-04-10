@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
-  Dimensions, FlatList, ActivityIndicator, RefreshControl, Platform, Animated, useWindowDimensions, Modal, TextInput, Linking
+  Dimensions, FlatList, RefreshControl, Platform, Animated, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,17 +15,13 @@ import colors from '../../styles/colors';
 import SearchBar from '../../components/SearchBar';
 import BusinessCard from '../../components/BusinessCard';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
-import { renderDynamicIcon } from '../../utils/iconHelper';
 import categoryService from '../../services/categoryService';
 import businessService from '../../services/businessService';
 import LeadGatekeeper from '../../components/LeadGatekeeper';
 import BookingWizard from '../../components/BookingWizard';
-import PremiumLoader from '../../components/PremiumLoader';
 import reviewService from '../../services/reviewService';
 import Toast from 'react-native-toast-message';
 import WelcomeModal from '../../components/WelcomeModal';
-import InteractiveRating from '../../components/InteractiveRating';
-import TrustTicker from '../../components/TrustTicker';
 import { useIsFocused } from '@react-navigation/native';
 import leadService from '../../services/leadService';
 
@@ -150,8 +146,6 @@ const SectionHeader = ({ title, onSeeAll, style }) => (
 const CategoryPill = ({ item, onPress }) => {
   const fallbackMatch = FALLBACK_CATEGORIES.find(f => f.name === item.name) || FALLBACK_CATEGORIES[0];
   const finalImage = item.image || item.image_url || fallbackMatch.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300';
-  const finalColor = item.color || fallbackMatch.color || '#3B82F6';
-  const finalIcon = item.icon || fallbackMatch.icon || 'grid-outline';
 
   return (
     <TouchableOpacity style={styles.catPill} onPress={onPress} activeOpacity={0.8}>
@@ -186,15 +180,13 @@ const TestimonialCard = ({ item }) => (
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 const HomeScreen = ({ navigation }) => {
-  const { isAuthenticated, user, leadCaptured } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const flatListRef = useRef(null);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [featuredBusinesses, setFeaturedBusinesses] = useState(FALLBACK_BUSINESSES);
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
-  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [platformStats, setPlatformStats] = useState({ totalUsers: 0, totalBusinesses: 0, happyCustomers: 0 });
   const [activeBookingsCount, setActiveBookingsCount] = useState(0);
   const isFocused = useIsFocused();
   const fabFade = useRef(new Animated.Value(1)).current;
@@ -219,15 +211,7 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchData();
-      fetchStats();
-      fetchActiveBookings();
-    }
-  }, [isFocused]);
-
-  const fetchActiveBookings = async () => {
+  const fetchActiveBookings = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const res = await leadService.getUserLeads();
@@ -236,18 +220,8 @@ const HomeScreen = ({ navigation }) => {
     } catch (e) {
       console.log('Error fetching user leads:', e);
     }
-  };
+  }, [isAuthenticated]);
 
-  const fetchStats = async () => {
-    try {
-      const res = await businessService.getPublicStats();
-      if (res?.data) {
-        setPlatformStats(res.data);
-      }
-    } catch (e) {
-      console.log('Error fetching platform stats:', e);
-    }
-  };
   const { width } = useWindowDimensions();
   const SLIDER_HEIGHT = width * 0.65;
   const isDesktop = width >= 768;
@@ -281,12 +255,18 @@ const HomeScreen = ({ navigation }) => {
     } catch (e) {
       // Silently fall back to mock data
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (isFocused) {
+      fetchData();
+      fetchActiveBookings();
+    }
+  }, [isFocused, fetchData, fetchActiveBookings]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const onRefresh = useCallback(() => { setRefreshing(true); fetchData(); }, [fetchData]);
 
@@ -311,7 +291,7 @@ const HomeScreen = ({ navigation }) => {
     return () => clearInterval(interval);
   }, [currentBannerIndex]);
 
-  const renderBanner = useMemo(() => ({ item }) => {
+  const renderBanner = useCallback(({ item }) => {
     const banner = item;
     return (
       <TouchableOpacity
@@ -334,7 +314,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
     );
-  }, [bannerWidth]);
+  }, [bannerWidth, navigation]);
 
   const greetingText = () => {
     const hour = new Date().getHours();

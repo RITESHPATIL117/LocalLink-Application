@@ -39,15 +39,15 @@ export default function FeaturedSection() {
   }
 
   return (
-    <section className="mb-12 md:mb-16">
+    <section className="mb-10 md:mb-14">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 md:mb-10">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-text-main tracking-tight">Top Rated Professionals</h2>
-          <p className="text-sm md:text-base text-text-muted mt-2">Verified experts in Sangli with stellar reviews</p>
+          <h2 className="section-heading">Top Rated Professionals</h2>
+          <p className="section-description mt-2">Verified experts in Sangli with stellar reviews</p>
         </div>
         <button 
           onClick={() => router.push('/search')}
-          className="text-primary font-semibold hover:underline flex items-center gap-2 group"
+          className="text-primary font-semibold hover:underline flex items-center gap-2 group btn-ui"
         >
           Explore All Marketplace <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
         </button>

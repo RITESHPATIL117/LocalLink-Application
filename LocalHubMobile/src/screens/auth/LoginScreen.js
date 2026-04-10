@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, TouchableOpacity, ScrollView, useWindowDimensions, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -9,8 +9,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { loginUser } from '../../store/authSlice';
 import Button from '../../components/Button';
 import InputField from '../../components/InputField';
-import AnimatedFadeIn from '../../components/AnimatedFadeIn';
-import globalStyles from '../../styles/globalStyles';
 import colors from '../../styles/colors';
 
 import AuthHeader from '../../components/AuthHeader';
@@ -30,14 +28,17 @@ const roles = [
 
 
 const LoginScreen = ({ navigation }) => {
-  const { width } = useWindowDimensions();
-  const isWeb = width > 768;
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
   const [selectedRole, setSelectedRole] = useState('user');
 
   const passwordRef = useRef(null);
-  const fadeAnims = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  const fadeAnimsRef = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]);
+  const fadeAnims = fadeAnimsRef.current;
 
   useEffect(() => {
     Animated.stagger(200, fadeAnims.map(anim => 
@@ -47,7 +48,7 @@ const LoginScreen = ({ navigation }) => {
         useNativeDriver: true,
       })
     )).start();
-  }, []);
+  }, [fadeAnims]);
 
   const handleLogin = (values) => {
     dispatch(loginUser({ ...values, role: selectedRole }))
@@ -171,7 +172,7 @@ const LoginScreen = ({ navigation }) => {
               </Formik>
 
               <View style={styles.registerContainer}>
-                <Text style={styles.registerText}>Don't have an account? </Text>
+                <Text style={styles.registerText}>Don&apos;t have an account? </Text>
                 <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
                   Create One
                 </Text>

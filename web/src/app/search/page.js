@@ -172,7 +172,7 @@ function SearchContent() {
             </div>
               <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter mb-4">No direct matches found</h3>
             <p className="text-slate-500 text-base md:text-lg font-medium max-w-md mx-auto mb-10 leading-relaxed">
-              We couldn't find any professionals matching that search. Try expanding your filters or search for another neighborhood in Sangli.
+              We couldn&apos;t find any professionals matching that search. Try expanding your filters or search for another neighborhood in Sangli.
             </p>
             <button 
               onClick={() => { setSearch(''); router.push('/search'); }}

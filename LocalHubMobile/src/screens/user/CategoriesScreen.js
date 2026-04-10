@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Image, TextInput, ActivityIndicator, useWindowDimensions,
-  Platform, KeyboardAvoidingView, LayoutAnimation, UIManager
+  LayoutAnimation
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import colors from '../../styles/colors';
 import globalStyles from '../../styles/globalStyles';
@@ -20,17 +19,6 @@ import { useFocusEffect } from '@react-navigation/native';
 
 
 // ─── Fallback & Mock Data ──────────────────────────────────────────────────
-
-const FALLBACK_CATEGORIES = [
-  { id: 'c1', name: 'Plumbing',        icon: 'water-outline',          color: '#3B82F6', bg: '#EFF6FF', image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800' },
-  { id: 'c2', name: 'Electrical',      icon: 'flash-outline',          color: '#F59E0B', bg: '#FFFBEB', image: 'https://images.unsplash.com/photo-1621905252507-b352224075b9?q=80&w=800' },
-  { id: 'c3', name: 'Cleaning',        icon: 'sparkles-outline',       color: '#10B981', bg: '#ECFDF5', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800' },
-  { id: 'c4', name: 'AC Service',      icon: 'thermometer-outline',    color: '#06B6D4', bg: '#ECFEFF', image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800' },
-  { id: 'c5', name: 'Salon',           icon: 'cut-outline',            color: '#EC4899', bg: '#FDF2F8', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800' },
-  { id: 'c6', name: 'Carpentry',       icon: 'hammer-outline',         color: '#92400E', bg: '#FFF7ED', image: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800' },
-  { id: 'c7', name: 'Painting',        icon: 'color-palette-outline',  color: '#8B5CF6', bg: '#F5F3FF', image: 'https://images.unsplash.com/photo-1562591176-3293099a0bf3?q=80&w=800' },
-  { id: 'c8', name: 'Pest Control',    icon: 'bug-outline',            color: '#EF4444', bg: '#FEF2F2', image: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=800' },
-];
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -59,22 +47,21 @@ const CategoriesScreen = ({ navigation, route }) => {
   const numColumns = rightPaneWidth > 800 ? 4 : (rightPaneWidth > 500 ? 3 : 2);
   const itemWidth = (rightPaneWidth - 48 - (16 * (numColumns - 1))) / numColumns;
 
-  useEffect(() => {
-    fetchCategories();
+  const handleSelectNav = React.useCallback(async (id) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setSelectedMainCat(id);
+    setSubLoading(true);
+    try {
+      const subRes = await categoryService.getSubcategories(id);
+      setActiveSubcategories(subRes.data || []);
+    } catch (e) {
+      console.error('Failed to fetch subcategories', e);
+    } finally {
+      setSubLoading(false);
+    }
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const categoryId = route.params?.categoryId;
-      if (categoryId && categories.length > 0) {
-        handleSelectNav(categoryId);
-        // Reset the param so it doesn't re-select if we navigate back
-        navigation.setParams({ categoryId: null });
-      }
-    }, [route.params?.categoryId, categories])
-  );
-
-  const fetchCategories = async () => {
+  const fetchCategories = React.useCallback(async () => {
     try {
       const res = await categoryService.getCategories();
       const rawData = res.data || [];
@@ -96,23 +83,24 @@ const CategoriesScreen = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleSelectNav]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const categoryId = route.params?.categoryId;
+      if (categoryId && categories.length > 0) {
+        handleSelectNav(categoryId);
+        // Reset the param so it doesn't re-select if we navigate back
+        navigation.setParams({ categoryId: null });
+      }
+    }, [route.params?.categoryId, categories, navigation, handleSelectNav])
+  );
 
   const activeCategoryData = categories.find(c => c.id === selectedMainCat) || categories[0];
-
-  const handleSelectNav = async (id) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSelectedMainCat(id);
-    setSubLoading(true);
-    try {
-      const subRes = await categoryService.getSubcategories(id);
-      setActiveSubcategories(subRes.data || []);
-    } catch (e) {
-      console.error('Failed to fetch subcategories', e);
-    } finally {
-      setSubLoading(false);
-    }
-  };
 
   // Filter Subcategories if searching, otherwise show active main category content
   const isSearching = search.trim().length > 0;
@@ -184,7 +172,7 @@ const CategoriesScreen = ({ navigation, route }) => {
         // ─── Search Results View ───
         <ScrollView contentContainerStyle={styles.searchResultsContainer} keyboardShouldPersistTaps="handled">
           <Text style={styles.searchResultsHeader}>
-            Found {searchResults.length} results for "{search}"
+            Found {searchResults.length} results for &quot;{search}&quot;
           </Text>
           <View style={styles.subCatGrid}>
             {searchResults.length > 0 ? searchResults.map((subItem, index) => (
@@ -325,7 +313,7 @@ const SUB_FALLBACKS = [
   'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800'
 ];
 
-const SubcategoryCard = ({ item, parentName, onPress, index = 0 }) => {
+const SubcategoryCard = ({ item, onPress, index = 0 }) => {
   const isValidImage = item.image && item.image.length > 5 && item.image !== 'null' && item.image !== 'undefined';
   const imgUri = isValidImage ? item.image : SUB_FALLBACKS[index % SUB_FALLBACKS.length];
   

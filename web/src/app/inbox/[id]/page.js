@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowLeft, FiMoreVertical, FiPaperclip, FiSend, FiCheck, FiCheckCircle, FiClock, FiShield, FiChevronLeft
@@ -9,29 +9,16 @@ import chatService from '../../../services/chatService';
 
 export default function ChatDetailPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const chatId = pathname?.split('/').filter(Boolean).pop();
-  const [chatName, setChatName] = useState('Elite Specialist');
+  const searchParams = useSearchParams();
+  const chatName = searchParams?.get('name') || 'Elite Specialist';
 
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    { id: '1', text: 'Hello, are you available today for a plumbing leak?', sender: 'other', time: '10:30 AM', status: 'read' },
+    { id: '2', text: 'Yes, I can come by at around 2 PM to assess the damage.', sender: 'me', time: '10:35 AM', status: 'read' },
+    { id: '3', text: 'That works great! I have the parts ready in the garage.', sender: 'other', time: '10:40 AM', status: 'read' },
+  ]);
   const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      setChatName(urlParams.get('name') || 'Elite Specialist');
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    // Initial fetch of messages mock
-    setMessages([
-      { id: '1', text: 'Hello, are you available today for a plumbing leak?', sender: 'other', time: '10:30 AM', status: 'read' },
-      { id: '2', text: 'Yes, I can come by at around 2 PM to assess the damage.', sender: 'me', time: '10:35 AM', status: 'read' },
-      { id: '3', text: 'That works great! I have the parts ready in the garage.', sender: 'other', time: '10:40 AM', status: 'read' },
-    ]);
-  }, [chatId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

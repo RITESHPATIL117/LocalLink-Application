@@ -218,7 +218,7 @@ export default function ReviewsPage() {
 
             <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #F1F5F9' }}>
               <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748B', marginBottom: '4px', textTransform: 'uppercase' }}>Replying to {selectedReview?.customer}</div>
-              <div style={{ fontSize: '14px', color: '#475569', fontStyle: 'italic', lineHeight: '20px' }}>"{selectedReview?.comment}"</div>
+              <div style={{ fontSize: '14px', color: '#475569', fontStyle: 'italic', lineHeight: '20px' }}>&quot;{selectedReview?.comment}&quot;</div>
             </div>
 
             <textarea
@@ -240,12 +240,12 @@ export default function ReviewsPage() {
         </div>
       )}
 
-      <style dangerouslySetInnerHTML={{__html: \`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
-      \`}} />
+      `}} />
     </div>
   );
 }

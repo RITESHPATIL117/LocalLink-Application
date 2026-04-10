@@ -13,7 +13,7 @@ const AdminHeader = ({ title, status, profilePic, onProfilePress, onSettingsPres
         Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       ])
     ).start();
-  }, []);
+  }, [pulseAnim]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>

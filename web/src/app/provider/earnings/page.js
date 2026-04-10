@@ -42,7 +42,7 @@ export default function EarningsPage() {
 
               return {
                 id: l.id || Math.random().toString(),
-                title: \`\${biz.name} - \${l.customerName || l.customer_name || 'Client'}\`,
+                title: `${biz.name} - ${l.customerName || l.customer_name || 'Client'}`,
                 date: l.createdAt ? new Date(l.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
                 rawDate: l.createdAt ? new Date(l.createdAt) : new Date(),
                 amount: amount,

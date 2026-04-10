@@ -62,7 +62,7 @@ const verifyBusiness = async (req, res) => {
 
 const getAllBusinesses = async (req, res) => {
     try {
-        const businesses = await Business.getAll(req.query);
+        const businesses = await Business.getAll({ ...req.query, includeUnverified: true });
         res.json(businesses);
     } catch (error) {
         res.status(500).json({ message: error.message });

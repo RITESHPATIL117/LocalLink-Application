@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiLock, FiArrowRight, FiHexagon, FiAlertCircle } from 'react-icons/fi';
-import InputField from '../../components/InputField';
-import Button from '../../components/Button';
 
 export default function Register() {
   const dispatch = useDispatch();
@@ -20,7 +18,7 @@ export default function Register() {
     email: '',
     phone: '',
     password: '',
-    role: 'customer' // default
+    role: 'user'
   });
   
   const [loading, setLoading] = useState(false);
@@ -32,9 +30,11 @@ export default function Register() {
 
   useEffect(() => {
     if (hasMounted && isAuthenticated) {
-      router.push('/');
+      if (formData.role === 'provider') router.push('/provider/dashboard');
+      else if (formData.role === 'admin') router.push('/admin/dashboard');
+      else router.push('/');
     }
-  }, [isAuthenticated, router, hasMounted]);
+  }, [isAuthenticated, router, hasMounted, formData.role]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -50,6 +50,8 @@ export default function Register() {
       const res = await dispatch(registerUser(formData)).unwrap();
       if (res.user.role === 'provider') {
         router.push('/provider/dashboard');
+      } else if (res.user.role === 'admin') {
+        router.push('/admin/dashboard');
       } else {
         router.push('/');
       }
@@ -62,7 +64,15 @@ export default function Register() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  if (!hasMounted || isAuthenticated || authLoading) return null;
+  if (!hasMounted) return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-main">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (isAuthenticated) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-main relative overflow-hidden py-24 px-6">
@@ -108,9 +118,9 @@ export default function Register() {
             <div className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100 flex gap-1 shadow-inner mb-4">
               <button 
                 type="button" 
-                onClick={() => setFormData({ ...formData, role: 'customer' })}
+                onClick={() => setFormData({ ...formData, role: 'user' })}
                 className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                  formData.role === 'customer' 
+                  formData.role === 'user' 
                   ? 'bg-white text-primary shadow-subtle' 
                   : 'text-slate-400 hover:text-slate-600'
                 }`}
@@ -127,6 +137,17 @@ export default function Register() {
                 }`}
               >
                 I am a provider
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setFormData({ ...formData, role: 'admin' })}
+                className={`flex-1 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                  formData.role === 'admin' 
+                  ? 'bg-white text-primary shadow-subtle' 
+                  : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Admin
               </button>
             </div>
 

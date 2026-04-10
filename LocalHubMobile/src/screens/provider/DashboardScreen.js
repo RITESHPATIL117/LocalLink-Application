@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, ActivityIndicator, useWindowDimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, useWindowDimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,41 +34,13 @@ const ProviderDashboardScreen = ({ navigation }) => {
   const { user } = useSelector((state) => state.auth);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   
-  const [stats, setStats] = useState({ totalLeads: 0, activeLeads: 0, views: 0 });
+  const [stats, setStats] = useState({ totalLeads: 0, activeLeads: 0, views: 0, activeListings: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
   const [monthlyChartData, setMonthlyChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileStrength, setProfileStrength] = useState(0);
 
-  useEffect(() => {
-    fetchDashboardData();
-    
-    // Socket integration
-    if (user?.id) {
-      socketService.connect();
-      socketService.joinRoom(user.id.toString());
-      
-      socketService.onNewLead((newLead) => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        
-        // Update stats and activity silently
-        fetchDashboardData(true);
-        
-        Toast.show({
-          type: 'success',
-          text1: '🔔 New Lead Received!',
-          text2: `${newLead.customerName} just requested a quote.`,
-          onPress: () => navigation.navigate('LeadsTab')
-        });
-      });
-    }
-
-    return () => {
-      // socketService.disconnect(); // Keep alive or disconnect on logout
-    };
-  }, [user]);
-
-  const fetchDashboardData = async (isSilent = false) => {
+  const fetchDashboardData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
       // 1. Fetch Aggregated Stats from new specialized endpoint
@@ -99,14 +71,15 @@ const ProviderDashboardScreen = ({ navigation }) => {
             }));
             
             allLeads = [...allLeads, ...mappedLeads];
-          } catch (e) {}
+          } catch (_e) {}
         })
       );
 
       setStats({ 
         totalLeads: apiStats.totalLeads || 0, 
         activeLeads: apiStats.pendingListings || 0, // Using pending as "action needed"
-        views: apiStats.totalViews || 0 
+        views: apiStats.totalViews || 0,
+        activeListings: apiStats.activeListings || 0
       });
 
       allLeads.sort((a, b) => b.rawDate - a.rawDate);
@@ -128,12 +101,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
           { id: 'a2', user: 'Tips', action: 'Complete your profile to increase visibility by 40%', time: 'Today', icon: 'bulb', color: '#10B981' },
           { id: 'a3', user: 'Notice', action: 'Your dashboard is now live with real-time tracking.', time: 'Today', icon: 'shield-checkmark', color: colors.primary },
         ]);
-        
-        setMonthlyChartData([
-          { label: 'Mon', value: 5 }, { label: 'Tue', value: 8 }, { label: 'Wed', value: 3 },
-          { label: 'Thu', value: 12 }, { label: 'Fri', value: 15 }, { label: 'Sat', value: 7 },
-          { label: 'Sun', value: 9 },
-        ]);
+        setMonthlyChartData(MONTHS.map((m) => ({ label: m, value: 0 })));
       } else {
         setRecentActivities(allLeads.slice(0, 4));
         // Chart logic remains based on lead dates
@@ -149,15 +117,43 @@ const ProviderDashboardScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.profilePic]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // Socket integration
+    if (user?.id) {
+      socketService.connect();
+      socketService.joinRoom(user.id.toString());
+      
+      socketService.onNewLead((newLead) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        
+        // Update stats and activity silently
+        fetchDashboardData(true);
+        
+        Toast.show({
+          type: 'success',
+          text1: '🔔 New Lead Received!',
+          text2: `${newLead.customerName} just requested a quote.`,
+          onPress: () => navigation.navigate('LeadsTab')
+        });
+      });
+    }
+
+    return () => {
+      // socketService.disconnect(); // Keep alive or disconnect on logout
+    };
+  }, [user, fetchDashboardData, navigation]);
 
   const businessName = user?.name || "Provider"; 
   const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200";
 
   const currentStatCards = [
-    { id: '1', title: 'Total Leads', value: (stats?.totalLeads || 0).toLocaleString(), trend: '+12%', isUp: true, icon: 'people-outline', color: '#3B82F6' },
-    { id: '2', title: 'Action Needed', value: (stats?.activeLeads || 0).toString(), trend: '5 New', isUp: true, icon: 'flash-outline', color: '#F59E0B' },
-    { id: '3', title: 'Profile Views', value: (stats?.views || 0).toLocaleString(), trend: '+8%', isUp: true, icon: 'eye-outline', color: '#10B981' },
+    { id: '1', title: 'Total Leads', value: (stats?.totalLeads || 0).toLocaleString(), trend: `${recentActivities.length} recent`, isUp: (stats?.totalLeads || 0) > 0, icon: 'people-outline', color: '#3B82F6' },
+    { id: '2', title: 'Action Needed', value: (stats?.activeLeads || 0).toString(), trend: `${stats?.activeLeads || 0} pending`, isUp: false, icon: 'flash-outline', color: '#F59E0B' },
+    { id: '3', title: 'Profile Views', value: (stats?.views || 0).toLocaleString(), trend: `${stats?.activeListings || 0} live`, isUp: (stats?.views || 0) > 0, icon: 'eye-outline', color: '#10B981' },
   ];
 
   // Highest value for chart scaling

@@ -21,10 +21,8 @@ export default function Navbar() {
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -36,7 +34,12 @@ export default function Navbar() {
     dispatch(logoutUser());
   };
 
-  if (!mounted) return null;
+  const dashboardPath =
+    user?.role === 'admin'
+      ? '/admin/dashboard'
+      : user?.role === 'provider'
+        ? '/provider/dashboard'
+        : '/profile';
 
   return (
     <nav
@@ -98,6 +101,14 @@ export default function Navbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
+              {(user?.role === 'admin' || user?.role === 'provider') && (
+                <Link
+                  href={dashboardPath}
+                  className="hidden md:flex text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl"
+                >
+                  Dashboard
+                </Link>
+              )}
               <Link href="/profile" className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-[20px] border border-slate-100 hover:bg-white hover:shadow-subtle transition-all group">
                 <div className="w-9 h-9 rounded-[14px] overflow-hidden bg-primary/10 border border-primary/20 flex items-center justify-center">
                   {user?.avatar ? (
@@ -126,10 +137,10 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/login" className="text-sm font-black text-slate-600 hover:text-primary px-4 transition-colors">
+              <Link href="/login" className="text-sm font-black text-slate-600 hover:text-primary px-4 transition-colors btn-ui !py-2 !px-5">
                 Login
               </Link>
-              <Link href="/register" className="btn-premium px-6 py-2.5 !rounded-2xl text-xs uppercase tracking-widest">
+              <Link href="/register" className="btn-premium btn-ui !px-5 !py-2.5 text-xs uppercase tracking-widest">
                 Join Now
               </Link>
             </div>
@@ -168,6 +179,17 @@ export default function Navbar() {
                   <FiHexagon size={16} />
                 </Link>
               ))}
+
+              {(user?.role === 'admin' || user?.role === 'provider') && (
+                <Link
+                  href={dashboardPath}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-primary/5 text-primary border border-primary/10"
+                >
+                  <span className="font-black text-base">Dashboard</span>
+                  <FiHexagon size={16} />
+                </Link>
+              )}
               
               {isAuthenticated && (
                 <button 

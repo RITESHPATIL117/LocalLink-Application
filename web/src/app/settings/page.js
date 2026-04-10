@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../../store/authSlice';
@@ -9,29 +9,8 @@ import {
   FiMapPin, FiInfo, FiFileText, FiLogOut, FiChevronRight 
 } from 'react-icons/fi';
 
-export default function SettingsPage() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const { isAuthenticated, loading: authLoading } = useSelector(state => state.auth || {});
-  
-  const [notifications, setNotifications] = useState(true);
-  const [location, setLocation] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleLogout = () => {
-    if (dispatch && logoutUser) {
-      dispatch(logoutUser());
-    }
-    router.push('/login');
-  };
-
-  if (!mounted) return null;
-
-  const SettingItem = ({ icon, title, type = 'chevron', value, onValueChange, onClick, destructive }) => (
+function SettingItem({ icon, title, type = 'chevron', value, onValueChange, onClick, destructive }) {
+  return (
     <motion.div 
       whileHover={type !== 'switch' ? { x: 4 } : {}}
       onClick={type !== 'switch' ? onClick : undefined}
@@ -74,6 +53,22 @@ export default function SettingsPage() {
       )}
     </motion.div>
   );
+}
+
+export default function SettingsPage() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { isAuthenticated, loading: authLoading } = useSelector(state => state.auth || {});
+  
+  const [notifications, setNotifications] = useState(true);
+  const [location, setLocation] = useState(true);
+
+  const handleLogout = () => {
+    if (dispatch && logoutUser) {
+      dispatch(logoutUser());
+    }
+    router.push('/login');
+  };
 
   return (
     <div className="bg-bg-main min-h-screen flex flex-col">

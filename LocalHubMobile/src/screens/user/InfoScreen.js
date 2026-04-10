@@ -27,13 +27,13 @@ const InfoScreen = ({ route, navigation }) => {
           <Text style={styles.lastUpdated}>Version 1.0.4 • Last updated March 28, 2026</Text>
           
           <Text style={styles.paragraph}>
-            By utilizing the LocalHub Mobile Application ("the Service"), you signify your irrevocable acceptance of these {title}. If you do not agree, please discontinue use immediately.
+            By utilizing the LocalHub Mobile Application (&quot;the Service&quot;), you signify your irrevocable acceptance of these {title}. If you do not agree, please discontinue use immediately.
           </Text>
 
           <View style={styles.legalSection}>
             <Text style={styles.subTitle}>1. Scope of Service</Text>
             <Text style={styles.paragraph}>
-              LocalHub serves as an intermediary platform connecting users with local service professionals ("Providers"). While we verify professional credentials, LocalHub does not guarantee the quality, safety, or legality of the services performed.
+              LocalHub serves as an intermediary platform connecting users with local service professionals (&quot;Providers&quot;). While we verify professional credentials, LocalHub does not guarantee the quality, safety, or legality of the services performed.
             </Text>
           </View>
 
@@ -47,14 +47,14 @@ const InfoScreen = ({ route, navigation }) => {
           <View style={styles.legalSection}>
             <Text style={styles.subTitle}>3. Lead Generation & Booking</Text>
             <Text style={styles.paragraph}>
-              Sending a "Request" creates a lead for the Provider. A booking is only confirmed once both parties agree on terms. LocalHub is not a party to any contract between you and the Provider.
+              Sending a &quot;Request&quot; creates a lead for the Provider. A booking is only confirmed once both parties agree on terms. LocalHub is not a party to any contract between you and the Provider.
             </Text>
           </View>
 
           <View style={styles.legalSection}>
             <Text style={styles.subTitle}>4. Payments & Refunds</Text>
             <Text style={styles.paragraph}>
-              Payment terms are negotiated between the User and the Provider. For "Pay After Service" options, users are legally bound to fulfill payment once the agreed-upon work is completed to specified standards.
+              Payment terms are negotiated between the User and the Provider. For &quot;Pay After Service&quot; options, users are legally bound to fulfill payment once the agreed-upon work is completed to specified standards.
             </Text>
           </View>
 

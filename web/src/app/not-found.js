@@ -36,8 +36,8 @@ export default function NotFound() {
           Lost in the Hub?
         </h2>
         <p className="text-xl text-slate-500 font-medium mb-12 leading-relaxed max-w-md mx-auto">
-          The expert service you're looking for might have moved, or the link has expired. 
-          Don't worry, we'll help you find your way back.
+          The expert service you&apos;re looking for might have moved, or the link has expired. 
+          Don&apos;t worry, we&apos;ll help you find your way back.
         </p>
 
         <div className="flex flex-col md:flex-row gap-6 mb-12">

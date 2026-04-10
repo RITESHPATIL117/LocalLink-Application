@@ -1,18 +1,13 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiChevronLeft, FiMessageCircle, FiMail, FiPhone, FiChevronDown, FiBookOpen } from 'react-icons/fi';
 import Button from '../../components/Button';
 
 export default function SupportPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const faqs = [
     { q: 'How do I book a service?', a: 'Navigate to the Categories or search for a business, then click the "Book Now" button on their profile. Our system will immediately notify the provider.' },
@@ -20,8 +15,6 @@ export default function SupportPage() {
     { q: 'Is my data secure?', a: 'Yes. We use industry-standard bank-level encryption for all your data, utilizing secure JWT tokens and encrypted database storage.' },
     { q: 'What payment methods are supported?', a: 'Currently, you pay the provider directly after the service is rendered. In-app payment integration (Stripe) is arriving in Q3.' }
   ];
-
-  if (!mounted) return null;
 
   return (
     <div className="bg-bg-main min-h-screen flex flex-col">
@@ -54,7 +47,7 @@ export default function SupportPage() {
               <FiMessageCircle size={40} />
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4">How can we help today?</h2>
-            <p className="text-xl text-primary font-bold">We're here 24/7 to guarantee your success.</p>
+            <p className="text-xl text-primary font-bold">We&apos;re here 24/7 to guarantee your success.</p>
           </div>
         </motion.div>
 

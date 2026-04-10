@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
@@ -10,13 +10,6 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import SkeletonLoader from '../../components/SkeletonLoader';
-import { Modal, ScrollView, StyleSheet as RNStyleSheet } from 'react-native';
-
-const dummyApprovals = [
-  { id: '1', name: 'Elite Electricians', owner: 'Vikram Singh', category: 'Electrician', date: '2 hours ago', image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=200' },
-  { id: '2', name: 'Green Leaf Gardening', owner: 'Pooja Hegde', category: 'Landscaping', date: '5 hours ago', image: 'https://images.unsplash.com/photo-1592150621344-82841b999744?q=80&w=200' },
-  { id: '3', name: 'Sparkle Cleaners', owner: 'Rahul Roy', category: 'Cleaning', date: 'Yesterday', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=200' },
-];
 
 const ApprovalsScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
@@ -49,15 +42,15 @@ const ApprovalsScreen = ({ navigation }) => {
   };
 
   const handleAction = async (id, type) => {
-    setIsProcessing(true);
     if (type === 'approve') {
+       setIsProcessing(true);
        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
        try {
          await adminService.verifyBusiness(id);
          setData(prev => prev.filter(item => item.id !== id));
          setReviewModalVisible(false);
          Toast.show({ type: 'success', text1: 'Verified', text2: 'Business is now live on LocalHub.' });
-       } catch (e) {
+       } catch (_e) {
          Toast.show({ type: 'error', text1: 'Error', text2: 'Could not verify business.' });
        }
     } else {
@@ -69,17 +62,27 @@ const ApprovalsScreen = ({ navigation }) => {
           { 
             text: 'Reject', 
             style: 'destructive',
-            onPress: () => {
-               setData(prev => prev.filter(item => item.id !== id));
-               setReviewModalVisible(false);
-               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-               Toast.show({ type: 'info', text1: 'Rejected', text2: 'Provider has been notified.' });
+            onPress: async () => {
+               setIsProcessing(true);
+               try {
+                 await adminService.updateBusinessStatus(id, 'Suspended');
+                 setData(prev => prev.filter(item => item.id !== id));
+                 setReviewModalVisible(false);
+                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                 Toast.show({ type: 'info', text1: 'Rejected', text2: 'Provider has been notified.' });
+               } catch (_e) {
+                 Toast.show({ type: 'error', text1: 'Action Failed', text2: 'Could not reject listing.' });
+               } finally {
+                 setIsProcessing(false);
+               }
             }
           }
         ]
       );
     }
-    setIsProcessing(false);
+    if (type === 'approve') {
+      setIsProcessing(false);
+    }
   };
 
   const renderItem = ({ item, index }) => (
@@ -89,7 +92,7 @@ const ApprovalsScreen = ({ navigation }) => {
         activeOpacity={0.9}
         onPress={() => handleReviewPress(item)}
       >
-        <Image source={{ uri: item.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400' }} style={styles.cardImage} />
+        <Image source={{ uri: item.image || item.image_url || 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400' }} style={styles.cardImage} />
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <View style={{ flex: 1 }}>
@@ -182,7 +185,7 @@ const ApprovalsScreen = ({ navigation }) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Image source={{ uri: selectedBiz?.image }} style={styles.modalImage} />
+              <Image source={{ uri: selectedBiz?.image || selectedBiz?.image_url || 'https://images.unsplash.com/photo-1581578731548-c64695cc6958?q=80&w=400' }} style={styles.modalImage} />
               
               <View style={styles.detailSection}>
                  <Text style={styles.detailLabel}>Business Name</Text>

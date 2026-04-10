@@ -1,12 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import colors from '../../styles/colors';
 
 const StatCard = ({ title, value, trend, isUp, icon, color, delay = 0 }) => {
-  const { width } = useWindowDimensions();
   const scaleAnim = React.useRef(new Animated.Value(0.95)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -26,7 +24,7 @@ const StatCard = ({ title, value, trend, isUp, icon, color, delay = 0 }) => {
         delay,
       }),
     ]).start();
-  }, []);
+  }, [delay, opacityAnim, scaleAnim]);
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

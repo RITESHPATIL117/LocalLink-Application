@@ -34,7 +34,7 @@ export default function AboutPage() {
               Reimagining Local Services for the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-light to-primary">Modern World.</span>
             </h1>
             <p className="text-xl md:text-2xl text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed">
-              LocalHub is on a mission to organize the world's local services and make them accessible, 
+              LocalHub is on a mission to organize the world&apos;s local services and make them accessible, 
               reliable, and highly professional for everyone, everywhere.
             </p>
           </motion.div>

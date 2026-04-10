@@ -37,8 +37,8 @@ const ACTIONS = [
 
 export default function QuickActions() {
   return (
-    <section className="mb-12 md:mb-16">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="mb-10 md:mb-14">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {ACTIONS.map((action, idx) => (
           <motion.div
             key={idx}
@@ -49,16 +49,16 @@ export default function QuickActions() {
           >
             <Link 
               href={action.path}
-              className="flex items-center gap-4 p-5 rounded-xl bg-white border border-slate-100 shadow-sm hover:border-primary/10 hover:shadow-md transition-all duration-300 group h-full"
+              className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-white border border-slate-100 shadow-sm hover:border-primary/10 hover:shadow-md transition-all duration-300 group h-full"
             >
               <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 group-hover:scale-110 shadow-subtle group-hover:shadow-glow"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-xl md:text-2xl transition-all duration-500 group-hover:scale-110 shadow-subtle group-hover:shadow-glow"
                 style={{ backgroundColor: `${action.color}10`, color: action.color }}
               >
                 {action.icon}
               </div>
               <div>
-                <h4 className="text-base md:text-lg font-bold text-slate-900 tracking-tight">{action.title}</h4>
+                <h4 className="text-sm md:text-base font-bold text-slate-900 tracking-tight">{action.title}</h4>
                 <p className="text-xs font-semibold text-slate-500 mt-1">{action.desc}</p>
               </div>
             </Link>

@@ -68,10 +68,10 @@ export default function AdminDashboardPage() {
            {[
              { label: 'Dashboard', ic: <FiLayers />, active: true, route: '/admin/dashboard' },
              { label: 'Approvals', ic: <FiCheckCircle />, badge: pendingCount, active: false, route: '/admin/approvals' },
-             { label: 'User Index', ic: <FiUsers />, active: false, route: '#' },
-             { label: 'Partners', ic: <FiBriefcase />, active: false, route: '#' },
-             { label: 'System Logs', ic: <FiActivity />, active: false, route: '#' },
-             { label: 'Platform Settings', ic: <FiSettings />, active: false, route: '#' },
+             { label: 'User Index', ic: <FiUsers />, active: false, route: '/admin/users' },
+             { label: 'Partners', ic: <FiBriefcase />, active: false, route: '/admin/businesses' },
+             { label: 'System Logs', ic: <FiActivity />, active: false, route: '/admin/reports' },
+             { label: 'Categories', ic: <FiSettings />, active: false, route: '/admin/categories' },
            ].map(item => (
              <motion.div key={item.label} whileHover={{ x: 4 }}>
                <Link href={item.route} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
@@ -126,11 +126,12 @@ export default function AdminDashboardPage() {
         <div className="p-8 md:p-12 max-w-7xl w-full mx-auto">
           
           {/* Main KPI Dashboard */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
             {[
               { label: 'Active Consumer Base', value: stats.users.toLocaleString(), trend: '+4.2%', icon: <FiUsers />, color: 'text-indigo-500', bg: 'bg-indigo-500/5' },
               { label: 'Verified Service Partners', value: stats.providers.toLocaleString(), trend: '+1.5%', icon: <FiBriefcase />, color: 'text-emerald-500', bg: 'bg-emerald-500/5' },
               { label: 'Marketplace Revenue', value: `₹${stats.revenue.toLocaleString()}`, trend: '+12.8%', icon: <FiTrendingUp />, color: 'text-amber-500', bg: 'bg-amber-500/5' },
+              { label: 'Pending Approval', value: pendingCount.toString(), trend: 'Needs Review', icon: <FiClock />, color: 'text-rose-500', bg: 'bg-rose-500/5' },
             ].map((kpi, idx) => (
               <motion.div 
                 key={kpi.label}
@@ -158,6 +159,28 @@ export default function AdminDashboardPage() {
                    </div>
                 </div>
               </motion.div>
+            ))}
+          </section>
+
+          {/* Quick Action Grid (parity with mobile admin dashboard) */}
+          <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-14">
+            {[
+              { label: 'Users', icon: <FiUsers />, route: '/admin/users' },
+              { label: 'Businesses', icon: <FiBriefcase />, route: '/admin/businesses' },
+              { label: 'Approvals', icon: <FiCheckCircle />, route: '/admin/approvals' },
+              { label: 'Categories', icon: <FiSettings />, route: '/admin/categories' },
+              { label: 'Reports', icon: <FiActivity />, route: '/admin/reports' },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => router.push(item.route)}
+                className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left hover:bg-white/10 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center mb-3">
+                  {item.icon}
+                </div>
+                <p className="text-sm font-bold text-slate-100">{item.label}</p>
+              </button>
             ))}
           </section>
 

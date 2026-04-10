@@ -43,7 +43,7 @@ export default function ContactPage() {
               Get in Touch
             </h1>
             <p className="text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
-              Have questions? We're here to help you scale your business or find the perfect professional for your next project.
+              Have questions? We&apos;re here to help you scale your business or find the perfect professional for your next project.
             </p>
           </motion.div>
         </div>

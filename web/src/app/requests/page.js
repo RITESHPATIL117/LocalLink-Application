@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiClock, FiCheckCircle, FiXCircle, FiGrid, FiList, 
-  FiCalendar, FiMapPin, FiPhone, FiDollarSign, FiInfo, FiChevronRight, FiBell, FiTrash2
+  FiCalendar, FiMapPin, FiPhone, FiDollarSign, FiInfo, FiChevronRight, FiChevronLeft, FiBell, FiTrash2
 } from 'react-icons/fi';
 import leadService from '../../services/leadService';
 

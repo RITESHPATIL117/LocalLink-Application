@@ -4,13 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { logoutUser } from '../../../store/authSlice';
 
-export default function ProviderSettingsPage() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const [notifications, setNotifications] = useState(true);
-  const [emailAlerts, setEmailAlerts] = useState(true);
-
-  const SettingRow = ({ icon, label, desc, value, onToggle }) => (
+function SettingRow({ icon, label, desc, value, onToggle }) {
+  return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: '#FFF5F0', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: '16px', fontSize: '20px' }}>
@@ -41,8 +36,10 @@ export default function ProviderSettingsPage() {
       </label>
     </div>
   );
+}
 
-  const ActionRow = ({ icon, label, desc, onClick }) => (
+function ActionRow({ icon, label, desc, onClick }) {
+  return (
     <div 
       onClick={onClick} 
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', cursor: 'pointer', transition: 'background-color 0.2s' }}
@@ -61,6 +58,13 @@ export default function ProviderSettingsPage() {
       <span style={{ color: '#CBD5E1', fontSize: '20px' }}>›</span>
     </div>
   );
+}
+
+export default function ProviderSettingsPage() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [notifications, setNotifications] = useState(true);
+  const [emailAlerts, setEmailAlerts] = useState(true);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh' }}>

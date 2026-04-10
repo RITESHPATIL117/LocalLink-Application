@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, Platform, ActivityIndicator, RefreshControl, Animated, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform, RefreshControl, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +19,6 @@ import AdminHeader from '../../components/admin/AdminHeader';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import StatCard from '../../components/admin/StatCard';
 import SkeletonLoader, { StatPillSkeleton } from '../../components/SkeletonLoader';
-import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 
 const sidebarMenu = [
   { id: 'dashboard', title: 'Home Screen', icon: 'home-outline' },
@@ -32,10 +31,10 @@ const sidebarMenu = [
 ];
 
 const defaultAdminStats = [
-  { id: '1', title: 'Total Businesses', value: '1,245', trend: '+45 This Week', isUp: true, icon: 'business', color: colors.primary },
-  { id: '2', title: 'Total Users', value: '8,930', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
-  { id: '3', title: 'Revenue', value: '₹4.2L', trend: '-2% vs Last', isUp: false, icon: 'wallet', color: '#F59E0B' },
-  { id: '4', title: 'Pending Approval', value: '24', trend: 'Needs Review', isUp: true, icon: 'time', color: '#EF4444' },
+  { id: '1', title: 'Total Businesses', value: '0', trend: '0 live', isUp: false, icon: 'business', color: colors.primary },
+  { id: '2', title: 'Total Users', value: '0', trend: '0 active', isUp: false, icon: 'people', color: '#10B981' },
+  { id: '3', title: 'Revenue', value: '₹0', trend: '0 this cycle', isUp: false, icon: 'wallet', color: '#F59E0B' },
+  { id: '4', title: 'Pending Approval', value: '0', trend: '0 waiting', isUp: false, icon: 'time', color: '#EF4444' },
 ];
 
 const recentActivityData = [
@@ -45,15 +44,7 @@ const recentActivityData = [
   { id: 'a4', action: 'System Backup completed successfully.', time: '4 hours ago', icon: 'cloud-done', color: '#10B981' },
 ];
 
-const chartData = [
-  { label: 'Mon', value: 120 },
-  { label: 'Tue', value: 145 },
-  { label: 'Wed', value: 200 },
-  { label: 'Thu', value: 180 },
-  { label: 'Fri', value: 250 },
-  { label: 'Sat', value: 320 },
-  { label: 'Sun', value: 290 },
-];
+const WEEK_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const DashboardScreen = ({ navigation }) => {
   const { width } = useWindowDimensions();
@@ -65,21 +56,46 @@ const DashboardScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [adminStats, setAdminStats] = useState(defaultAdminStats);
   const [recentActivity, setRecentActivity] = useState(recentActivityData);
+  const [chartData, setChartData] = useState(WEEK_LABELS.map((label) => ({ label, value: 0 })));
   const [showSettings, setShowSettings] = useState(false);
 
   const fetchAdminData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const statsRes = await adminService.getStats();
+      const [statsRes, usersRes, businessesRes] = await Promise.all([
+        adminService.getStats(),
+        adminService.getAllUsers().catch(() => ({ data: [] })),
+        adminService.getAllBusinesses().catch(() => ({ data: [] }))
+      ]);
       const stats = statsRes?.data || statsRes || {};
+      const users = usersRes?.data || usersRes || [];
+      const businesses = businessesRes?.data || businessesRes || [];
+
+      const liveBusinesses = businesses.filter((b) => b?.is_verified === 1).length;
+      const pendingBusinesses = businesses.filter((b) => b?.is_verified === 0).length;
+      const activeUsers = users.filter((u) => (u?.status || '').toLowerCase() !== 'inactive').length;
       
       const newStats = [
-        { id: '1', title: 'Total Businesses', value: stats.totalBusinesses?.toString() || '0', trend: '+5% This Week', isUp: true, icon: 'business', color: colors.primary },
-        { id: '2', title: 'Total Users', value: stats.totalUsers?.toString() || '0', trend: '+12% MoM', isUp: true, icon: 'people', color: '#10B981' },
-        { id: '3', title: 'Revenue', value: stats.revenue ? `₹${stats.revenue}` : '₹0', trend: 'Stable', isUp: true, icon: 'wallet', color: '#F59E0B' },
-        { id: '4', title: 'Pending Approval', value: stats.pendingApprovals?.toString() || '0', trend: 'Priority', isUp: false, icon: 'time', color: '#EF4444' },
+        { id: '1', title: 'Total Businesses', value: stats.totalBusinesses?.toString() || '0', trend: `${liveBusinesses} live`, isUp: liveBusinesses > 0, icon: 'business', color: colors.primary },
+        { id: '2', title: 'Total Users', value: stats.totalUsers?.toString() || '0', trend: `${activeUsers} active`, isUp: activeUsers > 0, icon: 'people', color: '#10B981' },
+        { id: '3', title: 'Revenue', value: stats.revenue ? `₹${stats.revenue}` : '₹0', trend: `${stats.revenue || 0} this cycle`, isUp: (stats.revenue || 0) > 0, icon: 'wallet', color: '#F59E0B' },
+        { id: '4', title: 'Pending Approval', value: stats.pendingApprovals?.toString() || '0', trend: `${pendingBusinesses} waiting`, isUp: false, icon: 'time', color: '#EF4444' },
       ];
       setAdminStats(newStats);
+
+      const now = new Date();
+      const dailyCounts = new Array(7).fill(0);
+      users.forEach((u) => {
+        if (!u?.createdAt && !u?.created_at) return;
+        const created = new Date(u.createdAt || u.created_at);
+        if (Number.isNaN(created.getTime())) return;
+        const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          const dayIndex = created.getDay();
+          dailyCounts[dayIndex] += 1;
+        }
+      });
+      setChartData(WEEK_LABELS.map((label, idx) => ({ label, value: dailyCounts[idx] })));
     } catch (e) {
       console.log('Admin dashboard err:', e);
     } finally {
@@ -151,6 +167,10 @@ const DashboardScreen = ({ navigation }) => {
         setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
     });
 
+    socketService.socket?.on('stats_update', () => {
+      fetchAdminData(true);
+    });
+
     return () => {
       // socketService.disconnect();
     };
@@ -162,7 +182,6 @@ const DashboardScreen = ({ navigation }) => {
     await fetchAdminData();
   };
 
-  const adminName = user?.name || "Admin Lead";
   const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200";
 
   const renderSidebar = () => (
@@ -285,8 +304,9 @@ const DashboardScreen = ({ navigation }) => {
                   <SkeletonLoader width="100%" height={180} borderRadius={24} />
                 ) : (
                   chartData.map((dataPoint, index) => {
-                    const heightPct = (dataPoint.value / 320) * 100;
-                    const isCurrent = index === 5; // Highlight Sat
+                    const maxChartValue = Math.max(...chartData.map((d) => d.value), 1);
+                    const heightPct = (dataPoint.value / maxChartValue) * 100;
+                    const isCurrent = index === new Date().getDay();
                     return (
                       <View key={index} style={styles.barItem}>
                          {isCurrent && (

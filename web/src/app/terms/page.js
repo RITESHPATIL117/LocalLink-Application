@@ -58,7 +58,7 @@ export default function TermsPage() {
           className="bg-white p-10 md:p-16 rounded-[40px] border border-slate-100 shadow-premium"
         >
           <p className="text-xl text-slate-500 font-medium leading-relaxed mb-12 pb-12 border-b border-slate-100">
-            Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the LocalHub website and mobile application.
+            Please read these Terms of Service (&quot;Terms&quot;, &quot;Terms of Service&quot;) carefully before using the LocalHub website and mobile application.
           </p>
           
           <div className="space-y-12">

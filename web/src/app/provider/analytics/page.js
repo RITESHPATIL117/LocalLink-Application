@@ -147,7 +147,7 @@ export default function AnalyticsPage() {
                       <div style={{ 
                         height: '100%', 
                         borderRadius: '5px', 
-                        width: \`\${loc.percentage}%\`, 
+                        width: `${loc.percentage}%`, 
                         background: getGradientForIdx(idx),
                         transition: 'width 1s ease-out'
                       }} />
@@ -185,12 +185,12 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: \`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-      \`}} />
+      `}} />
     </div>
   );
 }

@@ -32,18 +32,18 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="mt-12 md:mt-16 pt-12 md:pt-16 border-t border-slate-200/60 pb-12 md:pb-16">
+    <section className="mt-10 md:mt-14 pt-10 md:pt-14 border-t border-slate-200/60 pb-10 md:pb-14">
       <div className="section-container">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">How It Works</h2>
-          <p className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto">Experience seamless local service booking in 4 easy steps</p>
+        <div className="text-center mb-10 md:mb-12">
+          <h2 className="section-heading mb-3">How It Works</h2>
+          <p className="section-description max-w-2xl mx-auto">Experience seamless local service booking in 4 easy steps</p>
         </div>
         
         <div className="relative">
           {/* Connecting Line (Desktop) */}
-          <div className="hidden lg:block absolute top-12 left-[12%] right-[12%] h-[2px] bg-slate-100" />
+          <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-[2px] bg-slate-100" />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 relative">
             {STEPS.map((step, idx) => (
               <motion.div 
                 key={idx}
@@ -51,26 +51,22 @@ export default function HowItWorks() {
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.15 }}
-                className="text-center group"
+                className="group h-full"
               >
-                <div 
-                  className="w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto mb-10 text-4xl shadow-subtle group-hover:shadow-premium group-hover:scale-110 transition-all duration-500 relative z-10 bg-white border border-slate-50"
-                  style={{ color: step.color }}
-                >
+                <div className="h-full rounded-2xl bg-white border border-slate-100 p-5 md:p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
                   <div 
-                    className="absolute inset-4 rounded-2xl opacity-10"
-                    style={{ backgroundColor: step.color }}
-                  />
-                  <div className="relative z-10">
-                    {step.icon}
+                    className="w-16 h-16 md:w-18 md:h-18 rounded-2xl flex items-center justify-center mb-4 text-2xl md:text-3xl shadow-subtle group-hover:shadow-premium group-hover:scale-105 transition-all duration-300 relative z-10"
+                    style={{ color: step.color, backgroundColor: `${step.color}12` }}
+                  >
+                    <div className="relative z-10">
+                      {step.icon}
+                    </div>
                   </div>
-                </div>
-                <h4 className="text-xl md:text-2xl font-bold text-slate-900 mb-3">{step.title}</h4>
-                <p className="text-slate-500 text-sm md:text-base leading-relaxed px-2 md:px-4">{step.desc}</p>
-                
-                {/* Step Number Badge */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 w-8 h-8 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center border-4 border-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                  0{idx + 1}
+                  <h4 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h4>
+                  <p className="text-slate-500 text-sm leading-relaxed max-w-[240px] mx-auto">{step.desc}</p>
+                  <div className="mt-4 text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">
+                    Step 0{idx + 1}
+                  </div>
                 </div>
               </motion.div>
             ))}

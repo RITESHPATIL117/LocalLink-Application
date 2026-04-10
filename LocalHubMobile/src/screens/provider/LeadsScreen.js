@@ -11,6 +11,7 @@ import leadService from '../../services/leadService';
 import { LinearGradient } from 'expo-linear-gradient';
 import SkeletonLoader, { CardSkeleton } from '../../components/SkeletonLoader';
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 
 const LeadsScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');

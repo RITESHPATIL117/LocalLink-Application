@@ -25,7 +25,7 @@ const SupportScreen = ({ navigation }) => {
         <View style={styles.heroSection}>
           <Ionicons name="chatbubbles-outline" size={80} color={colors.primary} />
           <Text style={styles.heroTitle}>How can we help you?</Text>
-          <Text style={styles.heroSubtitle}>We're here 24/7 to assist you</Text>
+          <Text style={styles.heroSubtitle}>We&apos;re here 24/7 to assist you</Text>
         </View>
 
         <View style={styles.section}>
