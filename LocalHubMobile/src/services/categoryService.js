@@ -1,6 +1,104 @@
 import api from './api';
 import logger from '../utils/logger';
 
+const CATEGORY_IMAGE_BY_NAME = {
+  'home services': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800',
+  'appliance repair': 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800',
+  'cleaning & pest': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800',
+  'beauty & grooming': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800',
+  'packers & movers': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800',
+  'health & medical': 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?q=80&w=800',
+  automobile: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=800',
+  'events & weddings': 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800',
+  'tutors & education': 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800',
+  emergency: 'https://images.unsplash.com/photo-1583842183201-9018448ec629?q=80&w=800',
+  'real estate': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800',
+  'daily needs': 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800',
+  'food & dining': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800',
+};
+
+const SUBCATEGORY_IMAGE_BY_NAME = {
+  electrician: 'https://images.unsplash.com/photo-1621905252507-eb6368d5ba18?q=80&w=800',
+  plumber: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=800',
+  carpenter: 'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800',
+  painter: 'https://images.unsplash.com/photo-1562591176-3293099a0bf3?q=80&w=800',
+  restaurants: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800',
+  'cafés & bakeries': 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800',
+  'street food & snacks': 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?q=80&w=800',
+  'catering & tiffin': 'https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=800',
+  ambulance: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=800',
+  'ac service & repair': 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=800',
+  'refrigerator repair': 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800',
+  'washing machine': 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?q=80&w=800',
+  'tv & electronics': 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=800',
+};
+
+const CATEGORY_IMAGE_BY_KEYWORD = [
+  ['home', CATEGORY_IMAGE_BY_NAME['home services']],
+  ['appliance', CATEGORY_IMAGE_BY_NAME['appliance repair']],
+  ['clean', CATEGORY_IMAGE_BY_NAME['cleaning & pest']],
+  ['pest', CATEGORY_IMAGE_BY_NAME['cleaning & pest']],
+  ['beauty', CATEGORY_IMAGE_BY_NAME['beauty & grooming']],
+  ['groom', CATEGORY_IMAGE_BY_NAME['beauty & grooming']],
+  ['mover', CATEGORY_IMAGE_BY_NAME['packers & movers']],
+  ['medical', CATEGORY_IMAGE_BY_NAME['health & medical']],
+  ['health', CATEGORY_IMAGE_BY_NAME['health & medical']],
+  ['auto', CATEGORY_IMAGE_BY_NAME.automobile],
+  ['car', CATEGORY_IMAGE_BY_NAME.automobile],
+  ['event', CATEGORY_IMAGE_BY_NAME['events & weddings']],
+  ['wedding', CATEGORY_IMAGE_BY_NAME['events & weddings']],
+  ['educat', CATEGORY_IMAGE_BY_NAME['tutors & education']],
+  ['tutor', CATEGORY_IMAGE_BY_NAME['tutors & education']],
+  ['emergency', CATEGORY_IMAGE_BY_NAME.emergency],
+  ['estate', CATEGORY_IMAGE_BY_NAME['real estate']],
+  ['daily', CATEGORY_IMAGE_BY_NAME['daily needs']],
+  ['grocery', CATEGORY_IMAGE_BY_NAME['daily needs']],
+  ['food', CATEGORY_IMAGE_BY_NAME['food & dining']],
+  ['restaurant', CATEGORY_IMAGE_BY_NAME['food & dining']],
+  ['dining', CATEGORY_IMAGE_BY_NAME['food & dining']],
+  ['hotel', CATEGORY_IMAGE_BY_NAME['food & dining']],
+];
+
+const SUBCATEGORY_IMAGE_BY_KEYWORD = [
+  ['electric', SUBCATEGORY_IMAGE_BY_NAME.electrician],
+  ['plumb', SUBCATEGORY_IMAGE_BY_NAME.plumber],
+  ['carpent', SUBCATEGORY_IMAGE_BY_NAME.carpenter],
+  ['paint', SUBCATEGORY_IMAGE_BY_NAME.painter],
+  ['restaurant', SUBCATEGORY_IMAGE_BY_NAME.restaurants],
+  ['cafe', SUBCATEGORY_IMAGE_BY_NAME['cafés & bakeries']],
+  ['bakery', SUBCATEGORY_IMAGE_BY_NAME['cafés & bakeries']],
+  ['street food', SUBCATEGORY_IMAGE_BY_NAME['street food & snacks']],
+  ['snack', SUBCATEGORY_IMAGE_BY_NAME['street food & snacks']],
+  ['cater', SUBCATEGORY_IMAGE_BY_NAME['catering & tiffin']],
+  ['tiffin', SUBCATEGORY_IMAGE_BY_NAME['catering & tiffin']],
+  ['ambulance', SUBCATEGORY_IMAGE_BY_NAME.ambulance],
+  ['ac', SUBCATEGORY_IMAGE_BY_NAME['ac service & repair']],
+  ['refrigerator', SUBCATEGORY_IMAGE_BY_NAME['refrigerator repair']],
+  ['fridge', SUBCATEGORY_IMAGE_BY_NAME['refrigerator repair']],
+  ['washing', SUBCATEGORY_IMAGE_BY_NAME['washing machine']],
+  ['tv', SUBCATEGORY_IMAGE_BY_NAME['tv & electronics']],
+  ['electronic', SUBCATEGORY_IMAGE_BY_NAME['tv & electronics']],
+  ['hotel', SUBCATEGORY_IMAGE_BY_NAME.restaurants],
+];
+
+const imageForCategoryName = (name) => {
+  const key = String(name || '').toLowerCase().trim();
+  if (CATEGORY_IMAGE_BY_NAME[key]) return CATEGORY_IMAGE_BY_NAME[key];
+  for (const [needle, image] of CATEGORY_IMAGE_BY_KEYWORD) {
+    if (key.includes(needle)) return image;
+  }
+  return '';
+};
+
+const imageForSubcategoryName = (name) => {
+  const key = String(name || '').toLowerCase().trim();
+  if (SUBCATEGORY_IMAGE_BY_NAME[key]) return SUBCATEGORY_IMAGE_BY_NAME[key];
+  for (const [needle, image] of SUBCATEGORY_IMAGE_BY_KEYWORD) {
+    if (key.includes(needle)) return image;
+  }
+  return '';
+};
+
 const mockCategories = [
   {
     id: '1', name: 'Home Services', title: 'Electrician, Plumber, Carpenter', icon: 'hammer-outline', color: '#6366F1', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800',
@@ -105,6 +203,20 @@ const mockCategories = [
       { id: '12-3', name: 'Laundry Services', icon: 'shirt', image: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?q=80&w=800', isMaterial: true, color: '#0EA5E9' },
       { id: '12-4', name: 'Drinking Water Supply', icon: 'water', image: 'https://images.unsplash.com/photo-1548843900-5800d3a58eeb?q=80&w=800', isMaterial: true, color: '#0EA5E9' }
     ]
+  },
+  {
+    id: '13',
+    name: 'Food & Dining',
+    title: 'Restaurants, Cafés & Catering',
+    icon: 'restaurant-outline',
+    color: '#EA580C',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800',
+    subcategories: [
+      { id: '13-1', name: 'Restaurants', icon: 'restaurant', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800', isMaterial: true, color: '#EA580C' },
+      { id: '13-2', name: 'Cafés & Bakeries', icon: 'cafe', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800', isMaterial: true, color: '#EA580C' },
+      { id: '13-3', name: 'Street Food & Snacks', icon: 'fast-food', image: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?q=80&w=800', isMaterial: true, color: '#EA580C' },
+      { id: '13-4', name: 'Catering & Tiffin', icon: 'nutrition', image: 'https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=800', isMaterial: true, color: '#EA580C' }
+    ]
   }
 ];
 
@@ -126,19 +238,26 @@ const categoryService = {
             ...cat,
             id: cat.id?.toString() || mockMatch?.id || Math.random().toString(),
             color: cat.color || mockMatch?.color || '#3B82F6',
-            bg: mockMatch?.bg || '#EFF6FF',
+            bg: cat.bg || mockMatch?.bg || '#EFF6FF',
             icon: cat.icon || mockMatch?.icon || 'grid-outline',
-            subcategories: (cat.subcategories || []).map((sub) => {
-              const mockSubMatch = (mockMatch?.subcategories || []).find(
-                (ms) => ms.name?.toLowerCase() === sub.name?.toLowerCase()
-              );
-              return {
-                ...sub,
-                id: sub.id?.toString() || mockSubMatch?.id || `${cat.id}-${sub.name}`,
-                icon: sub.icon || mockSubMatch?.icon || 'construct-outline',
-                image: sub.image || mockSubMatch?.image || '',
-              };
-            }),
+            image: imageForCategoryName(cat.name) || cat.image || cat.image_url || mockMatch?.image || '',
+            subcategories: (cat.subcategories || [])
+              .filter((sub) => {
+                const p = sub.parent_id ?? sub.parentId ?? sub.category_id ?? sub.categoryId;
+                if (p == null) return true;
+                return String(p) === String(cat.id);
+              })
+              .map((sub) => {
+                const mockSubMatch = (mockMatch?.subcategories || []).find(
+                  (ms) => ms.name?.toLowerCase() === sub.name?.toLowerCase()
+                );
+                return {
+                  ...sub,
+                  id: sub.id?.toString() || mockSubMatch?.id || `${cat.id}-${sub.name}`,
+                  icon: sub.icon || mockSubMatch?.icon || 'construct-outline',
+                  image: imageForSubcategoryName(sub.name) || sub.image || sub.image_url || mockSubMatch?.image || '',
+                };
+              }),
           };
         });
         return { data: normalized };
@@ -151,6 +270,7 @@ const categoryService = {
         const apiMatch = apiCats.find(a => a.name.toLowerCase() === m.name.toLowerCase());
         if (apiMatch) {
           m.id = apiMatch.id.toString();
+          m.image = imageForCategoryName(m.name) || apiMatch.image || apiMatch.image_url || m.image;
         } else {
           // If no API match, ensure the ID does not collide with real DB IDs
           if (!m.id.startsWith('mock-')) {
@@ -202,7 +322,13 @@ const categoryService = {
 
       if (apiSubs.length > 0) {
         const parentMock = mockCategories.find(c => c.id === catId.toString());
-        const normalizedSubs = apiSubs.map((sub) => {
+        const scoped = apiSubs.filter((sub) => {
+          const p = sub.parent_id ?? sub.parentId ?? sub.category_id ?? sub.categoryId;
+          if (p == null) return true;
+          return String(p) === String(catId);
+        });
+        const list = scoped.length > 0 ? scoped : apiSubs;
+        const normalizedSubs = list.map((sub) => {
           const mockSubMatch = (parentMock?.subcategories || []).find(
             (ms) => ms.name?.toLowerCase() === sub.name?.toLowerCase()
           );
@@ -210,7 +336,7 @@ const categoryService = {
             ...sub,
             id: sub.id?.toString() || mockSubMatch?.id || `${catId}-${sub.name}`,
             icon: sub.icon || mockSubMatch?.icon || 'construct-outline',
-            image: sub.image || mockSubMatch?.image || '',
+            image: imageForSubcategoryName(sub.name) || sub.image || sub.image_url || mockSubMatch?.image || '',
           };
         });
         return { data: normalizedSubs };
@@ -235,4 +361,5 @@ const categoryService = {
   }
 };
 
+export { mockCategories };
 export default categoryService;

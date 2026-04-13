@@ -1,5 +1,6 @@
 import api from './api';
 import logger from '../utils/logger';
+import { getSeededBusinesses, mergeBusinessLists } from '../utils/businessSearchFilter';
 
 const mockBusinesses = [
   {
@@ -53,6 +54,37 @@ const mockBusinesses = [
 ];
 
 const businessService = {
+  isBusinessLive: (b) => {
+    const status = String(b?.status || b?.business_status || '').toLowerCase().trim();
+    const approval = String(b?.approvalStatus || b?.approval_status || '').toLowerCase().trim();
+    const verifiedRaw = b?.is_verified ?? b?.isVerified ?? b?.verified ?? b?.isApproved;
+
+    // Verification flags can be number / boolean / string.
+    // IMPORTANT: if verified=true/1, treat listing as live even when status is stale.
+    if (verifiedRaw != null) {
+      if (typeof verifiedRaw === 'boolean') return verifiedRaw;
+      const asNum = Number(verifiedRaw);
+      if (!Number.isNaN(asNum)) return asNum === 1;
+      const asText = String(verifiedRaw).toLowerCase().trim();
+      if (asText === 'true' || asText === 'yes' || asText === 'approved' || asText === 'verified' || asText === 'live') return true;
+      if (asText === 'false' || asText === 'no' || asText === 'pending' || asText === 'rejected') return false;
+    }
+
+    // Explicit approval status from backend
+    if (approval) {
+      if (approval === 'approved' || approval === 'live' || approval === 'verified') return true;
+      if (approval === 'pending' || approval === 'rejected' || approval === 'suspended') return false;
+    }
+
+    // Explicit status from backend
+    if (status) {
+      if (status === 'active' || status === 'approved' || status === 'live' || status === 'verified') return true;
+      if (status === 'pending' || status === 'rejected' || status === 'suspended') return false;
+    }
+
+    // Backward compatibility: when backend doesn't expose moderation fields, don't hide listings.
+    return true;
+  },
   getPublicStats: async () => {
     return api.get('/businesses/public-stats');
   },
@@ -60,18 +92,23 @@ const businessService = {
     try {
       logger.info('Fetching all businesses...', params);
       const response = await api.get('/businesses', { params });
-      if (response && (Array.isArray(response) ? response.length > 0 : response)) {
-        logger.info(`Successfully fetched ${Array.isArray(response) ? response.length : 1} businesses`);
+      const apiRows = Array.isArray(response)
+        ? response
+        : (Array.isArray(response?.data) ? response.data : []);
+
+      if (apiRows.length > 0) {
+        logger.info(`Successfully fetched ${apiRows.length} businesses`);
         // Map backend image_url to image frontend expectations
-        const mapped = Array.isArray(response) 
-          ? response.map(b => ({ ...b, image: b.image_url || b.image }))
-          : { ...response, image: response.image_url || response.image };
-        return { data: mapped };
+        const mapped = apiRows.map(b => ({ ...b, image: b.image_url || b.image }));
+
+        // Customer side should not see pending/unverified listings
+        const approvedOnly = mapped.filter((b) => businessService.isBusinessLive(b));
+        return { data: approvedOnly };
       }
       logger.warn('No businesses returned from API, using mock data');
-      return { data: mockBusinesses };
+      return { data: mergeBusinessLists(mockBusinesses, getSeededBusinesses()) };
     } catch (error) {
-      return { data: mockBusinesses };
+      return { data: mergeBusinessLists(mockBusinesses, getSeededBusinesses()) };
     }
   },
   getNearbyBusinesses: async (params) => {

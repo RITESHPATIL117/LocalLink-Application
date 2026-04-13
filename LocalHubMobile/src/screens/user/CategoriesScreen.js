@@ -15,6 +15,7 @@ import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import { renderDynamicIcon } from '../../utils/iconHelper';
 import { useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
+import { resolveCategoryImage, resolveSubcategoryImage } from '../../utils/categoryImageResolver';
 
 
 
@@ -40,6 +41,7 @@ const CategoriesScreen = ({ navigation, route }) => {
   // Lead Modal State
   const [leadModalVisible, setLeadModalVisible] = useState(false);
   const [pendingSubItem, setPendingSubItem] = useState(null);
+  const [leadEnquiryNote, setLeadEnquiryNote] = useState('');
   const { isAuthenticated, leadCaptured } = useSelector(state => state.auth);
 
   // Responsive Grid
@@ -47,19 +49,35 @@ const CategoriesScreen = ({ navigation, route }) => {
   const numColumns = rightPaneWidth > 800 ? 4 : (rightPaneWidth > 500 ? 3 : 2);
   const itemWidth = (rightPaneWidth - 48 - (16 * (numColumns - 1))) / numColumns;
 
-  const handleSelectNav = React.useCallback(async (id) => {
+  const handleSelectNav = React.useCallback(async (id, categoriesSnapshot = null) => {
+    if (id == null || id === '') return;
+    const cats = categoriesSnapshot ?? categories;
+    const idStr = String(id);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSelectedMainCat(id);
+    setSelectedMainCat(idStr);
     setSubLoading(true);
     try {
-      const subRes = await categoryService.getSubcategories(id);
-      setActiveSubcategories(subRes.data || []);
+      const cat = cats.find((c) => String(c.id) === idStr);
+      const embedded = cat?.subcategories;
+      if (embedded && embedded.length > 0) {
+        setActiveSubcategories(embedded);
+        return;
+      }
+      const subRes = await categoryService.getSubcategories(idStr);
+      let list = subRes.data || [];
+      const filtered = list.filter((sub) => {
+        const p = sub.parent_id ?? sub.parentId ?? sub.category_id ?? sub.categoryId;
+        if (p == null) return true;
+        return String(p) === idStr;
+      });
+      setActiveSubcategories(filtered.length > 0 ? filtered : list);
     } catch (e) {
       console.error('Failed to fetch subcategories', e);
+      setActiveSubcategories([]);
     } finally {
       setSubLoading(false);
     }
-  }, []);
+  }, [categories]);
 
   const fetchCategories = React.useCallback(async () => {
     try {
@@ -68,16 +86,13 @@ const CategoriesScreen = ({ navigation, route }) => {
       
       const structured = rawData.map((c, i) => ({
         ...c,
-        id: c.id || `fallback-${i}`,
+        id: String(c.id != null ? c.id : `fallback-${i}`),
         color: c.color || '#3B82F6',
         bg: c.bg || '#EFF6FF',
         icon: c.icon || 'grid-outline',
       }));
 
       setCategories(structured);
-      if (structured.length > 0) {
-        handleSelectNav(structured[0].id);
-      }
     } catch (error) {
       console.log('Error fetching categories:', error);
     } finally {
@@ -89,27 +104,63 @@ const CategoriesScreen = ({ navigation, route }) => {
     fetchCategories();
   }, [fetchCategories]);
 
+  // When opened directly (no category passed from Home), select the first category once.
+  useEffect(() => {
+    if (loading) return;
+    if (!categories.length) return;
+    const hasRouteCategory =
+      route?.params?.categoryId != null && route.params.categoryId !== '' ||
+      (route?.params?.categoryName && String(route.params.categoryName).trim() !== '');
+    if (hasRouteCategory) return;
+    if (selectedMainCat != null) return;
+    handleSelectNav(categories[0].id, categories);
+  }, [loading, categories, selectedMainCat, route?.params, handleSelectNav]);
+
   useFocusEffect(
     React.useCallback(() => {
-      const categoryId = route.params?.categoryId;
-      if (categoryId && categories.length > 0) {
-        handleSelectNav(categoryId);
-        // Reset the param so it doesn't re-select if we navigate back
-        navigation.setParams({ categoryId: null });
+      let categoryId = route.params?.categoryId;
+      const categoryName = route.params?.categoryName;
+      if (!categories.length) return;
+      let found = null;
+      if (categoryId != null && categoryId !== '') {
+        found = categories.find((c) => String(c.id) === String(categoryId));
       }
-    }, [route.params?.categoryId, categories, navigation, handleSelectNav])
+      if (!found && categoryName) {
+        found = categories.find(
+          (c) => c.name?.toLowerCase().trim() === String(categoryName).toLowerCase().trim()
+        );
+      }
+      if (found) {
+        handleSelectNav(String(found.id), categories);
+        navigation.setParams({ categoryId: null, categoryName: null });
+      }
+    }, [route.params?.categoryId, route.params?.categoryName, categories, navigation, handleSelectNav])
   );
 
-  const activeCategoryData = categories.find(c => c.id === selectedMainCat) || categories[0];
+  const activeCategoryData =
+    categories.find((c) => String(c.id) === String(selectedMainCat)) || categories[0];
 
   // Filter Subcategories if searching, otherwise show active main category content
   const isSearching = search.trim().length > 0;
   
+  const buildSearchParams = (subItem) => {
+    const catId = subItem.parentCatId ?? selectedMainCat;
+    const cat = categories.find((c) => String(c.id) === String(catId));
+    return {
+      query: subItem.name,
+      categoryId: catId,
+      categoryName: cat?.name || subItem.parentCat || activeCategoryData?.name,
+      subcategoryId: subItem.id,
+      subcategoryName: subItem.name,
+      fromCategoryBrowse: true,
+    };
+  };
+
   const handleSubcategoryPress = (subItem) => {
     if (isAuthenticated || leadCaptured) {
-      navigation.navigate('SearchResults', { query: subItem.name });
+      navigation.navigate('SearchResults', buildSearchParams(subItem));
     } else {
-      // Attach the parent category ID so LeadGatekeeper can send it to the backend
+      setLeadEnquiryNote(`Categories: ${subItem.name}${subItem.parentCat ? ` (${subItem.parentCat})` : ''}`);
       setPendingSubItem({ ...subItem, category_id: selectedMainCat });
       setLeadModalVisible(true);
     }
@@ -117,15 +168,31 @@ const CategoriesScreen = ({ navigation, route }) => {
 
   const handleLeadSuccess = () => {
     setLeadModalVisible(false);
-    navigation.navigate('SearchResults', { query: pendingSubItem?.name });
+    const cat = categories.find((c) => String(c.id) === String(pendingSubItem?.category_id));
+    navigation.navigate('SearchResults', {
+      query: pendingSubItem?.name,
+      categoryId: pendingSubItem?.category_id,
+      categoryName: cat?.name || pendingSubItem?.parentCat,
+      subcategoryId: pendingSubItem?.id,
+      subcategoryName: pendingSubItem?.name,
+      fromCategoryBrowse: true,
+    });
   };
 
-  const searchResults = isSearching 
-    ? categories.flatMap(cat => 
-        (cat.subcategories || [])
-           .filter(sub => sub.name.toLowerCase().includes(search.toLowerCase()) || cat.name.toLowerCase().includes(search.toLowerCase()))
-           .map(sub => ({ ...sub, parentCat: cat.name }))
-      )
+  const searchQuery = search.trim().toLowerCase();
+  const searchResults = isSearching
+    ? categories.flatMap((cat) => {
+        const subs = cat.subcategories || [];
+        const words = searchQuery.split(/\s+/).filter(Boolean);
+        return subs
+          .filter((sub) => {
+            const sn = sub.name.toLowerCase();
+            if (sn.includes(searchQuery)) return true;
+            if (words.length > 1) return words.every((w) => sn.includes(w));
+            return false;
+          })
+          .map((sub) => ({ ...sub, parentCat: cat.name, parentCatId: cat.id }));
+      })
     : [];
 
   return (
@@ -202,7 +269,7 @@ const CategoriesScreen = ({ navigation, route }) => {
           <View style={styles.leftNav}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.leftNavScroll}>
               {categories.map((cat, index) => {
-                const isActive = selectedMainCat === cat.id;
+                const isActive = String(selectedMainCat) === String(cat.id);
                 return (
                   <TouchableOpacity
                     key={cat.id}
@@ -231,6 +298,13 @@ const CategoriesScreen = ({ navigation, route }) => {
                   
                   {/* Active Category Header Banner */}
                   <View style={[styles.rightHeaderBanner, { backgroundColor: activeCategoryData.bg }]}>
+                    {resolveCategoryImage(activeCategoryData) ? (
+                      <Image
+                        source={{ uri: resolveCategoryImage(activeCategoryData) }}
+                        style={styles.rightHeaderPhoto}
+                        resizeMode="cover"
+                      />
+                    ) : null}
                     <View style={styles.rightHeaderLeft}>
                       <Text style={[styles.rightHeaderTitle, { color: activeCategoryData.color }]}>
                         {activeCategoryData.name}
@@ -273,9 +347,10 @@ const CategoriesScreen = ({ navigation, route }) => {
                           duration={500} 
                           style={[styles.gridItem, { width: itemWidth }]}
                         >
-                          <SubcategoryCard 
-                            item={subItem} 
-                            onPress={() => handleSubcategoryPress(subItem)} 
+                          <SubcategoryCard
+                            item={subItem}
+                            parentName={activeCategoryData.name}
+                            onPress={() => handleSubcategoryPress(subItem)}
                             index={index}
                           />
                         </AnimatedFadeIn>
@@ -291,9 +366,10 @@ const CategoriesScreen = ({ navigation, route }) => {
           </View>
         </View>
       )}
-      <LeadGatekeeper 
+      <LeadGatekeeper
         visible={leadModalVisible}
         category={pendingSubItem}
+        enquiryNote={leadEnquiryNote}
         onClose={() => setLeadModalVisible(false)}
         onSuccess={handleLeadSuccess}
       />
@@ -313,9 +389,19 @@ const SUB_FALLBACKS = [
   'https://images.unsplash.com/photo-1595844730298-b960ff98fee0?q=80&w=800'
 ];
 
-const SubcategoryCard = ({ item, onPress, index = 0 }) => {
-  const isValidImage = item.image && item.image.length > 5 && item.image !== 'null' && item.image !== 'undefined';
-  const imgUri = isValidImage ? item.image : SUB_FALLBACKS[index % SUB_FALLBACKS.length];
+const subImageHashKey = (parentName, subName) => `${parentName || ''}|${subName || ''}`;
+
+const pickFallbackSubImage = (key) => {
+  let h = 0;
+  const s = String(key || '');
+  for (let i = 0; i < s.length; i += 1) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
+  return SUB_FALLBACKS[Math.abs(h) % SUB_FALLBACKS.length];
+};
+
+const SubcategoryCard = ({ item, parentName, onPress, index: _index = 0 }) => {
+  const resolved = resolveSubcategoryImage(item, parentName);
+  const isValidImage = resolved && resolved.length > 5 && resolved !== 'null' && resolved !== 'undefined';
+  const imgUri = isValidImage ? resolved : pickFallbackSubImage(subImageHashKey(parentName, item.name));
   
   return (
     <TouchableOpacity style={styles.jdCard} onPress={onPress} activeOpacity={0.8}>
@@ -407,14 +493,21 @@ const styles = StyleSheet.create({
   rightHeaderBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: 20, borderRadius: 20, marginBottom: 20,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  rightHeaderLeft: { flex: 1, paddingRight: 10 },
+  rightHeaderPhoto: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.22,
+  },
+  rightHeaderLeft: { flex: 1, paddingRight: 10, zIndex: 1 },
   rightHeaderTitle: { fontSize: 20, fontWeight: '900', marginBottom: 4 },
   rightHeaderSub: { fontSize: 12, color: '#4B5563', fontWeight: '600', opacity: 0.8 },
   rightHeaderIcon: {
     width: 50, height: 50, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
+    zIndex: 1,
   },
 
   // Subcategory Grid

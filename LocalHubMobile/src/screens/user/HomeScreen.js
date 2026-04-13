@@ -15,7 +15,8 @@ import colors from '../../styles/colors';
 import SearchBar from '../../components/SearchBar';
 import BusinessCard from '../../components/BusinessCard';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
-import categoryService from '../../services/categoryService';
+import categoryService, { mockCategories } from '../../services/categoryService';
+import { navigateRoot, navigateToCategories } from '../../navigation/navigationRef';
 import businessService from '../../services/businessService';
 import LeadGatekeeper from '../../components/LeadGatekeeper';
 import BookingWizard from '../../components/BookingWizard';
@@ -24,18 +25,20 @@ import Toast from 'react-native-toast-message';
 import WelcomeModal from '../../components/WelcomeModal';
 import { useIsFocused } from '@react-navigation/native';
 import leadService from '../../services/leadService';
+import { resolveCategoryImage } from '../../utils/categoryImageResolver';
 
 const MAX_APP_WIDTH = 800;
 
 // ─── Fallback Data ─────────────────────────────────────────────────────────────
 
-const FALLBACK_CATEGORIES = [
-  { id: 'daily-life', name: 'Daily Life', icon: 'basket-outline', color: '#0EA5E9', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400' },
-  { id: 'professional', name: 'Professional', icon: 'briefcase-outline', color: '#6366F1', image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=400' },
-  { id: 'home-repair', name: 'Home & Repair', icon: 'hammer-outline', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400' },
-  { id: 'travel', name: 'Travel', icon: 'car-sport-outline', color: '#EF4444', image: 'https://images.unsplash.com/photo-1487754164641-a095905fd481?q=80&w=400' },
-  { id: 'shopping', name: 'Shopping', icon: 'bag-handle-outline', color: '#EC4899', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=400' },
-];
+/** Must use real mock category ids so Categories screen can load subcategories (legacy ids like "daily-life" never matched). */
+const HOME_BROWSE_PILLS = mockCategories.slice(0, 6).map((c) => ({
+  id: String(c.id),
+  name: c.name,
+  icon: c.icon,
+  color: c.color,
+  image: c.image,
+}));
 
 const FALLBACK_BUSINESSES = [
   {
@@ -143,9 +146,11 @@ const SectionHeader = ({ title, onSeeAll, style }) => (
   </View>
 );
 
+const PLACEHOLDER_CATEGORY_IMAGE =
+  'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=400';
+
 const CategoryPill = ({ item, onPress }) => {
-  const fallbackMatch = FALLBACK_CATEGORIES.find(f => f.name === item.name) || FALLBACK_CATEGORIES[0];
-  const finalImage = item.image || item.image_url || fallbackMatch.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=300';
+  const finalImage = resolveCategoryImage(item) || PLACEHOLDER_CATEGORY_IMAGE;
 
   return (
     <TouchableOpacity style={styles.catPill} onPress={onPress} activeOpacity={0.8}>
@@ -180,10 +185,10 @@ const TestimonialCard = ({ item }) => (
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 const HomeScreen = ({ navigation }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, leadCaptured } = useSelector((state) => state.auth);
   const flatListRef = useRef(null);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [categories, setCategories] = useState(HOME_BROWSE_PILLS);
   const [featuredBusinesses, setFeaturedBusinesses] = useState(FALLBACK_BUSINESSES);
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
   const [refreshing, setRefreshing] = useState(false);
@@ -193,7 +198,7 @@ const HomeScreen = ({ navigation }) => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [leadModalVisible, setLeadModalVisible] = useState(false);
-  const [pendingCategory, setPendingCategory] = useState(null);
+  const [leadContext, setLeadContext] = useState(null);
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
 
@@ -238,7 +243,9 @@ const HomeScreen = ({ navigation }) => {
       const apiBiz  = businessesRes.data || [];
       const apiRevs = reviewsRes.data || [];
 
-      if (apiCats.length > 0) setCategories(apiCats);
+      if (apiCats.length > 0) {
+        setCategories(apiCats.map((c) => ({ ...c, id: String(c.id != null ? c.id : '') })));
+      }
       if (apiBiz.length > 0) setFeaturedBusinesses(apiBiz);
       
       if (apiRevs.length > 0) {
@@ -272,13 +279,31 @@ const HomeScreen = ({ navigation }) => {
 
   const handleCategoryPress = (cat) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Navigate to Categories screen with the selected category ID
-    navigation.navigate('CategoriesTab', { categoryId: cat.id });
+    navigateToCategories({ categoryId: cat.id, categoryName: cat.name });
   };
+
+  const openQuickEnquiry = useCallback(
+    (afterNavigate, categoryLabel, enquiryNote) => {
+      if (isAuthenticated || leadCaptured) {
+        navigation.navigate(afterNavigate.name, afterNavigate.params ?? {});
+        return;
+      }
+      setLeadContext({
+        category: { name: categoryLabel },
+        enquiryNote,
+        afterNavigate,
+      });
+      setLeadModalVisible(true);
+    },
+    [isAuthenticated, leadCaptured, navigation]
+  );
 
   const handleLeadSuccess = () => {
     setLeadModalVisible(false);
-    navigation.navigate('CategoriesTab', { categoryId: pendingCategory?.id });
+    if (leadContext?.afterNavigate) {
+      navigation.navigate(leadContext.afterNavigate.name, leadContext.afterNavigate.params ?? {});
+    }
+    setLeadContext(null);
   };
 
   // Auto-scroll banner
@@ -352,7 +377,7 @@ const HomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity style={styles.loginBtn} onPress={() => navigateRoot('Login')}>
               <Text style={styles.loginBtnText}>Login</Text>
             </TouchableOpacity>
           )}
@@ -434,17 +459,42 @@ const HomeScreen = ({ navigation }) => {
         <AnimatedFadeIn delay={200}>
           <View style={styles.quickActionsRow}>
             {[
-              { label: 'Book Service', icon: 'calendar-outline',       color: '#3B82F6', route: 'SearchResults' },
-              { label: 'List Business', icon: 'business-outline',       color: '#10B981', route: 'Login' },
-              { label: 'My Bookings',  icon: 'document-text-outline',  color: '#F59E0B', route: 'RequestsTab' },
-              { label: 'Support',      icon: 'headset-outline',         color: '#8B5CF6', route: 'Support' },
+              {
+                label: 'Book Service',
+                icon: 'calendar-outline',
+                color: '#3B82F6',
+                onPress: () =>
+                  openQuickEnquiry(
+                    { name: 'SearchResults', params: {} },
+                    'service booking',
+                    'Home quick enquiry: Book a service'
+                  ),
+              },
+              {
+                label: 'List Business',
+                icon: 'business-outline',
+                color: '#10B981',
+                onPress: () => navigateRoot('Login'),
+              },
+              {
+                label: 'My Bookings',
+                icon: 'document-text-outline',
+                color: '#F59E0B',
+                onPress: () => navigation.navigate('RequestsTab'),
+              },
+              {
+                label: 'Support',
+                icon: 'headset-outline',
+                color: '#8B5CF6',
+                onPress: () => navigation.navigate('Support'),
+              },
             ].map(a => (
               <TouchableOpacity
                 key={a.label}
                 style={styles.quickAction}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate(a.route);
+                  a.onPress();
                 }}
                 activeOpacity={0.8}
               >
@@ -478,7 +528,11 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.emergencyItem}
                   onPress={() => {
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                    navigation.navigate('SearchResults', { query: item.query });
+                    openQuickEnquiry(
+                      { name: 'SearchResults', params: { query: item.query } },
+                      `${item.name} emergency`,
+                      `Home QuickFix: ${item.name} — ${item.query}`
+                    );
                   }}
                 >
                   <View style={[styles.emergencyIconBg, { backgroundColor: `${item.color}10` }]}>
@@ -519,7 +573,9 @@ const HomeScreen = ({ navigation }) => {
         <AnimatedFadeIn delay={300}>
           <SectionHeader
             title="Browse by Category"
-            onSeeAll={() => navigation.navigate('CategoriesTab')}
+            onSeeAll={() =>
+              navigateToCategories()
+            }
           />
           <ScrollView 
             horizontal 
@@ -616,8 +672,12 @@ const HomeScreen = ({ navigation }) => {
       {/* ─── Category Lead Modal ─── */}
       <LeadGatekeeper
         visible={leadModalVisible}
-        category={pendingCategory}
-        onClose={() => setLeadModalVisible(false)}
+        category={leadContext?.category}
+        enquiryNote={leadContext?.enquiryNote}
+        onClose={() => {
+          setLeadModalVisible(false);
+          setLeadContext(null);
+        }}
         onSuccess={handleLeadSuccess}
       />
 

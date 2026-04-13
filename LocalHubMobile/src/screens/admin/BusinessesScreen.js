@@ -72,12 +72,32 @@ const BusinessesScreen = ({ navigation, route }) => {
     );
   };
 
+  const approveBusiness = async (biz) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await adminService.verifyBusiness(biz.id);
+      setBusinesses((prev) =>
+        prev.map((b) =>
+          b.id === biz.id ? { ...b, is_verified: 1, status: 'active' } : b
+        )
+      );
+      Toast.show({ type: 'success', text1: 'Approved', text2: 'Business is now live.' });
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Approve failed', text2: 'Could not approve business.' });
+    }
+  };
+
   const filteredBusinesses = businesses.filter(biz => {
     const matchesSearch = biz.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           biz.category_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (filter === 'All') return matchesSearch;
-    if (filter === 'Active' || filter === 'Pending') return matchesSearch && (biz.status === filter.toLowerCase() || (filter === 'Active' && biz.is_verified === 1));
+    if (filter === 'Active') {
+      return matchesSearch && (biz.is_verified === 1 || biz.status === 'active');
+    }
+    if (filter === 'Pending') {
+      return matchesSearch && (biz.is_verified === 0 || biz.status === 'pending');
+    }
     
     // Check if filter is a category ID
     return matchesSearch && (biz.category_id?.toString() === filter || biz.status === filter.toLowerCase());
@@ -106,7 +126,7 @@ const BusinessesScreen = ({ navigation, route }) => {
             >
               <View style={[styles.statusDot, { backgroundColor: item.status === 'suspended' ? '#EF4444' : '#10B981' }]} />
               <Text style={[styles.statusText, { color: item.status === 'suspended' ? '#EF4444' : '#10B981' }]}>
-                {item.status?.toUpperCase()}
+                {(item.is_verified === 0 ? 'PENDING' : item.status)?.toUpperCase()}
               </Text>
             </TouchableOpacity>
           </View>
@@ -125,6 +145,14 @@ const BusinessesScreen = ({ navigation, route }) => {
           </View>
         </View>
         <View style={styles.actionColumn}>
+          {item.is_verified === 0 && (
+            <TouchableOpacity
+              style={styles.approveBtn}
+              onPress={() => approveBusiness(item)}
+            >
+              <Ionicons name="checkmark" size={18} color="#FFF" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity 
             style={[styles.moderateBtn, item.status === 'suspended' && styles.activateBtn]} 
             onPress={() => toggleStatus(item.id, item.status)}
@@ -240,6 +268,18 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 20, fontWeight: '900', color: '#1E293B', marginBottom: 8 },
   emptyDesc: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20, fontWeight: '600' },
   actionColumn: { justifyContent: 'center', alignItems: 'center', paddingLeft: 10, gap: 12 },
+  approveBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4
+  },
   moderateBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EF4444', justifyContent: 'center', alignItems: 'center', shadowColor: '#EF4444', shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   activateBtn: { backgroundColor: '#10B981', shadowColor: '#10B981' },
 });

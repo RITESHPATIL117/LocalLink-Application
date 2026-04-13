@@ -71,7 +71,8 @@ const UserNavigator = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
-          display: isDesktop ? 'none' : 'flex',
+          // Keep bottom tabs on web desktop so Home / Categories / Profile stay reachable (drawer alone hid all tabs).
+          display: isDesktop && Platform.OS !== 'web' ? 'none' : 'flex',
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F1F5F9',

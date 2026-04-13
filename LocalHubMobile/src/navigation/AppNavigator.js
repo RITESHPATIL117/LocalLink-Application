@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 
+import { navigationRef } from './navigationRef';
 import AdminNavigator from './AdminNavigator';
 import UserNavigator from './UserNavigator';
 import MainDrawerNavigator from './MainDrawerNavigator';
@@ -24,7 +25,7 @@ const AppNavigator = () => {
   const { isAuthenticated, role } = useSelector((state) => state.auth);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated && role === ROLES.ADMIN ? (
           <Stack.Screen name="AdminRoot" component={AdminNavigator} />

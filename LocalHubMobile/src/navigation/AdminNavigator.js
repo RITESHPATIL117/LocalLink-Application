@@ -11,6 +11,7 @@ import ReportsScreen from '../screens/admin/ReportsScreen';
 import BusinessesScreen from '../screens/admin/BusinessesScreen';
 import ApprovalsScreen from '../screens/admin/ApprovalsScreen';
 import CategoriesScreen from '../screens/admin/CategoriesScreen';
+import AdminNotificationsScreen from '../screens/admin/AdminNotificationsScreen';
 import BusinessDetailsScreen from '../screens/user/BusinessDetailsScreen';
 
 const Tab = createBottomTabNavigator();
@@ -24,6 +25,7 @@ const AdminDashboardStack = () => (
     <Stack.Screen name="Businesses" component={BusinessesScreen} />
     <Stack.Screen name="Approvals" component={ApprovalsScreen} />
     <Stack.Screen name="Categories" component={CategoriesScreen} />
+    <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
     <Stack.Screen name="BusinessDetails" component={BusinessDetailsScreen} />
   </Stack.Navigator>
 );

@@ -125,6 +125,7 @@ const SubcategoryScreen = ({ route, navigation }) => {
       <LeadGatekeeper
         visible={leadModalVisible}
         category={{ name: subcategory, id: categoryId }}
+        enquiryNote={`Subcategory: ${subcategory}`}
         onClose={() => navigation.goBack()}
         onSuccess={handleLeadSuccess}
       />

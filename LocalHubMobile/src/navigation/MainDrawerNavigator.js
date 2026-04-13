@@ -6,6 +6,7 @@ import colors from '../styles/colors';
 import UserNavigator from './UserNavigator';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
+import { navigateRoot } from './navigationRef';
 
 const Drawer = createDrawerNavigator();
 
@@ -30,9 +31,28 @@ const CustomDrawerContent = (props) => {
 
       <View style={styles.drawerItems}>
         <DrawerItemList {...props} />
-        
+
+        {!isAuthenticated && (
+          <DrawerItem
+            label="Login / Sign up"
+            icon={({ color, size }) => <Ionicons name="log-in-outline" color={color} size={size} />}
+            onPress={() => navigateRoot('Login')}
+          />
+        )}
+
+        <DrawerItem
+          label="Browse categories"
+          icon={({ color, size }) => <Ionicons name="grid-outline" color={color} size={size} />}
+          onPress={() =>
+            props.navigation.navigate('MainTabs', {
+              screen: 'CategoriesTab',
+              params: { screen: 'Categories', params: {} },
+            })
+          }
+        />
+
         <View style={styles.divider} />
-        
+
         <DrawerItem
           label="Help & Support"
           icon={({ color, size }) => <Ionicons name="help-circle-outline" color={color} size={size} />}

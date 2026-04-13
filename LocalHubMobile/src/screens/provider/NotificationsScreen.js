@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,41 +7,83 @@ import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useIsFocused } from '@react-navigation/native';
+import notificationService from '../../services/notificationService';
+import businessOwnerService from '../../services/businessOwnerService';
+import leadService from '../../services/leadService';
 
 const { width } = Dimensions.get('window');
 
-const dummyNotifications = [
-  {
-    id: '1',
-    title: 'New Lead Received!',
-    message: 'Amit Sharma is interested in your Plumbing services.',
-    time: '2 mins ago',
-    type: 'lead',
-    icon: 'people',
-    unread: true,
-  },
-  {
-    id: '2',
-    title: 'Listing Approved!',
-    message: 'Your business "SuperFast Plumbing" is now live.',
-    time: '1 hour ago',
-    type: 'system',
-    icon: 'checkmark-circle',
-    unread: false,
-  },
-  {
-    id: '3',
-    title: 'Payment Received',
-    message: '₹1,200 has been added to your balance.',
-    time: 'Yesterday',
-    type: 'payment',
-    icon: 'wallet',
-    unread: false,
-  },
-];
+const fmtTime = (d) => {
+  if (!d) return 'Recently';
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+  return date.toLocaleString();
+};
 
 const NotificationsScreen = ({ navigation }) => {
-  const [notifications, setNotifications] = React.useState(dummyNotifications);
+  const [notifications, setNotifications] = useState([]);
+  const isFocused = useIsFocused();
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const [notifRes, bizRes] = await Promise.all([
+        notificationService.getNotifications().catch(() => ({ data: [] })),
+        businessOwnerService.getBusinesses().catch(() => ({ data: [] })),
+      ]);
+      const notifRows = notifRes?.data || [];
+      const businesses = bizRes?.data || [];
+
+      const leadRows = [];
+      await Promise.all(
+        businesses.map(async (biz) => {
+          try {
+            const lr = await leadService.getLeadsByBusiness(biz.id);
+            const leads = lr?.data || [];
+            leads
+              .filter((l) => {
+                const s = String(l.status || '').toLowerCase();
+                return !s || s === 'new' || s === 'pending';
+              })
+              .forEach((l) => {
+                leadRows.push({
+                  id: `lead-${l.id}`,
+                  title: 'New Quick Enquiry',
+                  message: `${l.customerName || 'Customer'} is interested in ${biz.name || 'your service'}.`,
+                  time: fmtTime(l.createdAt),
+                  createdAt: l.createdAt || new Date().toISOString(),
+                  type: 'lead',
+                  icon: 'flash',
+                  unread: true,
+                });
+              });
+          } catch (_e) {}
+        })
+      );
+
+      const apiNotifs = (notifRows || []).map((n, idx) => ({
+        id: String(n.id || `notif-${idx}`),
+        title: n.title || 'Notification',
+        message: n.message || n.description || 'You have a new update.',
+        time: fmtTime(n.createdAt || n.created_at),
+        createdAt: n.createdAt || n.created_at || new Date().toISOString(),
+        type: n.type || 'system',
+        icon: n.type === 'payment' ? 'wallet' : n.type === 'lead' ? 'people' : 'checkmark-circle',
+        unread: !n.read,
+      }));
+
+      const merged = [...leadRows, ...apiNotifs].sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+      setNotifications(merged);
+    } catch (_e) {
+      setNotifications([]);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (isFocused) fetchNotifications();
+  }, [isFocused, fetchNotifications]);
 
   const handleMarkAllRead = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

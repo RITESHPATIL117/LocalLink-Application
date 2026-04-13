@@ -787,13 +787,20 @@ const AddBusinessScreen = ({ navigation, route }) => {
         package: selectedPkg,
         image_url: data.profileImage, // Main Profile Photo
         images: images,               // Gallery / Portfolio
-        subcategory: data.category === 'Other' ? data.customCategory : data.subCategory
+        subcategory: data.category === 'Other' ? data.customCategory : data.subCategory,
+        // Approval workflow: new listings must be reviewed by admin
+        is_verified: 0,
+        status: 'pending',
       };
 
       if (isEdit) await businessOwnerService.updateBusiness(business.id, payload);
       else await businessOwnerService.addBusiness(payload);
 
-      Toast.show({ type: 'success', text1: isEdit ? 'Business Updated' : 'Business Published!' });
+      Toast.show({
+        type: 'success',
+        text1: isEdit ? 'Business Updated' : 'Submitted for Approval',
+        text2: isEdit ? 'Changes saved successfully.' : 'Your listing will go live after admin approval.',
+      });
       navigation.goBack();
     } catch (e) {
       Toast.show({ type: 'error', text1: 'Failed', text2: e.message });

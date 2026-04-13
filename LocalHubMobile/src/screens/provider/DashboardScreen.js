@@ -39,6 +39,8 @@ const ProviderDashboardScreen = ({ navigation }) => {
   const [monthlyChartData, setMonthlyChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileStrength, setProfileStrength] = useState(0);
+  const [actionLeads, setActionLeads] = useState([]);
+  const [actionLeadsLoading, setActionLeadsLoading] = useState(false);
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -119,8 +121,81 @@ const ProviderDashboardScreen = ({ navigation }) => {
     }
   }, [user?.profilePic]);
 
+  const fetchActionLeads = useCallback(async () => {
+    setActionLeadsLoading(true);
+    try {
+      const businessesRes = await businessOwnerService.getBusinesses().catch(() => ({ data: [] }));
+      const businesses = businessesRes?.data || businessesRes || [];
+      let fetched = [];
+
+      await Promise.all(
+        businesses.map(async (biz) => {
+          try {
+            const leadsRes = await leadService.getLeadsByBusiness(biz.id);
+            const leads = leadsRes?.data || leadsRes || [];
+            const mapped = (leads || []).map((l) => ({
+              ...l,
+              id: l.id || Math.random().toString(),
+              businessName: biz.name || 'Business',
+              customer: l.customerName || 'Customer',
+              phone: l.customerPhone || l.phone || '',
+              status: l.status ? (l.status.charAt(0).toUpperCase() + l.status.slice(1)) : 'New',
+              time: l.createdAt ? new Date(l.createdAt).toLocaleString() : 'Recently',
+              rawDate: l.createdAt ? new Date(l.createdAt) : new Date(),
+              message: l.message || l.description || '',
+            }));
+            fetched = [...fetched, ...mapped];
+          } catch (_e) {}
+        })
+      );
+
+      // Action-needed: New only (provider can Accept or Cancel)
+      const pending = fetched
+        .filter((l) => String(l.status).toLowerCase() === 'new')
+        .sort((a, b) => b.rawDate - a.rawDate)
+        .slice(0, 6);
+      setActionLeads(pending);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log('Error fetching action leads', e);
+      setActionLeads([]);
+    } finally {
+      setActionLeadsLoading(false);
+    }
+  }, []);
+
+  const updateLeadStatus = useCallback(async (lead, nextStatus) => {
+    const next = nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1);
+    Haptics.notificationAsync(
+      nextStatus === 'closed'
+        ? Haptics.NotificationFeedbackType.Warning
+        : Haptics.NotificationFeedbackType.Success
+    );
+
+    // Optimistic: remove from action queue
+    setActionLeads((prev) => prev.filter((l) => l.id !== lead.id));
+
+    try {
+      await leadService.updateLeadStatus(lead.id, nextStatus);
+      Toast.show({
+        type: 'success',
+        text1: nextStatus === 'closed' ? 'Cancelled' : 'Accepted',
+        text2:
+          nextStatus === 'closed'
+            ? 'Request marked as cancelled.'
+            : 'Request confirmed. You can contact the customer now.',
+      });
+      fetchDashboardData(true);
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Failed', text2: 'Could not update request status.' });
+      // Restore on failure
+      setActionLeads((prev) => [lead, ...prev].sort((a, b) => b.rawDate - a.rawDate).slice(0, 6));
+    }
+  }, [fetchDashboardData]);
+
   useEffect(() => {
     fetchDashboardData();
+    fetchActionLeads();
     
     // Socket integration
     if (user?.id) {
@@ -132,6 +207,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
         
         // Update stats and activity silently
         fetchDashboardData(true);
+        fetchActionLeads();
         
         Toast.show({
           type: 'success',
@@ -145,7 +221,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
     return () => {
       // socketService.disconnect(); // Keep alive or disconnect on logout
     };
-  }, [user, fetchDashboardData, navigation]);
+  }, [user, fetchDashboardData, fetchActionLeads, navigation]);
 
   const businessName = user?.name || "Provider"; 
   const profilePic = user?.profilePic || "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200";
@@ -215,6 +291,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.headerBackground}
+          pointerEvents="none"
         />
 
         {/* Top Navigation / Header Area */}
@@ -278,6 +355,54 @@ const ProviderDashboardScreen = ({ navigation }) => {
               ))}
             </View>
           </AnimatedFadeIn>
+
+          {/* Requests to Accept */}
+          <AnimatedFadeIn delay={150} duration={600}>
+            <View style={styles.actionNeededCard}>
+              <View style={styles.actionHeader}>
+                <View>
+                  <Text style={styles.actionTitle}>Requests to Accept</Text>
+                  <Text style={styles.actionSubtitle}>Confirm or cancel new customer requests</Text>
+                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('LeadsTab')}>
+                  <Text style={styles.actionSeeAll}>See all</Text>
+                </TouchableOpacity>
+              </View>
+
+              {actionLeadsLoading ? (
+                <SkeletonLoader width="100%" height={90} borderRadius={18} style={{ marginBottom: 12 }} />
+              ) : actionLeads.length === 0 ? (
+                <View style={styles.actionEmpty}>
+                  <Ionicons name="checkmark-done-outline" size={26} color="#10B981" />
+                  <Text style={styles.actionEmptyText}>No new requests right now.</Text>
+                </View>
+              ) : (
+                actionLeads.map((l) => (
+                  <View key={l.id} style={styles.actionRowCard}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.actionCustomer} numberOfLines={1}>{l.customer}</Text>
+                      <Text style={styles.actionMeta} numberOfLines={1}>{l.businessName} • {l.time}</Text>
+                      {!!l.message && <Text style={styles.actionMsg} numberOfLines={1}>{l.message}</Text>}
+                    </View>
+                    <View style={styles.actionBtns}>
+                      <TouchableOpacity
+                        style={styles.btnAccept}
+                        onPress={() => updateLeadStatus(l, 'contacted')}
+                      >
+                        <Ionicons name="checkmark" size={18} color="#FFF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.btnCancel}
+                        onPress={() => updateLeadStatus(l, 'closed')}
+                      >
+                        <Ionicons name="close" size={18} color="#FFF" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </AnimatedFadeIn>
           
           {/* Stats Cards */}
           {loading ? (
@@ -292,7 +417,11 @@ const ProviderDashboardScreen = ({ navigation }) => {
                   key={stat.id} 
                   style={[styles.statCard, { minWidth: isLargeScreen ? 200 : (width - 72) / 2 }]}
                   activeOpacity={0.9}
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (stat.id === '1' || stat.id === '2') navigation.navigate('LeadsTab');
+                    else if (stat.id === '3') navigation.navigate('MoreTab');
+                  }}
                 >
                   <View style={styles.statTop}>
                     <View style={[styles.iconBox, { backgroundColor: `${stat.color}15` }]}>
@@ -426,11 +555,13 @@ const ProviderDashboardScreen = ({ navigation }) => {
                 style={[styles.mobileMenuItem, activeMenu === item.id && styles.activeMobileMenuItem]}
                 onPress={() => {
                   setActiveMenu(item.id);
-                  if (item.id === 'listings') navigation.navigate('MyListingsTab');
+                  if (item.id === 'dashboard') navigation.navigate('HomeTab');
+                  else if (item.id === 'listings') navigation.navigate('MyListingsTab');
                   else if (item.id === 'leads') navigation.navigate('LeadsTab');
                   else if (item.id === 'analytics') navigation.navigate('MoreTab');
                   else if (item.id === 'reviews') navigation.navigate('Reviews');
                   else if (item.id === 'subscription') navigation.navigate('Earnings');
+                  else if (item.id === 'settings') navigation.navigate('Settings');
                 }}
               >
                 <Ionicons 
@@ -498,6 +629,56 @@ const styles = StyleSheet.create({
   quickItem: { flex: 1, backgroundColor: '#FFF', padding: 16, borderRadius: 24, alignItems: 'center', marginHorizontal: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
   quickIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
   quickLabel: { fontSize: 11, fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.2 },
+
+  actionNeededCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  actionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  actionTitle: { fontSize: 16, fontWeight: '900', color: '#0F172A', letterSpacing: -0.3 },
+  actionSubtitle: { fontSize: 12, color: '#64748B', fontWeight: '600', marginTop: 2 },
+  actionSeeAll: { fontSize: 13, fontWeight: '900', color: colors.primary },
+  actionEmpty: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  actionEmptyText: { color: '#64748B', fontWeight: '700' },
+  actionRowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 10,
+    gap: 12,
+  },
+  actionCustomer: { fontSize: 14, fontWeight: '900', color: '#0F172A' },
+  actionMeta: { fontSize: 11, color: '#64748B', fontWeight: '700', marginTop: 2 },
+  actionMsg: { fontSize: 12, color: '#475569', fontWeight: '600', marginTop: 4 },
+  actionBtns: { flexDirection: 'row', gap: 8 },
+  btnAccept: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnCancel: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   statsContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 28, marginHorizontal: -6 },
   statCard: {

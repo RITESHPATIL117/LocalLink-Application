@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform, RefreshControl, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -59,7 +59,15 @@ const DashboardScreen = ({ navigation }) => {
   const [chartData, setChartData] = useState(WEEK_LABELS.map((label) => ({ label, value: 0 })));
   const [showSettings, setShowSettings] = useState(false);
 
-  const fetchAdminData = async (isSilent = false) => {
+  const handleStatPress = (stat) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (stat.id === '1') navigation.navigate('Businesses');
+    else if (stat.id === '2') navigation.navigate('UsersTab');
+    else if (stat.id === '4') navigation.navigate('ApprovalsTab');
+    else if (stat.id === '3') navigation.navigate('ReportsTab');
+  };
+
+  const fetchAdminData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
       const [statsRes, usersRes, businessesRes] = await Promise.all([
@@ -102,7 +110,7 @@ const DashboardScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAdminData();
@@ -112,7 +120,7 @@ const DashboardScreen = ({ navigation }) => {
     socketService.joinRoom('admin_room'); // Admin room for platform updates
     
     // 1. Listen for new leads
-    socketService.socket?.on('new_lead_received', (data) => {
+    const onNewLeadReceived = (data) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
             type: 'success',
@@ -132,10 +140,12 @@ const DashboardScreen = ({ navigation }) => {
             color: colors.primary
         };
         setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
-    });
+    };
+    socketService.socket?.on('new_lead_received', onNewLeadReceived);
+    socketService.socket?.on('new_lead', onNewLeadReceived);
 
     // 2. Listen for new business registration
-    socketService.socket?.on('new_business_registered', (data) => {
+    const onNewBusinessRegistered = (data) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
             type: 'info',
@@ -153,10 +163,11 @@ const DashboardScreen = ({ navigation }) => {
             color: '#10B981'
         };
         setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
-    });
+    };
+    socketService.socket?.on('new_business_registered', onNewBusinessRegistered);
 
     // 3. Listen for general platform activity
-    socketService.socket?.on('log_activity', (data) => {
+    const onLogActivity = (data) => {
         const newLog = {
             id: `log-${Date.now()}`,
             action: data.action,
@@ -165,16 +176,25 @@ const DashboardScreen = ({ navigation }) => {
             color: '#6B7280'
         };
         setRecentActivity(prev => [newLog, ...prev.slice(0, 5)]);
-    });
+    };
+    socketService.socket?.on('log_activity', onLogActivity);
 
-    socketService.socket?.on('stats_update', () => {
-      fetchAdminData(true);
-    });
+    const onStatsUpdate = () => fetchAdminData(true);
+    socketService.socket?.on('stats_update', onStatsUpdate);
+
+    // Poll fallback (keeps numbers fresh even if sockets fail)
+    const poll = setInterval(() => fetchAdminData(true), 20000);
 
     return () => {
       // socketService.disconnect();
+      clearInterval(poll);
+      socketService.socket?.off('new_lead_received', onNewLeadReceived);
+      socketService.socket?.off('new_lead', onNewLeadReceived);
+      socketService.socket?.off('new_business_registered', onNewBusinessRegistered);
+      socketService.socket?.off('log_activity', onLogActivity);
+      socketService.socket?.off('stats_update', onStatsUpdate);
     };
-  }, []);
+  }, [fetchAdminData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -282,6 +302,7 @@ const DashboardScreen = ({ navigation }) => {
                   key={stat.id}
                   {...stat}
                   delay={idx * 150}
+                  onPress={() => handleStatPress(stat)}
                 />
               ))
             )}
@@ -369,7 +390,7 @@ const DashboardScreen = ({ navigation }) => {
 
         </View>
       </ScrollView>
-      <WelcomeModal isProvider={true} />
+      <WelcomeModal isProvider={false} />
       
       {/* Admin Settings / Profile Modal */}
       <Modal visible={showSettings} transparent animationType="fade">
@@ -383,6 +404,13 @@ const DashboardScreen = ({ navigation }) => {
                         <Ionicons name="shield-outline" size={20} color="#64748B" />
                     </View>
                     <Text style={styles.sheetActionText}>Platform Health</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.sheetAction, { marginTop: 12 }]} onPress={() => { setShowSettings(false); navigation.navigate('AdminNotifications'); }}>
+                    <View style={[styles.sheetIconBg, { backgroundColor: '#EFF6FF' }]}>
+                        <Ionicons name="notifications-outline" size={20} color={colors.primary} />
+                    </View>
+                    <Text style={styles.sheetActionText}>Quick Enquiry Notifications</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.sheetAction, { marginTop: 12 }]} onPress={logout}>

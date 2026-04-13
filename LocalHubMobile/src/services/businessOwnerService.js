@@ -14,7 +14,10 @@ const businessOwnerService = {
   addBusiness: async (data) => {
     const payload = {
       ...data,
-      categoryName: data.category 
+      categoryName: data.category,
+      // Ensure backend receives explicit approval state for new listings
+      is_verified: data.is_verified ?? 0,
+      status: data.status ?? 'pending',
     };
     return api.post('/businesses', payload);
   },

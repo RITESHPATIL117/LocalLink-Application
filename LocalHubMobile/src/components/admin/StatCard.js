@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-const StatCard = ({ title, value, trend, isUp, icon, color, delay = 0 }) => {
+const StatCard = ({ title, value, trend, isUp, icon, color, delay = 0, onPress }) => {
   const scaleAnim = React.useRef(new Animated.Value(0.95)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -32,6 +32,7 @@ const StatCard = ({ title, value, trend, isUp, icon, color, delay = 0 }) => {
       Animated.timing(scaleAnim, { toValue: 0.96, duration: 100, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 150, friction: 3, useNativeDriver: true }),
     ]).start();
+    if (onPress) onPress();
   };
 
   return (

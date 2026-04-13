@@ -10,7 +10,7 @@ import colors from '../styles/colors';
 import leadService from '../services/leadService';
 import { setLeadCaptured } from '../store/authSlice';
 
-const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
+const LeadGatekeeper = ({ visible, onClose, onSuccess, category, enquiryNote }) => {
   const dispatch = useDispatch();
   const { isAuthenticated, user, temporaryLeadInfo } = useSelector(state => state.auth);
   const [name, setName] = useState('');
@@ -42,9 +42,21 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
 
     setLoading(true);
     try {
-      // Just limit this to taking info for tracking as requested by the user.
-      // We no longer trigger a backend API lead creation here because guest users
-      // get a 401 error since /leads is now protected. Wait until they actually book.
+      const message =
+        enquiryNote ||
+        (category?.name ? `Quick enquiry: ${category.name}` : 'Quick enquiry from LocalHub');
+      try {
+        await leadService.broadcastRFQ({
+          business_id: null,
+          category_id: category?.id || category?.category_id || null,
+          user_id: user?.id || null,
+          customer_name: name.trim(),
+          customer_phone: phone.trim(),
+          message,
+        });
+      } catch (_apiErr) {
+        // Logged-in users may succeed; guests often receive 401 — still capture locally below.
+      }
       dispatch(setLeadCaptured({ name, phone }));
       onSuccess();
     } catch (error) {
@@ -75,7 +87,9 @@ const LeadGatekeeper = ({ visible, onClose, onSuccess, category }) => {
             <View style={styles.header}>
               <View>
                 <Text style={styles.title}>Quick Inquiry</Text>
-                <Text style={styles.subtitle}>Get the best {category?.name || 'service'} quotes</Text>
+                <Text style={styles.subtitle}>
+                  Get the best {category?.name ? `${category.name} ` : ''}quotes
+                </Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                 <Ionicons name="close" size={24} color="#1F2937" />

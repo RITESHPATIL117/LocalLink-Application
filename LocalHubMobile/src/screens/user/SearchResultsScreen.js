@@ -1,9 +1,8 @@
 import { useWindowDimensions, TextInput, View, StyleSheet, TouchableOpacity, Text, FlatList, Platform } from 'react-native';
 import PremiumLoader from '../../components/PremiumLoader';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-  
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../styles/colors';
@@ -12,8 +11,14 @@ import BusinessCard from '../../components/BusinessCard';
 import businessService from '../../services/businessService';
 import BookingWizard from '../../components/BookingWizard';
 import Toast from 'react-native-toast-message';
+import {
+  filterBusinessesByContext,
+  getSeededBusinesses,
+  mergeBusinessLists,
+} from '../../utils/businessSearchFilter';
 
 const filters = ['Top Rated', 'Near Me', 'Open Now', 'Price', 'Newest'];
+const cityFilters = ['All', 'Sangli', 'Miraj', 'Pune'];
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { width } = useWindowDimensions();
@@ -26,31 +31,172 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [search, setSearch] = useState(route?.params?.query || '');
   const [bookingModalVisible, setBookingModalVisible] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [usedFreeSearch, setUsedFreeSearch] = useState(false);
 
   const handleInquirePress = (biz) => {
     setSelectedBusiness(biz);
     setBookingModalVisible(true);
   };
-  
-  const query = route?.params?.query || ''; 
 
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  const HOME_CITY = 'sangli';
+  const [selectedCity, setSelectedCity] = useState(route?.params?.city || 'All');
+
+  const routeParams = route?.params || {};
+  const {
+    query: paramQuery = '',
+    categoryId: paramCategoryId,
+    categoryName: paramCategoryName,
+    subcategoryId: paramSubcategoryId,
+    subcategoryName: paramSubcategoryName,
+    fromCategoryBrowse: paramFromBrowse,
+    city: paramCity = 'All',
+  } = routeParams;
+
+  useEffect(() => {
+    if (route.params?.query != null) setSearch(String(route.params.query));
+  }, [route.params?.query]);
+
+  useEffect(() => {
+    setSelectedCity(paramCity || 'All');
+  }, [paramCity]);
+
+  useEffect(() => {
+    setUsedFreeSearch(false);
+  }, [paramCategoryId, paramSubcategoryId, paramFromBrowse]);
+
+  const browseFilterCtx = useMemo(
+    () => ({
+      query: (paramQuery || '').trim(),
+      categoryId: paramCategoryId,
+      categoryName: paramCategoryName,
+      subcategoryId: paramSubcategoryId,
+      subcategoryName: paramSubcategoryName,
+      strictBrowse: !!paramFromBrowse,
+    }),
+    [
+      paramQuery,
+      paramCategoryId,
+      paramCategoryName,
+      paramSubcategoryId,
+      paramSubcategoryName,
+      paramFromBrowse,
+    ]
+  );
+
+  const submitHeaderSearch = useCallback(() => {
+    const t = search.trim();
+    setUsedFreeSearch(true);
+    navigation.setParams({
+      query: t,
+      fromCategoryBrowse: undefined,
+      categoryId: undefined,
+      categoryName: undefined,
+      subcategoryId: undefined,
+      subcategoryName: undefined,
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [navigation, search]);
+
+  const parseDistanceKm = (distance) => {
+    if (distance == null) return Number.POSITIVE_INFINITY;
+    const n = parseFloat(String(distance).replace(/[^\d.]/g, ''));
+    return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
+  };
+
+  const getCityFromBiz = (biz) => {
+    const city = (biz.city || biz.category_city || '').toString().trim();
+    if (city) return city.toLowerCase();
+    const address = (biz.address || '').toString().toLowerCase();
+    if (address.includes('sangli')) return 'sangli';
+    if (address.includes('miraj')) return 'miraj';
+    if (address.includes('pune')) return 'pune';
+    if (address.includes('kolhapur')) return 'kolhapur';
+    return '';
+  };
 
   const fetchResults = useCallback(async () => {
     setLoading(true);
     try {
+      const qForApi = usedFreeSearch
+        ? search.trim()
+        : (paramQuery || search || '').trim();
+
       const params = {
-        q: query,
+        q: qForApi,
         filter: activeFilter.toLowerCase().replace(' ', '_'),
       };
+      if (!usedFreeSearch && paramCategoryId != null) params.category_id = paramCategoryId;
+      if (!usedFreeSearch && paramSubcategoryId != null) params.subcategory_id = paramSubcategoryId;
+
       const res = await businessService.getAllBusinesses(params);
-      setResults(res.data || []);
+      const raw = res.data || [];
+      const allSeeds = getSeededBusinesses();
+
+      const filterCtx = usedFreeSearch
+        ? { query: search.trim(), strictBrowse: false }
+        : {
+            ...browseFilterCtx,
+            query: qForApi || browseFilterCtx.query,
+            strictBrowse: !!paramFromBrowse,
+          };
+
+      let filtered;
+      if (filterCtx.strictBrowse) {
+        // Strict category/subcategory filtering first against live API rows
+        filtered = filterBusinessesByContext(raw, filterCtx);
+        // If API misses category mapping, fallback to STRICTLY filtered seed rows only (not all categories)
+        if (!filtered.length) {
+          filtered = filterBusinessesByContext(allSeeds, filterCtx);
+        }
+      } else {
+        const merged = mergeBusinessLists(raw, allSeeds);
+        filtered = filterBusinessesByContext(merged, filterCtx);
+      }
+
+      if (activeFilter === 'Top Rated') {
+        filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      } else if (activeFilter === 'Near Me') {
+        filtered = filtered
+          .filter((b) => {
+            const city = getCityFromBiz(b);
+            const d = parseDistanceKm(b.distance);
+            return city === HOME_CITY || d <= 5;
+          })
+          .sort((a, b) => parseDistanceKm(a.distance) - parseDistanceKm(b.distance));
+      } else if (activeFilter === 'Newest') {
+        filtered = [...filtered].sort((a, b) => {
+          const ta = new Date(a.createdAt || a.created_at || 0).getTime();
+          const tb = new Date(b.createdAt || b.created_at || 0).getTime();
+          return tb - ta;
+        });
+      } else if (activeFilter === 'Price') {
+        const rank = { basic: 1, standard: 2, premium: 3, luxury: 4 };
+        filtered = [...filtered].sort((a, b) => (rank[a.tier] || 99) - (rank[b.tier] || 99));
+      }
+
+      if (selectedCity !== 'All') {
+        const cityKey = selectedCity.toLowerCase();
+        filtered = filtered.filter((b) => getCityFromBiz(b) === cityKey);
+      }
+
+      setResults(filtered);
     } catch (error) {
       console.log('Error fetching search results:', error);
     } finally {
       setLoading(false);
     }
-  }, [query, activeFilter]);
+  }, [
+    activeFilter,
+    browseFilterCtx,
+    paramCategoryId,
+    paramFromBrowse,
+    paramQuery,
+    paramSubcategoryId,
+    search,
+    selectedCity,
+    usedFreeSearch,
+  ]);
 
   useEffect(() => {
     fetchResults();
@@ -117,12 +263,17 @@ const SearchResultsScreen = ({ route, navigation }) => {
           )}
           <View style={styles.headerSearch}>
             <Ionicons name="search" size={18} color="#9CA3AF" />
-            <TextInput 
+            <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder="Search services..."
               style={styles.headerSearchInput}
+              returnKeyType="search"
+              onSubmitEditing={submitHeaderSearch}
             />
+            <TouchableOpacity onPress={submitHeaderSearch} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="arrow-forward-circle" size={26} color={colors.primary} />
+            </TouchableOpacity>
           </View>
           <TouchableOpacity 
             style={styles.viewToggleBtn}
@@ -155,6 +306,33 @@ const SearchResultsScreen = ({ route, navigation }) => {
             )}
           />
         </View>
+
+        <View style={[styles.filterBar, { paddingTop: 0 }]}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={cityFilters}
+            keyExtractor={(item) => `city-${item}`}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  selectedCity === item && styles.activeFilterChip,
+                ]}
+                onPress={() => {
+                  setSelectedCity(item);
+                  navigation.setParams({ city: item });
+                }}
+              >
+                <Text style={[
+                  styles.filterText,
+                  selectedCity === item && styles.activeFilterText,
+                ]}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
       </View>
 
       {loading ? (
@@ -182,7 +360,11 @@ const SearchResultsScreen = ({ route, navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={80} color="#E5E7EB" />
-              <Text style={styles.emptyText}>No results found for &quot;{search}&quot;</Text>
+              <Text style={styles.emptyText}>
+                No results found
+                {(search.trim() || paramQuery) ? ` for "${search.trim() || paramQuery}"` : ''}
+                {paramFromBrowse && paramCategoryName ? ` in ${paramCategoryName}` : ''}
+              </Text>
             </View>
           }
         />

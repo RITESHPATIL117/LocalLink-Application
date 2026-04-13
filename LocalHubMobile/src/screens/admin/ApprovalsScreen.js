@@ -22,14 +22,82 @@ const ApprovalsScreen = ({ navigation }) => {
     fetchPending();
   }, []);
 
+  const toList = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return [];
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.items)) return payload.items;
+    if (Array.isArray(payload.results)) return payload.results;
+    if (Array.isArray(payload.businesses)) return payload.businesses;
+    if (Array.isArray(payload.pending)) return payload.pending;
+    return [];
+  };
+
+  const toNumLike = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n;
+    const s = String(v).toLowerCase().trim();
+    if (s === 'true' || s === 'yes') return 1;
+    if (s === 'false' || s === 'no') return 0;
+    return null;
+  };
+
+  const isPendingBusiness = (biz) => {
+    const verified =
+      biz?.is_verified ??
+      biz?.isVerified ??
+      biz?.verified ??
+      biz?.isApproved ??
+      biz?.approvalStatus;
+    const status = String(biz?.status || '').toLowerCase();
+    const verifyNum = toNumLike(verified);
+    if (verifyNum != null) {
+      return verifyNum === 0;
+    }
+    if (String(verified || '').toLowerCase() === 'pending') return true;
+    if (String(verified || '').toLowerCase() === 'approved') return false;
+    if (String(verified || '').toLowerCase() === 'rejected') return false;
+
+    // Fallback to status when verification fields are absent
+    if (status) {
+      if (status === 'pending' || status === 'new') return true;
+      if (status === 'active' || status === 'approved' || status === 'suspended' || status === 'rejected') return false;
+    }
+
+    // Last fallback: treat unknown/unset rows as pending review.
+    return true;
+  };
+
   const fetchPending = async () => {
     setLoading(true);
     try {
       const res = await adminService.getPendingBusinesses();
-      setData(res.data || []);
+      const fromPendingEndpoint = toList(res?.data ?? res);
+
+      if ((fromPendingEndpoint || []).length > 0) {
+        setData(fromPendingEndpoint);
+      } else {
+        // Fallback: some backends don't populate /pending-businesses but do expose status in /businesses
+        const allRes = await adminService.getAllBusinesses().catch(() => ({ data: [] }));
+        const all = toList(allRes?.data ?? allRes);
+        setData(all.filter(isPendingBusiness));
+      }
     } catch (e) {
       console.log('Fetch pending err:', e);
-      Toast.show({ type: 'error', text1: 'Fetch Failed', text2: 'Could not load pending approvals.' });
+      // Secondary fallback when pending endpoint errors
+      try {
+        const allRes = await adminService.getAllBusinesses().catch(() => ({ data: [] }));
+        const all = toList(allRes?.data ?? allRes);
+        const pending = all.filter(isPendingBusiness);
+        setData(pending);
+        if (!pending.length) {
+          Toast.show({ type: 'error', text1: 'Fetch Failed', text2: 'Could not load pending approvals.' });
+        }
+      } catch (_e2) {
+        Toast.show({ type: 'error', text1: 'Fetch Failed', text2: 'Could not load pending approvals.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -47,6 +115,8 @@ const ApprovalsScreen = ({ navigation }) => {
        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
        try {
          await adminService.verifyBusiness(id);
+        // Keep legacy pipelines in sync where customer endpoints read status instead of verify flag.
+        await adminService.updateBusinessStatus(id, 'Active').catch(() => null);
          setData(prev => prev.filter(item => item.id !== id));
          setReviewModalVisible(false);
          Toast.show({ type: 'success', text1: 'Verified', text2: 'Business is now live on LocalHub.' });
@@ -145,7 +215,7 @@ const ApprovalsScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={data}
-          keyExtractor={item => item.id}
+          keyExtractor={item => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}

@@ -11,6 +11,7 @@ import globalStyles from '../../styles/globalStyles';
 import AnimatedFadeIn from '../../components/AnimatedFadeIn';
 import Button from '../../components/Button';
 import { useFavorites } from '../../hooks/useFavorites';
+import { navigateRoot } from '../../navigation/navigationRef';
 
 const menuGroups = [
   {
@@ -46,6 +47,16 @@ const ProfileScreen = ({ navigation }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { favorites } = useFavorites();
 
+  const tabNav = navigation.getParent?.();
+
+  const goTab = (name, stackScreen) => {
+    if (tabNav) {
+      tabNav.navigate(name, stackScreen ? { screen: stackScreen } : undefined);
+    } else {
+      navigation.navigate(name, stackScreen ? { screen: stackScreen } : undefined);
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -62,9 +73,9 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.guestDesc}>
               Log in to save your favorite businesses, track your service requests, and leave helpful reviews for the community.
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.guestLoginBtn}
-              onPress={() => navigation.navigate('Login')}
+              onPress={() => navigateRoot('Login')}
             >
               <Text style={styles.guestLoginText}>Login / Sign Up</Text>
             </TouchableOpacity>
@@ -146,13 +157,13 @@ const ProfileScreen = ({ navigation }) => {
                         style={[styles.menuItem, itemIdx === group.items.length - 1 && { borderBottomWidth: 0 }]}
                         onPress={() => {
                           if (item.id === 'personal') navigation.navigate('EditProfile');
-                          if (item.id === 'requests') navigation.navigate('RequestsTab');
-                          if (item.id === 'favorites') navigation.navigate('FavoritesTab');
-                          if (item.id === 'settings') navigation.navigate('Settings');
-                          if (item.id === 'help') navigation.navigate('Support');
-                          if (item.id === 'reviews') navigation.navigate('RequestsTab'); // Or dedicated reviews if created
-                          if (item.id === 'recent') navigation.navigate('HomeTab');
-                          if (item.id === 'terms') navigation.navigate('Info', { title: 'Terms & Privacy' });
+                          if (item.id === 'requests') goTab('RequestsTab', 'Requests');
+                          if (item.id === 'favorites') goTab('FavoritesTab', 'Favorites');
+                          if (item.id === 'settings') navigateRoot('Settings');
+                          if (item.id === 'help') navigateRoot('Support');
+                          if (item.id === 'reviews') goTab('RequestsTab', 'Requests');
+                          if (item.id === 'recent') goTab('HomeTab', 'Home');
+                          if (item.id === 'terms') navigateRoot('Info', { title: 'Terms & Privacy' });
                         }}
                       >
                         <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
